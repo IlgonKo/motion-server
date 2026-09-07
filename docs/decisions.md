@@ -976,6 +976,42 @@ Device Profile + ESI
 - 영향: RF-018에서 gamepad reference client를 구현한다. 기존 velocity command가 linear axis에서 막히는
   부분은 [TD-034](tasks/td/TD-034-linear-rotary-velocity-command.md)에서 먼저 정리한다.
 
+## DEC-041 I/O reset/restart는 capability 기반, CPX parameter storage는 0x27F1 기반으로 처리
+
+- 상태: `accepted`
+- 결정일: 2026-09-07
+- 결정:
+  - `system/bus/rescan`은 Motion Server API에서 제거한다. 기존 topology 복구는
+    `system/bus/reconnect`, process/runtime 전체 재구성은 `system/server/restart`가 담당한다.
+  - `system/io/reset`은 I/O Fault acknowledge/clear 또는 device reset sequence 용도로 유지한다.
+    선택한 I/O device가 reset sequence를 지원하지 않거나 필요로 하지 않으면
+    `UNSUPPORTED_OPERATION`을 반환한다.
+  - `system/io/restart`는 I/O device restart sequence 용도로 유지한다. 선택한 I/O device가
+    restart sequence를 지원하지 않으면 `UNSUPPORTED_OPERATION`을 반환한다.
+  - `system/io/param_storage`는 I/O device의 parameter 저장 대상을 설정하는 명령으로 유지한다.
+    CPX-AP-I-EC는 `0x27F1 Stored Parameters NV`를 사용하며, `0x27F1:01 Mode`에
+    `0` 또는 `1`을 써서 volatile/non-volatile storage mode로 설정한다.
+  - CPX-AP-I-EC `0x27F1:01 Mode` 값은 `0=volatile memory`, `1=non-volatile memory`,
+    `2=factory reset`으로 취급한다. `system/io/param_storage`는 `Mode=0/1`만 사용하며 `Mode=2`는
+    이 API에서 사용하지 않는다.
+  - CPX-AP-I-EC 실장치에서는 storage mode 변경 직후 곧바로 다른 mode를 쓰면
+    SDO abort `0x08000000` (`General error`)로 reject될 수 있다. 이는 object/index 오류가 아니라
+    장치 내부 storage mode 반영 중의 일시적 거부로 취급하며, 운용 시 mode 변경 간격을 둔다.
+  - RF-017은 Motion Server 측 Persistent Parameter Store, 변경 이력, virtual device 재시작 복원과
+    실장비 이전 기능으로 한정한다.
+- 이유: reset/restart/save를 하나의 추상 명령으로 강제하면 CPX처럼 장치별 지원 여부가 다른 경우
+  의미가 흐려진다. 반대로 API name은 유지하되 device capability에 따라 명확히 success 또는
+  unsupported로 응답하면 client 계약과 실장치 차이를 모두 보존할 수 있다.
+- 검토한 대안:
+  - `system/io/reset`을 삭제하는 방식은 I/O Fault clear/ack가 필요한 장치가 추가될 때 API를 다시
+    만들어야 하므로 채택하지 않는다.
+  - CPX parameter storage mode 설정을 RF-017로 미루는 방식은 CPX가 이미 장치 내부 저장 기능을 제공하므로
+    RF-003의 I/O management 범위에 맞지 않아 채택하지 않는다.
+  - `system/bus/rescan`을 유지하는 방식은 현재 서버의 runtime/topology lifecycle과 중복되므로
+    채택하지 않는다.
+- 영향: [RF-003](tasks/rf/RF-003-bus-io-management.md)은 I/O reset/restart/param_storage 구현으로
+  재정의한다. CPX reset/restart 미지원 경로와 CPX `0x27F1` parameter storage 경로를 테스트한다.
+
 ## 새 결정 작성 양식
 
 ```text

@@ -460,7 +460,7 @@ system/io/reset
 system/io/restart
 system/io/param_read
 system/io/param_write
-system/io/param_save
+system/io/param_storage
 system/io/ethercat/param_catalog
 system/io/iol/param_catalog
 system/io/ap/param_read
@@ -474,6 +474,24 @@ AP module별 parameter catalog는 이 API에 섞지 않고 `system/io/ap/param_c
 다룬다. 따라서 `system/io/ethercat/param_catalog`는 `module` 또는 `slot` 입력을 사용하지 않는다.
 응답의 `scope`는 `station`이고, 각 object에는 `station`, `identity`, `diagnosis`, `sync`,
 `pdo_mapping` 같은 `group`이 포함된다.
+
+`system/io/reset`은 선택한 I/O device의 Fault acknowledge/clear 또는 device reset sequence 용도다.
+장치 profile이 해당 sequence를 지원하지 않으면 `UNSUPPORTED_OPERATION` Fail response를 반환한다.
+CPX-AP-I-EC는 현재 reset sequence를 지원하지 않는다.
+
+`system/io/restart`는 선택한 I/O device의 restart sequence 용도다. 장치 profile이 해당 sequence를
+지원하지 않으면 `UNSUPPORTED_OPERATION` Fail response를 반환한다. CPX-AP-I-EC는 현재 restart
+sequence를 지원하지 않는다.
+
+`system/io/param_storage`는 선택한 I/O device의 parameter 저장 대상을 설정한다.
+CPX-AP-I-EC는 `0x27F1:01 Mode`를 사용하며, `mode="volatile"`은 `0`,
+`mode="non_volatile"`은 `1`을 쓴다. `Mode=2` factory reset은 이 API에서 사용하지 않는다.
+별도 저장 결과 확인 readback은 수행하지 않으며, write가 성공하면 명령 성공으로 처리한다.
+이 명령은 현재 parameter snapshot을 Motion Server의 Persistent Parameter Store에 저장하지 않는다.
+
+```json
+{"cmd": "system/io/param_storage", "io": "io0", "mode": "non_volatile"}
+```
 
 ### IO-Link Input Decoding (RF-015)
 
@@ -747,12 +765,10 @@ system/server/fault_reset
 system/server/restart
 system/bus/fault_reset
 system/bus/reconnect
-system/bus/rescan
 ```
 
-`system/bus/rescan`은 아직 구현되지 않았다. Bus reconnect는 현재 runtime과 TCP client를
-유지하며 transport/process image/parameter refresh를 동기 수행한다. Server restart만 새
-process와 Diagnostic 저장소를 만든다. Bus reconnect는 `initialization_error`,
+Bus reconnect는 현재 runtime과 TCP client를 유지하며 transport/process image/parameter refresh를
+동기 수행한다. Server restart만 새 process와 Diagnostic 저장소를 만든다. Bus reconnect는 `initialization_error`,
 `bus_disconnected`, `fault` 상태에서만 허용되고 `normal` 상태에서는 거부된다. 별도 recovery
 worker가 없으므로 reconnect가 완료될 때까지 status/stop을 포함한 다른 API 요청 처리는
 일시 정지하지만 기존 TCP socket과 command authority는 유지된다. Parameter refresh는 PRE-OP에서

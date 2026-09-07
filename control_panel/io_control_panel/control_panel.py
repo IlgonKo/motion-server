@@ -258,6 +258,26 @@ class IOControlPanel:
             padx=4,
             pady=(6, 0),
         )
+        ttk.Button(
+            parameter,
+            text="Volatile",
+            command=lambda: self.set_parameter_storage("volatile"),
+        ).grid(
+            row=2,
+            column=14,
+            padx=(8, 0),
+            pady=(6, 0),
+        )
+        ttk.Button(
+            parameter,
+            text="Non-volatile",
+            command=lambda: self.set_parameter_storage("non_volatile"),
+        ).grid(
+            row=2,
+            column=15,
+            padx=4,
+            pady=(6, 0),
+        )
         ttk.Entry(
             parameter,
             textvariable=self.param_result_var,
@@ -265,11 +285,11 @@ class IOControlPanel:
         ).grid(
             row=3,
             column=0,
-            columnspan=14,
+            columnspan=16,
             sticky="ew",
             pady=(6, 0),
         )
-        parameter.columnconfigure(13, weight=1)
+        parameter.columnconfigure(15, weight=1)
 
         ap_parameter = ttk.Frame(self.parameter_tabs, padding=8)
         self.parameter_tabs.add(ap_parameter, text="AP Parameter")
@@ -964,6 +984,21 @@ class IOControlPanel:
         except Exception as exc:
             messagebox.showerror("IO Control Panel", str(exc))
 
+    def set_parameter_storage(self, mode):
+        try:
+            self.require_command_authority()
+            response = self.client.request(
+                {
+                    "cmd": "system/io/param_storage",
+                    "io": self.device_var.get(),
+                    "mode": mode,
+                },
+                expected_type="system/io/param_storage",
+            )
+            self.show_parameter_response(response)
+        except Exception as exc:
+            messagebox.showerror("IO Control Panel", str(exc))
+
     def parameter_message(self, command):
         message = {
             "cmd": command,
@@ -979,8 +1014,19 @@ class IOControlPanel:
 
     def show_parameter_response(self, response):
         if response.get("type") == "command_rejected" or not response.get("ok", False):
-            message = response.get("message", response.get("error", "command failed"))
+            message = self.failure_message(response)
             self.param_result_var.set(f"Error: {message}")
+            return
+        if response.get("type") == "system/io/param_storage":
+            detail = response.get("result", {})
+            if isinstance(detail, dict) and detail.get("object"):
+                self.param_result_var.set(
+                    "Parameter storage mode: "
+                    f"{detail.get('object')}={detail.get('mode')} "
+                    f"({detail.get('storage', '')})"
+                )
+            else:
+                self.param_result_var.set("Parameter storage mode set")
             return
         text = f"Value={response.get('value')}"
         if response.get("hex") is not None:

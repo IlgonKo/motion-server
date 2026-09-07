@@ -6,6 +6,50 @@
 
 ## 2026-09-07
 
+### RF-003 I/O 관리 API 계약 정리
+
+- RF-003을 `system/io/reset`, `system/io/restart`, `system/io/param_storage` 중심으로 재정의했다.
+- `system/bus/rescan`은 현재 Motion Server lifecycle과 중복되므로 제거하기로 했다.
+- `system/io/reset`은 I/O Fault acknowledge/clear 또는 device reset sequence 용도로 유지하고,
+  장치 미지원 시 `UNSUPPORTED_OPERATION`으로 응답하기로 했다.
+- `system/io/restart`도 장치별 capability 기반으로 유지하며, CPX에서 미지원이면
+  `UNSUPPORTED_OPERATION`으로 응답하기로 했다.
+- CPX-AP-I-EC `system/io/param_storage`는 `0x27F1 Stored Parameters NV` 기반으로 구현하고,
+  `0x27F1:01 Mode=0/1`을 volatile/non-volatile storage mode 설정으로 사용하기로 했다.
+  별도 저장 결과 확인 readback은 수행하지 않기로 했다. `Mode=2` factory reset은 이 API에서 사용하지 않는다.
+- RF-017은 서버 Persistent Parameter Store와 virtual device 저장/복원 확장으로 범위를 한정했다.
+
+### RF-003 I/O 관리 API 1차 구현
+
+- `system/bus/rescan`을 API specification과 command registry에서 제거했다.
+- `system/io/reset`과 `system/io/restart`를 device capability 기반 handler로 연결했고, CPX처럼
+  capability가 없는 장치는 `UNSUPPORTED_OPERATION`을 반환하도록 했다.
+- CPX-AP-I-EC에 `IO_PARAMETER_STORAGE` capability와 `set_io_parameter_storage()`를 추가하여
+  `0x27F1:01 Mode=0/1` write로 volatile/non-volatile storage mode를 설정하도록 했다.
+- `system/io/param_storage`는 transport 필요 명령으로 지정하여 bus disconnected 상태에서 SDO write까지
+  내려가지 않도록 했다.
+- I/O management command와 degraded server 계약 테스트를 추가했고 전체 unittest 423개가 통과했다.
+- CPX-AP-I-EC 실장치 smoke test는 별도 확인이 필요하다.
+
+### IO Control Panel parameter storage UI 추가
+
+- IO Control Panel의 EC Parameter 탭에 `Volatile` / `Non-volatile` storage mode 버튼을 추가했다.
+- 버튼은 선택된 I/O에 `system/io/param_storage` 명령을 보내고, 성공 시 `0x27F1:01=0/1`
+  storage mode 설정 결과를 표시한다.
+- IO Control Panel client가 `system/io/param_storage` 응답을 추적하도록 갱신했다.
+- IO Control Panel 시작 시 I/O Control 범위 밖의 `system/simulation/io/input_read` 자동 요청을 제거했다.
+- 관련 panel/client 테스트를 추가했고, `system/io/param_storage` volatile/non-volatile mode 테스트까지
+  포함하여 전체 unittest 428개가 통과했다.
+
+### RF-003 실장치 smoke test 및 완료 처리
+
+- CPX-AP-I-EC 실장치에서 `system/io/param_storage`의 `volatile`/`non_volatile` mode write가
+  동작함을 확인했다.
+- storage mode를 연속으로 빠르게 변경하면 CPX가 `DeviceRejectedException`
+  (`operation=sdo_write`, `device_code=134217728` / `0x08000000`)으로 reject할 수 있음을 기록했다.
+  이는 object/index 오류가 아니라 장치 내부 storage mode 반영 중의 일시적 거부로 취급한다.
+- RF-003 상태를 `complete`로 변경했다.
+
 ### TD-034 Linear/Rotary Velocity Command 구현
 
 - RF-018 gamepad reference client 선행 조건으로 `system/axis/move_vel`과 `system/axes/move_vel`을

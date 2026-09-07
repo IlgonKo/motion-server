@@ -5,6 +5,7 @@ from device.cpx_ap_i_ec.io_link_variants import configure_io_link_variants
 from device.cpx_ap_i_ec.pdo import CPXRxPDO, CPXTxPDO
 from device.cpx_ap_i_ec.pdo_codec import CPXPdoCodec
 from device.cpx_ap_i_ec.pdo_configuration import cpx_pdo_configuration
+from device.capabilities import DeviceCapability
 from device.exceptions import (
     DeviceIdentityMismatchException,
     DeviceLayoutInvalidException,
@@ -18,7 +19,13 @@ class CPXApIEcDeviceProfile:
     name = "cpx_ap_i_ec"
     is_motion_axis = False
     pdo_codec = CPXPdoCodec
-    capabilities = frozenset()
+    capabilities = frozenset({DeviceCapability.IO_PARAMETER_STORAGE})
+    PARAMETER_STORAGE_INDEX = 0x27F1
+    PARAMETER_STORAGE_MODE_SUBINDEX = 0x01
+    PARAMETER_STORAGE_MODES = {
+        "volatile": 0,
+        "non_volatile": 1,
+    }
 
     def __init__(self, io_id=None, device_config=None):
         if device_config is not None:
@@ -140,3 +147,20 @@ class CPXApIEcDeviceProfile:
         cycle_time,
     ):
         return False
+
+    def set_io_parameter_storage(self, master, slave_index, mode):
+        storage_mode = self.PARAMETER_STORAGE_MODES[str(mode)]
+        master.sdo.write_uint8(
+            slave_index,
+            self.PARAMETER_STORAGE_INDEX,
+            self.PARAMETER_STORAGE_MODE_SUBINDEX,
+            storage_mode,
+        )
+        return {
+            "object": (
+                f"0x{self.PARAMETER_STORAGE_INDEX:04X}:"
+                f"{self.PARAMETER_STORAGE_MODE_SUBINDEX:02X}"
+            ),
+            "mode": storage_mode,
+            "storage": str(mode),
+        }

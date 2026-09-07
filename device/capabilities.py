@@ -3,6 +3,9 @@ from enum import Enum
 
 class DeviceCapability(Enum):
     AXIS_RESTART = "axis_restart"
+    IO_RESET = "io_reset"
+    IO_RESTART = "io_restart"
+    IO_PARAMETER_STORAGE = "io_parameter_storage"
 
 
 _CAPABILITY_METHODS = {
@@ -10,6 +13,9 @@ _CAPABILITY_METHODS = {
         "request_axis_restart",
         "clear_axis_restart_request",
     ),
+    DeviceCapability.IO_RESET: ("reset_io_device",),
+    DeviceCapability.IO_RESTART: ("restart_io_device",),
+    DeviceCapability.IO_PARAMETER_STORAGE: ("set_io_parameter_storage",),
 }
 
 

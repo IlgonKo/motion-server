@@ -19,6 +19,11 @@ from motion_server.handlers.command.axis_parameter_write import write_parameter
 from motion_server.handlers.command.io_ethercat_parameter_write import (
     write_io_parameter,
 )
+from motion_server.handlers.command.io_management import (
+    reset_io_device,
+    restart_io_device,
+    set_io_parameter_storage,
+)
 from motion_server.handlers.command.server import (
     fault_reset_bus,
     fault_reset_server,
@@ -120,16 +125,15 @@ COMMAND_HANDLERS = {
     "system/server/restart": request_server_restart,
     "system/bus/fault_reset": fault_reset_bus,
     "system/bus/reconnect": request_bus_reconnect,
-    "system/bus/rescan": reject_not_implemented,
     "system/io/output_write": output_write,
     "system/simulation/io/input_write": write_simulation_input,
     "system/simulation/io/input_reset": reset_simulation_inputs,
-    "system/io/reset": reject_not_implemented,
-    "system/io/restart": reject_not_implemented,
+    "system/io/reset": reset_io_device,
+    "system/io/restart": restart_io_device,
     "system/io/param_write": lambda message, runtime, state, client: (
         write_io_parameter(message, runtime, client)
     ),
-    "system/io/param_save": reject_not_implemented,
+    "system/io/param_storage": set_io_parameter_storage,
     "system/io/ap/param_write": lambda message, runtime, state, client: (
         write_ap_parameter(message, runtime, client)
     ),

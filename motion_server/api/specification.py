@@ -84,7 +84,6 @@ COMMAND_SPECS = {
         command("system/server/restart", degraded_allowed=True),
         command("system/bus/fault_reset", degraded_allowed=True),
         command("system/bus/reconnect", degraded_allowed=True),
-        command("system/bus/rescan"),
         command("system/axis/enable"),
         command("system/axis/disable"),
         command("system/axis/fault_reset"),
@@ -124,7 +123,7 @@ COMMAND_SPECS = {
         command("system/io/reset"),
         command("system/io/restart"),
         command("system/io/param_write", transport_required=True),
-        command("system/io/param_save"),
+        command("system/io/param_storage", transport_required=True),
         command("system/io/ap/param_write", transport_required=True),
         command("system/io/iol/param_write", transport_required=True),
     )

@@ -56,13 +56,15 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - clean environment에서 설치·실행 절차가 재현되고 자동 또는 scripted smoke test가 통과한다.
 - 상세: [RF-002 기능 명세](tasks/rf/RF-002-low-code-client.md)
 
-### RF-003 예약된 Bus 및 I/O 관리 API
+### RF-003 I/O Reset, Restart 및 Parameter Storage API
 
-- 상태: `reserved`
+- 상태: `complete`
 - 우선순위: 보통
-- 요약: 예약된 bus rescan과 I/O reset/restart/parameter-save API의 계약과 구현을 완성한다.
+- 요약: I/O reset/restart/parameter-storage API의 장치별 지원 정책과 CPX parameter storage mode 설정을 구현한다.
 - 완료 조건:
-  - 각 명령의 device별 의미, authority, lifecycle과 PDO 처리 정책이 결정 문서에 확정된다.
+  - `system/bus/rescan`은 현재 API 계약에서 제거된다.
+  - `system/io/reset`과 `system/io/restart`는 장치 미지원 시 `UNSUPPORTED_OPERATION`으로 응답한다.
+  - CPX-AP-I-EC `system/io/param_storage`는 `0x27F1 Stored Parameters NV` 기준으로 구현된다.
   - API specification, validation, handler와 응답 형식이 구현된다.
   - 성공, 지원하지 않는 device, 실행 중 충돌과 복구 실패 경로가 자동 테스트된다.
   - 지원 장치의 virtual 또는 실장치 smoke test와 API 문서가 제공된다.

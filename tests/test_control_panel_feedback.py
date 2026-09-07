@@ -335,6 +335,63 @@ class ServerHealthFeedbackTest(unittest.TestCase):
 
 
 class IoSimulationFeedbackTest(unittest.TestCase):
+    def test_io_panel_param_storage_sends_selected_io_command(self):
+        class Client:
+            def __init__(self):
+                self.requests = []
+
+            def request(self, message, expected_type=None):
+                self.requests.append((message, expected_type))
+                return {
+                    "type": "system/io/param_storage",
+                    "ok": True,
+                    "result": {
+                        "object": "0x27F1:01",
+                        "mode": 0,
+                        "storage": "volatile",
+                    },
+                }
+
+        class Var:
+            def __init__(self, value=""):
+                self.value = value
+
+            def get(self):
+                return self.value
+
+            def set(self, value):
+                self.value = value
+
+        client = Client()
+        panel = object.__new__(IOControlPanel)
+        panel.client = client
+        panel.device_var = Var("io0")
+        panel.param_result_var = Var()
+        panel.current_authority = lambda: {"owned_by_this_client": True}
+
+        panel.set_parameter_storage("volatile")
+
+        self.assertEqual(
+            client.requests,
+            [(
+                {"cmd": "system/io/param_storage", "io": "io0", "mode": "volatile"},
+                "system/io/param_storage",
+            )],
+        )
+        self.assertIn("0x27F1:01=0", panel.param_result_var.get())
+        self.assertIn("volatile", panel.param_result_var.get())
+
+    def test_io_panel_param_storage_response_is_tracked_by_client(self):
+        client = MotionServerClient("127.0.0.1", 15000)
+        client._store_message({
+            "type": "system/io/param_storage",
+            "ok": True,
+            "io": "io0",
+            "result": {"object": "0x27F1:01", "mode": 1},
+        })
+
+        self.assertEqual(client.responses[0]["type"], "system/io/param_storage")
+
     def test_iol_catalog_entries_accept_top_level_devices_payload(self):
         panel = object.__new__(IOControlPanel)
         response = {

@@ -146,7 +146,7 @@ class DegradedApiContractTest(unittest.TestCase):
         self.assertEqual(authority["result"], "success")
         self.assertEqual(reconnect["result"], "success")
 
-    def test_device_api_and_bus_rescan_are_not_available(self):
+    def test_device_api_is_not_available_and_bus_rescan_is_unknown(self):
         session = failed_session(InitializationCause.BUS_CONNECTION_FAILED)
         state = initial_degraded_state(session)
 
@@ -154,11 +154,11 @@ class DegradedApiContractTest(unittest.TestCase):
         rescan = self.route(state, {"cmd": "system/bus/rescan"})
 
         self.assertEqual(axis["failure"]["code"], "SERVER_NOT_READY")
-        self.assertEqual(rescan["failure"]["code"], "SERVER_NOT_READY")
+        self.assertEqual(rescan["failure"]["code"], "UNKNOWN_COMMAND")
 
         state["command_authority_owner"] = 1
         rescan = self.route(state, {"cmd": "system/bus/rescan"})
-        self.assertEqual(rescan["failure"]["code"], "SERVER_NOT_READY")
+        self.assertEqual(rescan["failure"]["code"], "UNKNOWN_COMMAND")
 
     def test_recovery_narrower_than_failure_scope_is_invalid_state(self):
         session = failed_session(InitializationCause.CONFIGURATION_INVALID)

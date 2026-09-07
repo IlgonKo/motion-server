@@ -56,7 +56,6 @@ class MotionServerClient:
             try:
                 self._connect()
                 self.send_json({"cmd": "system/io/status"})
-                self.send_json({"cmd": "system/simulation/io/input_read"})
                 self._read_loop()
             except Exception as exc:
                 with self.lock:
@@ -119,6 +118,7 @@ class MotionServerClient:
                 "system/io/output_write",
                 "system/io/param_read",
                 "system/io/param_write",
+                "system/io/param_storage",
                 "system/io/ap/param_read",
                 "system/io/ap/param_write",
                 "system/io/ethercat/param_catalog",
