@@ -689,14 +689,21 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-034 Linear/Rotary Velocity Command 허용 범위 정리
 
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 보통
 - 요약: RF-018의 다축 velocity control을 위해 기존 `system/axis/move_vel`과 `system/axes/move_vel`의 linear/rotary 허용 범위를 정리한다.
 - 후속 작업: `RF-018`
+- 진행 상황:
+  - `pv_allowed`를 known linear/rotary axis의 velocity mode 사용 가능 조건으로 정리했다.
+  - 서버 `move_vel` 경로에서 rotary 전용 gate를 제거했다.
+  - target velocity가 axis별 motion limit을 초과하면 `LIMIT_VIOLATION`으로 거부하도록 했다.
+  - Axis Control Panel의 PV/velocity 관련 표시도 linear/rotary 모두 허용하는 계약과 맞췄다.
+  - Linear + rotary 혼합 다축 velocity command와 velocity limit 회귀 테스트를 추가했다.
 - 완료 조건:
   - 기존 command authority, enabled state, fault state, motion limit, software limit와 timeout safety 계약을 유지한다.
-  - 현재 linear axis에서 velocity command가 제한되는 원인과 의도를 확인한다.
-  - linear axis와 rotary axis 모두에서 `move_vel`을 허용하도록 필요한 제한을 제거하거나 명시 조건으로 전환한다.
+  - 현재 `pv_allowed`가 Profile Velocity mode 선택 가능 여부와 API velocity command 허용 여부를 섞고 있는 지점을 정리한다.
+  - linear axis와 rotary axis 모두에서 `move_vel`을 허용하도록 필요한 제한을 제거하거나 velocity command 전용 조건으로 전환한다.
   - linear는 mm/s, rotary는 deg/s 기준의 unit conversion과 axis별 velocity limit가 검증된다.
   - `system/axes/move_vel`이 X/Y/Z/Rotation 동시 수동 velocity command에 사용할 수 있음을 자동 테스트로 확인한다.
+  - Axis Control Panel의 PV/velocity 관련 표시가 서버 계약과 일치한다.
 - 상세: [TD-034 기술 명세](tasks/td/TD-034-linear-rotary-velocity-command.md)

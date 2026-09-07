@@ -314,7 +314,7 @@ class AxisServerControlPanel(
             self.multi_motion_mode_vars[axis_index].set(self.latest_motion_modes[axis_index])
             messagebox.showinfo(
                 "PV Not Available",
-                "PV mode is available only for rad, degree, or revolution axes.",
+                "PV mode requires a known linear or rotary axis unit.",
             )
             return
         if mode == "csp" and self.server_mode != "advanced":

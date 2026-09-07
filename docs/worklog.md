@@ -4,6 +4,21 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-09-07
+
+### TD-034 Linear/Rotary Velocity Command 구현
+
+- RF-018 gamepad reference client 선행 조건으로 `system/axis/move_vel`과 `system/axes/move_vel`을
+  linear/rotary axis 모두에서 사용할 수 있도록 정리했다.
+- `pv_allowed`를 rotary 전용 조건이 아니라 known linear/rotary axis의 velocity mode 사용 가능
+  조건으로 변경했다.
+- 서버 `move_vel` 경로에서 rotary 전용 gate를 제거하고, target velocity가 axis별 motion limit을
+  초과하면 `LIMIT_VIOLATION`으로 거부하도록 했다.
+- Axis Control Panel의 PV/velocity 관련 표시와 안내 문구를 서버 계약에 맞게 정리했다.
+- API 문서에 linear `mm/s`, rotary `deg/s` 단위와 mixed-axis velocity command 계약을 추가했다.
+- Linear + rotary 혼합 velocity command, velocity limit 초과, metadata 회귀 테스트를 추가했고 전체
+  unittest 418개가 통과했다.
+
 ## 2026-09-04
 
 ### Axis Control Panel profile setting 즉시 갱신 수정

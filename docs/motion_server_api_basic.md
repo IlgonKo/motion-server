@@ -302,6 +302,10 @@ Examples:
 {"cmd": "system/axis/move_vel", "axis": 0, "velocity": 30.0}
 ```
 
+`velocity` 단위는 축 설정에 따라 결정된다. Linear axis는 `mm/s`, rotary axis는 `deg/s`를 사용한다.
+`move_vel`은 linear/rotary 모두에서 사용할 수 있으며, command authority, axis enabled/fault 상태,
+motion limit, software limit와 timeout safety 계약을 따른다.
+
 Jog:
 
 ```json
@@ -435,6 +439,9 @@ Examples:
   "velocities": [30.0, -20.0]
 }
 ```
+
+각 `velocities` 값의 단위는 해당 axis metadata를 따른다. Linear axis는 `mm/s`, rotary axis는
+`deg/s`이며, linear/rotary가 섞인 다축 velocity command도 하나의 요청으로 사용할 수 있다.
 
 Trajectory 명령은 Advanced mode 전용이다.
 

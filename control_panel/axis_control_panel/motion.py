@@ -165,7 +165,7 @@ class MotionMixin:
         if mode == "pv" and not self.axis_pv_allowed(axis_index):
             messagebox.showinfo(
                 "PV Not Available",
-                "PV mode is available only for rad, degree, or revolution axes.",
+                "PV mode requires a known linear or rotary axis unit.",
             )
             self.motion_mode_var.set(self.latest_motion_modes[axis_index])
             return

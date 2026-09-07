@@ -144,7 +144,7 @@ class AxisUnitConverter:
 
     @staticmethod
     def pv_allowed(unit):
-        return unit is not None and int(unit) in PV_USER_POSITION_UNITS
+        return AxisUnitConverter.motion_kind(unit) in ("linear", "rotary")
 
     @staticmethod
     def scale_from_exponent(exponent):

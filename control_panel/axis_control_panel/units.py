@@ -84,8 +84,7 @@ def build_axis_metadata(axis_index, user_position_unit, exponents):
         "user_position_unit": user_position_unit,
         "user_position_unit_name": user_unit_name,
         "motion_kind": axis_motion_kind(user_position_unit),
-        "pv_allowed": user_position_unit is not None
-        and int(user_position_unit) in PV_USER_POSITION_UNITS,
+        "pv_allowed": axis_motion_kind(user_position_unit) in ("linear", "rotary"),
         "converting_unit_exponents": exponents,
         "position_unit": position_unit,
         "velocity_unit": f"{position_unit}/s",

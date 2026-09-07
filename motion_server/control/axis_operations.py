@@ -82,8 +82,7 @@ def pv_reject_message(state, axis_indices):
                 f"unit={state['axis_devices'].user_position_unit_name(user_position_unit)}"
             )
     return (
-        "PV mode is allowed only for rotary user position units "
-        "(rad, degree, or revolution). "
+        "PV mode requires a known linear or rotary user position unit. "
         + "; ".join(details)
     )
 

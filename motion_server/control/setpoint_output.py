@@ -8,11 +8,10 @@ from motion_server.control.axis_operations import (
     hold_axis_at_actual_position,
     hold_faulted_axes,
     reject_if_any_axis_disabled,
-    reject_if_pv_not_allowed,
     update_motion_mode_summary,
 )
 from motion_server.api import require_int32
-from motion_server.failure import InvalidStateException
+from motion_server.failure import InvalidStateException, LimitViolationException
 
 
 def command_profile_positions(runtime, target_positions, axis_indices):
@@ -53,11 +52,12 @@ def command_profile_velocities(
     if reject_if_any_axis_disabled(runtime, axis_indices, client, command):
         return
 
-    if reject_if_pv_not_allowed(state, axis_indices, client, command):
-        return
+    for axis_index in axis_indices:
+        require_pdo_fields_for_mode(runtime, "pv", axis_index)
+
+    reject_if_velocity_limits_exceeded(runtime, state, axis_indices, velocities)
 
     for axis_index, velocity in zip(axis_indices, velocities):
-        require_pdo_fields_for_mode(runtime, "pv", axis_index)
         slave = runtime.slaves[axis_index]
         target_velocity = require_int32(
             velocity,
@@ -76,6 +76,25 @@ def command_profile_velocities(
 
     update_motion_mode_summary(state)
     exchange(runtime, cycles=2)
+
+
+def reject_if_velocity_limits_exceeded(runtime, state, axis_indices, velocities):
+    for axis_index, velocity in zip(axis_indices, velocities):
+        limit = float(runtime.motion_limits[axis_index].max_velocity)
+        drive_limit = abs(
+            state["axis_devices"].motion_api_to_drive(
+                axis_index,
+                limit,
+                "velocity",
+            )
+        )
+        if abs(float(velocity)) > drive_limit + 1e-9:
+            raise LimitViolationException(
+                f"axis {axis_index} target_velocity",
+                velocity,
+                minimum=-drive_limit,
+                maximum=drive_limit,
+            )
 
 
 def pp_setpoint_handshake(runtime, axis_indices):

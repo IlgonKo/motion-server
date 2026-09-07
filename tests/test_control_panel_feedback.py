@@ -12,6 +12,7 @@ from control_panel.axis_control_panel.panel_update_data import (
     initial_feedback,
     merge_axis_status,
 )
+from control_panel.axis_control_panel.units import build_axis_metadata
 from control_panel.server_health import (
     format_server_health,
     normalize_server_health,
@@ -35,6 +36,13 @@ class _PanelVar:
 
 
 class AxisMotionSettingsTest(unittest.TestCase):
+    def test_panel_linear_axis_metadata_allows_velocity_mode(self):
+        metadata = build_axis_metadata(0, 0x0100, [6, 3, 3, 3])
+
+        self.assertEqual(metadata["motion_kind"], "linear")
+        self.assertTrue(metadata["pv_allowed"])
+        self.assertEqual(metadata["velocity_unit"], "mm/s")
+
     def test_profile_settings_clear_dirty_before_refresh_request(self):
         events = []
 
