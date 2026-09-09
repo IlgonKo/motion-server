@@ -65,8 +65,25 @@ Motion Server 버전에 따라 고정되는 내용을 AI가 읽기 쉬우면서�
 - 시퀀스 생성 시 지켜야 할 안전 및 오류 처리 규칙
 - 공식 Python client와 API block 직접 조합 방법 및 올바른/잘못된 패턴
 
-설명 문서와 기계 판독 계약이 서로 다른 사실을 갖지 않도록 가능한 한 코드의 API specification 및
-schema를 단일 원본으로 사용한다. 구체적인 파일 형식과 생성 방법은 구현 전에 확정한다.
+설명 문서와 기계 판독 계약이 서로 다른 사실을 갖지 않도록 API 계약은 별도의 표준 JSON Schema
+파일을 단일 원본으로 관리한다. Schema는 namespace별 파일로 분리하며, 서버의 API specification은
+이 Schema를 읽어서 구성한다.
+
+```text
+axis/param_read      → axis.json
+io/iol/param_read    → io.json
+system/...           → system.json
+bus/...              → bus.json
+```
+
+표준 JSON Schema 키워드로 request/response의 구조, 필수 필드와 데이터 타입을 정의한다. 표준 Schema가
+표현하지 못하는 Motion Server 고유 의미는 `x-motion-server` 확장에 둔다. 여기에는 command authority,
+실행 전제조건, 단위, 사용할 Feedback과 시퀀스의 다음 단계 전환 조건 등을 기록한다.
+
+이 Schema는 Motion Server에 동작 완료 판단 기능을 추가하기 위한 설계가 아니다. Motion Server는 API로
+받은 명령을 장치에 전달하고 장치 Feedback을 client에 전달하는 현재 책임을 유지한다. 실제 장치와
+Virtual Device가 위치, 속도와 Statusword를 만들고, 생성된 Python/Node-RED 시퀀스가 Schema의 의미를
+바탕으로 Feedback을 해석하여 다음 단계 진행 여부와 전체 시퀀스 완료를 판단한다.
 
 ### Runtime 시스템 정보
 
@@ -87,7 +104,10 @@ Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구�
 ## AI 시퀀스 생성 규칙
 
 - 동시에 움직여야 하는 축은 가능한 경우 기존 다축 API를 사용한다.
-- command 응답과 실제 동작 완료를 구분하고, 실제 완료는 Feedback으로 판정한다.
+- API 요청의 Success와 시퀀스의 다음 단계 전환 조건을 구분한다. Success는 요청이 정상 처리되었다는
+  의미이며 물리 동작 완료를 뜻하지 않는다.
+- 생성된 시퀀스는 Schema에 선언된 장치 Feedback 조건을 평가한 뒤 다음 단계로 진행한다. 이 판단을
+  Motion Server core에 추가하지 않는다.
 - 입력 대기와 동작 완료 대기에는 유한한 timeout을 둔다.
 - Fault, command authority 상실 또는 연결 단절 시 후속 단계로 진행하지 않는다.
 - 연결이 복구되어도 이전 motion command를 자동 재전송하지 않는다.
@@ -95,6 +115,67 @@ Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구�
 - 종료, 사용자 중단과 예외 발생 모두에서 `finally` 안전 정리를 수행한다.
 - AI는 Expert Mode나 safety bypass를 자동으로 활성화하지 않는다.
 - 안전 제한의 최종 집행은 AI 코드가 아니라 기존 Motion Server가 담당한다.
+
+## API 응답과 시퀀스 전환 조건
+
+`x-motion-server.sequence-transition`은 서버가 실행할 로직이 아니라 AI가 Python/Node-RED 시퀀스를
+생성할 때 사용할 기계 판독 설명이다. Feedback 조건의 기본 허용치는 Schema에 정의하고 사용자가
+프롬프트에서 필요한 경우에만 덮어쓴다.
+
+- `position-tolerance` 기본값: `0.5`, 단위는 해당 Axis의 position API 단위(`mm` 또는 `deg`)
+- `velocity-tolerance` 기본값: `1.0`, 단위는 해당 Axis의 velocity API 단위(`mm/s` 또는 `deg/s`)
+- 적용 우선순위: 사용자 지정값 → Schema 기본값
+
+명령별 기본 전환 조건은 다음과 같다.
+
+| 명령 | 시퀀스의 다음 단계 전환 조건 |
+| --- | --- |
+| `move_abs` | 실제 위치가 목표 위치 허용 범위 안이고, Statusword `Target reached`와 `Standstill`을 모두 만족 |
+| `move_rel` | 실제 위치가 계산된 최종 목표 위치 허용 범위 안이고, Statusword `Target reached`와 `Standstill`을 모두 만족 |
+| `move_vel` | 요청 속도가 0이 아니면 실제 속도가 요청 속도 허용 범위 안이고, Statusword `Target reached`와 `Moving`을 모두 만족 |
+| `move_vel`의 속도 0인 Axis | `Standstill` 만족 |
+| `jog_start` | 장치가 Jog 목표 속도 도달 상태와 Statusword `Moving`을 보고 |
+| `stop`, `jog_stop` | `Standstill` 만족 |
+| `enable` | Statusword가 `Operation enabled` 상태 |
+| `disable` | Statusword가 `Operation enabled` 상태가 아님 |
+| `fault_reset` | 별도 Feedback 조건 없이 API 요청 Success로 해당 block 완료 |
+| `home` | Homing 완료와 `Referenced` 상태를 모두 만족 |
+| I/O write | 별도 Feedback 조건 없이 API 요청 Success로 해당 block 완료 |
+
+`fault_reset`은 Fault 원인을 제거하거나 복구 완료를 보장하는 명령이 아니라 Fault Reset 신호를 장치에
+전달하는 write 성격의 명령이다. Fault 조건이 남아 있으면 Fault bit가 해제되지 않을 수 있으므로 이를
+기본 전환 조건으로 기다리지 않는다. 복구 상태 확인이 필요한 시퀀스는 별도의 명시적인 Feedback 대기
+단계를 둔다.
+
+다축 명령은 선택된 각 Axis에 위 조건을 개별 적용하고 모든 대상 Axis가 각자의 조건을 만족해야 다음
+단계로 진행한다. 다축 `move_vel`에서 요청 속도가 0인 Axis에는 `Moving`을 요구하지 않고 `Standstill`을
+적용한다.
+
+예시 표현은 다음과 같다.
+
+```yaml
+x-motion-server:
+  sequence-transition:
+    feedback: system/feedback
+    target: selected-axis
+    defaults:
+      position-tolerance: 0.5
+      velocity-tolerance: 1.0
+    condition:
+      all-of:
+        - type: position-near-target
+          actual: actual_positions[axis]
+          target: target_positions[axis]
+          tolerance: position-tolerance
+        - type: statusword-bit
+          source: statuswords[axis]
+          bit: 10
+          value: true
+          meaning: target-reached
+        - type: standstill
+          actual-velocity: actual_velocities[axis]
+          tolerance: velocity-tolerance
+```
 
 ## Python 우선 전략
 
@@ -206,7 +287,7 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
 ## 미결정 사항
 
 - 기존 Python client에 추가할 Feedback 대기, timeout과 cancellation의 최소 범위
-- 정적 AI 지식 패키지의 파일 구조와 schema 단일 원본
+- namespace별 JSON Schema의 실제 디렉터리 구조와 서버 specification loader 구현 방식
 - 현재 시스템 model/capability를 기존 API로 조합할지 별도 snapshot API로 제공할지
 - 사용자 Stop 입력 방식과 생성 프로그램의 실행/상태 표시 방법
 - 예제 프롬프트의 대표 산업 시나리오와 난이도 단계

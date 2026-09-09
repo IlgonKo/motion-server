@@ -6,6 +6,19 @@
 
 ## 2026-09-09
 
+### RF-019 API Schema와 외부 시퀀스 전환 계약 확정
+
+- namespace별 표준 JSON Schema를 API 계약의 단일 원본으로 사용하고 서버 specification이 이를 읽는
+  방향을 확정했다. Motion Server 고유 의미는 `x-motion-server` 확장으로 표현한다.
+- API Success와 Feedback 기반 시퀀스 단계 전환을 분리했다. Motion Server는 명령 전달과 Feedback
+  중계 역할을 유지하며 범용 모션 완료 판정이나 operation tracker를 추가하지 않는다.
+- `move_abs`/`move_rel`, `move_vel`, jog/stop, enable/disable, home의 기본 Feedback 전환 조건을 정하고,
+  `fault_reset`과 I/O write는 API Success로 block이 완료되는 write 성격으로 분류했다.
+- position tolerance `0.5`, velocity tolerance `1.0`을 Axis API 단위 기반 Schema 기본값으로 두고,
+  사용자 프롬프트 지정값이 우선하도록 했다.
+- 다축 명령은 모든 선택 Axis에 조건을 적용하며, `move_vel` 속도 0인 Axis는 Moving 대신 Standstill을
+  요구하도록 정했다.
+
 ### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼 등록
 
 - 사용자가 예제 프롬프트를 수정하여 Motion/I/O 요구사항을 자연어로 정의하고, AI가 Motion Server

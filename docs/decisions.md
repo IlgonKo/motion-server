@@ -1019,6 +1019,38 @@ Device Profile + ESI
 - 영향: [RF-003](tasks/rf/RF-003-bus-io-management.md)은 I/O reset/restart/param_storage 구현으로
   재정의한다. CPX reset/restart 미지원 경로와 CPX `0x27F1` parameter storage 경로를 테스트한다.
 
+## DEC-042 API Schema는 서버 계약과 외부 시퀀스 전환 의미의 단일 원본으로 사용
+
+- 상태: `accepted`
+- 결정일: 2026-09-09
+- 결정:
+  - API 계약은 namespace별 표준 JSON Schema 파일을 단일 원본으로 관리하고 서버 specification은 이를
+    읽어서 구성한다. Motion Server 고유 의미는 `x-motion-server` 확장에 기록한다.
+  - API 요청 Success는 요청이 정상 처리되었다는 의미이며 물리 동작 완료를 뜻하지 않는다.
+  - Motion Server는 명령을 장치에 전달하고 Feedback을 중계하는 현재 책임을 유지한다. 범용 operation
+    tracker나 모션 완료 판정 기능을 서버에 추가하지 않는다.
+  - 생성된 Python/Node-RED 시퀀스가 Schema에 선언된 Feedback 조건을 평가하여 다음 단계 진행과 전체
+    시퀀스 완료를 판단한다.
+  - 위치/속도 허용치 기본값은 Schema에 두고 사용자 프롬프트 지정값이 이를 덮어쓴다. 초기 기본값은
+    position `0.5`와 velocity `1.0`이며 해당 Axis의 API 단위를 따른다.
+  - `move_abs`/`move_rel`은 위치 근접, Target reached와 Standstill을 모두 요구한다. 0이 아닌
+    `move_vel`은 속도 근접, Target reached와 Moving을 요구하고 속도 0인 Axis는 Standstill을 요구한다.
+    `jog_start`는 목표 속도 도달과 Moving, stop 계열은 Standstill을 사용한다.
+  - `fault_reset`은 Fault 조건 제거를 보장하지 않는 write 성격의 명령이므로 I/O write와 같이 API
+    Success로 block을 완료한다. 필요한 복구 확인은 별도의 명시적인 Feedback 대기 단계로 구성한다.
+  - 다축 명령은 선택된 모든 Axis가 각 Axis에 해당하는 조건을 만족해야 다음 단계로 진행한다.
+- 이유: AI가 API 응답을 물리 동작 완료로 오해하거나 client마다 임의의 완료 조건을 만들지 않게 하면서도,
+  Motion Server core의 기존 명령 전달 및 Feedback 중계 책임을 확장하지 않기 위해서다.
+- 검토한 대안:
+  - Motion Server에 범용 operation ID와 완료 tracker를 추가하는 방식은 서버 책임을 시퀀스 실행까지
+    확장하므로 채택하지 않는다.
+  - Python helper가 Motion Server API를 다시 wrapping하는 방식은 API와 sequence block이 중복되므로
+    채택하지 않는다.
+  - 각 생성 시퀀스가 허용치를 임의로 정하는 방식은 생성 결과 간 동작이 달라지므로 채택하지 않는다.
+- 영향: [RF-019](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)에서 Schema 구조와 명령별 외부
+  시퀀스 전환 조건을 구체화한다. 이 결정 자체로 Motion Server runtime 동작이나 API 응답을 변경하지
+  않는다.
+
 ## 새 결정 작성 양식
 
 ```text

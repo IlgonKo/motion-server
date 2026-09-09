@@ -286,12 +286,18 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
     수 있는 대표 예제 프롬프트를 제공한다.
   - AI가 Motion Server의 개념, API 의미, 전제조건, 단위, 완료 판정, Failure와 복구 규칙을 추측 없이
     이해할 수 있는 정적 지식 패키지를 제공한다.
+  - namespace별 표준 JSON Schema를 API 계약의 단일 원본으로 사용하고 서버 specification이 이를
+    읽도록 한다. Motion Server 고유 의미는 `x-motion-server` 확장으로 표현한다.
+  - API Success와 외부 시퀀스의 Feedback 기반 다음 단계 전환 조건을 분리하며, Motion Server core에는
+    범용 동작 완료 판정이나 operation tracker를 추가하지 않는다.
+  - 위치/속도 기본 허용치는 Schema에 정의하고 사용자 지정값이 이를 덮어쓴다. 명령별 전환 조건과
+    다축/속도 0 예외가 기계 판독 가능하게 정의된다.
   - 현재 Axis/I/O 구성, 단위, limit와 지원 기능을 AI가 확인할 수 있는 runtime 정보 경계를 확정한다.
   - Motion Server API를 시퀀스 구성 block의 단일 계약으로 유지하고 AI 생성 코드는 기존 Python
     client로 API block을 직접 조합한다. Motion/I/O 명령을 중복 포장하는 helper는 만들지 않는다.
   - 기존 Python client에는 예제에서 반복이 확인된 Feedback 조건 대기, timeout과 cancellation 같은
     비도메인 실행 기능만 보완한다.
-  - 생성 코드는 preflight, command authority, timeout, feedback 기반 완료 판정, Stop/Fault 처리와
+  - 생성 코드는 preflight, command authority, timeout, feedback 기반 단계 전환, Stop/Fault 처리와
     `finally` 안전 정리 구조를 따른다.
   - 대표 단일축/다축, I/O handshake와 Motion/I/O 복합 시퀀스를 Mock 환경에서 자동 검증한다.
   - Node-RED flow 생성은 Python 시퀀스 패턴이 안정화된 이후의 후속 출력 형식으로 둔다.
