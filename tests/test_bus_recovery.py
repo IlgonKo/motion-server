@@ -174,7 +174,7 @@ class BusRecoveryTest(unittest.TestCase):
         runtime.ethercat_master = SimpleNamespace(
             reset_virtual_io_inputs=reset_inputs,
         )
-        state["simulation_api_enabled"] = True
+        state["backend_is_mock"] = True
 
         with (
             patch("motion_server.app.recovery.clear_axis_restart_commands"),

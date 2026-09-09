@@ -795,8 +795,10 @@ Device Profile + ESI
 - 상태: `accepted`
 - 결정일: 2026-08-27
 - 결정:
-  - `system/simulation/io/input_write`, `input_read`, `input_reset`의 별도 namespace를 사용한다.
-  - API는 `MOTION_SERVER_SIMULATION_API_ENABLED=1`이고 backend가 `mock`일 때만 사용할 수 있다.
+  - `system/simulation/io/input_write`, `input_reset`의 별도 namespace를 사용한다.
+  - 입력 상태 읽기는 실장치와 가상장치 모두 일반 `system/io/input_read`를 사용한다.
+    `system/simulation/io/input_read`는 일반 input read와 중복되므로 공개 API에서 제거한다.
+  - API는 backend가 `mock`일 때만 사용할 수 있다.
   - DI는 JSON boolean, AI는 PDO raw integer, IO-Link는 module 전체 input process-data raw payload로
     설정한다. IO-Link port별 분할은 초기 범위에서 제외한다.
   - Simulation input은 외부 환경 자극이므로 Motion Server command authority를 요구하지 않는다.
@@ -804,8 +806,13 @@ Device Profile + ESI
   - 입력은 cycle 사이에 유지하고 명시적 reset까지 보존한다. virtual device가 bus reconnect 또는
     server restart로 재생성되면 기본값으로 초기화한다.
   - reset은 I/O id를 필수로 받고 optional slot으로 station 전체 또는 module 하나를 초기화한다.
-  - IO Control Panel은 API 사용 가능 여부를 조회하여 mock simulation에서만 DI checkbox, AI 정수와
-    IO-Link hexadecimal payload 조작 화면을 노출한다.
+  - IO Control Panel은 backend/capability를 미리 조회하지 않고 DI checkbox, AI 정수와 IO-Link
+    hexadecimal payload 조작 화면을 항상 노출한다. 실제 write/reset 요청이 성공하면 반영하고,
+    real backend처럼 미지원 대상이면 서버의 `UNSUPPORTED_OPERATION` 응답을 그대로 표시한다.
+  - Node-RED의 `03 I/O Control`과 `04 Virtual I/O Simulation` flow 분리는 Desktop IO Control Panel의
+    Virtual Input Simulation 화면을 제거하거나 숨기는 결정으로 해석하지 않는다. Desktop IO Control
+    Panel은 Virtual Input Simulation 화면을 항상 노출하며, backend 정보나 simulation availability를
+    일반 status/feedback에 추가하지 않는다.
 - 이유: 일반 운전 API와 virtual environment 입력 조작을 분리하고 실제 EtherCAT 장치에 simulation
   값이 전달될 가능성을 차단하면서 제어 client와 simulator가 동시에 동작할 수 있게 하기 위해서다.
 - 검토한 대안: 일반 I/O output authority 공유는 simulator의 독립 실행을 막고, 별도 simulation

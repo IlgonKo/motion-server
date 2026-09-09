@@ -22,7 +22,7 @@ Device가 없어도 Motion Server의 I/O 제어, feedback과 상위 application 
 - Analog Input 값을 설정한다.
 - IO-Link Input Process Data payload를 설정한다.
 - 설정한 값은 다음 Model_Update cycle부터 `0x7F00` process image와 기존 I/O feedback에 반영한다.
-- 현재 virtual input 상태를 조회하고 기본값으로 초기화한다.
+- 현재 input 상태는 일반 I/O read/status로 조회하고 virtual input은 기본값으로 초기화한다.
 - IO-Link는 module 전체 Input Process Data raw payload를 설정한다. port별 payload API는 후속
   확장으로 둔다.
 - Control Panel의 virtual input 조작 화면과 외부 simulator가 사용할 API 계약을 제공한다.
@@ -34,24 +34,27 @@ Device가 없어도 Motion Server의 I/O 제어, feedback과 상위 application 
   - `digital`: `channel`, JSON boolean `value`
   - `analog`: `channel`, PDO raw integer `value`
   - `io_link`: module 전체 크기의 hexadecimal/list `payload`
-- `system/simulation/io/input_read`
-  - `io` 생략 시 사용 가능한 모든 Virtual CPX station을 반환한다.
-  - `io` 지정 시 해당 station의 현재 internal input state를 반환한다.
 - `system/simulation/io/input_reset`
   - `io` 필수, `slot` 선택
   - slot 지정 시 module 하나, 생략 시 station 전체 입력을 기본값으로 초기화한다.
 - 쓰기와 reset은 command authority를 요구하지 않는다. 여러 client 요청은 server 처리 순서의
   last-write-wins로 직렬화된다.
+- 입력 상태 읽기는 기존 공통 API인 `system/io/input_read`를 사용한다. mock backend에서는
+  Virtual CPX의 현재 input state가, real backend에서는 실제 장치 입력이 반환된다.
+- 기존 `system/simulation/io/input_read`는 일반 `system/io/input_read`와 역할이 중복되므로 제거한다.
 
 ## 안전 및 노출 정책
 
 - virtual/mock backend에서만 사용할 수 있으며 실제 EtherCAT 장치에는 전달하지 않는다.
-- `MOTION_SERVER_SIMULATION_API_ENABLED=1`로 명시적으로 활성화한 경우에만 노출한다.
+- write/reset은 `mock` backend에서만 성공한다. API 지원 여부를 위한 별도 조회 계약은 두지 않는다.
 - 일반 I/O output command authority와 독립적으로 동작하며 별도 simulation authority는 두지 않는다.
 - 잘못된 I/O id, module, channel, port, datatype과 payload 길이는 공통 Failure 계약으로 반환한다.
-- Virtual Device 전용 기능임을 응답과 사용자 화면에서 명확히 표시한다.
+- IO Control Panel의 조작 화면은 항상 표시하고 실제 write/reset 응답으로 지원 여부를 확인한다.
+  backend 종류와 simulation availability를 일반 status/feedback에 노출하지 않는다.
 - 입력값은 cycle 사이와 client disconnect 후에도 유지한다. bus reconnect/server restart로 Virtual
   Device가 재생성되면 기본값으로 초기화한다.
+- Node-RED `03 I/O Control`에서 simulation 요청을 제외한다는 결정은 Desktop IO Control Panel의
+  Virtual Input Simulation 화면을 제거한다는 의미가 아니다.
 
 ## 제외 범위
 
@@ -70,19 +73,22 @@ Device가 없어도 Motion Server의 I/O 제어, feedback과 상위 application 
 
 - DI/AI/IO-Link input을 주입하고 다음 cycle의 기존 status/input feedback에서 같은 값을 확인한다.
 - 여러 I/O station, module, channel과 port 사이의 상태 격리를 검증한다.
-- real backend, 비활성화 상태와 잘못된 target에 대한 거부 경로를 검증한다.
+- real backend와 잘못된 target에 대한 거부 경로를 검증한다.
 - Control Panel과 외부 reference client에서 같은 simulation API 시나리오를 실행한다.
 
 ## 완료 증거
 
-- 세 API를 공통 API specification과 command/status registry에 등록했다. write/reset은
-  `authority_required=False`이고 활성화 flag와 MockMaster를 모두 검증한다.
+- Simulation write/reset API를 공통 API specification과 command registry에 등록했다. write/reset은
+  `authority_required=False`이고 MockMaster를 검증한다.
 - Virtual CPX input snapshot/reset과 MockMaster의 virtual-device 접근을 연결했으며 MockSlave와
   VirtualOdBridge에는 simulation 의미를 추가하지 않았다.
-- IO Control Panel은 연결 시 capability probe를 실행하고 사용 가능할 때만 DI checkbox, AI integer,
-  IO-Link hexadecimal raw payload 및 module/station reset 화면을 표시한다.
+- IO Control Panel은 DI checkbox, AI integer, IO-Link hexadecimal raw payload 및 module/station reset
+  화면을 항상 표시한다. mock에서는 조작이 성공하고 real backend에서는 `UNSUPPORTED_OPERATION`을
+  사용자에게 표시한다.
 - API 예제는 `docs/motion_server_api_basic.md`, 수동 검증 절차는 `docs/test_procedure.md`에 기록했다.
 - DI의 next-cycle 기존 feedback 반영, AI/IO-Link payload, module reset, 다중 station 격리,
-  비활성/real backend/잘못된 target 거부, authority 독립, reconnect reset 및 Control Panel 상태 보존을
+  real backend/잘못된 target 거부, authority 독립, reconnect reset 및 Control Panel 상시 노출을
   자동 테스트했다.
 - 2026-08-27 기준 전체 unittest 319개, source compile과 diff whitespace 검사를 통과했다.
+- 2026-09-09 읽기 API 통합과 Control Panel 상시 노출 변경 후 전체 Python unittest 426개와
+  Node-RED reference client/flow 테스트 7개를 통과했다.

@@ -66,7 +66,7 @@ def reconnect_runtime(runtime, state):
     try:
         runtime.close()
         _connect_until(runtime, started_at + timeout)
-        if state.get("simulation_api_enabled", False):
+        if state.get("backend_is_mock", False):
             reset_virtual_inputs = getattr(
                 runtime.ethercat_master,
                 "reset_virtual_io_inputs",

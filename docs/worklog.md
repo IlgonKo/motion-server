@@ -4,6 +4,24 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-09-09
+
+### RF-014 Desktop IO Control Panel simulation 경계 정리
+
+- `03 I/O Control`과 `04 Virtual I/O Simulation`을 분리한 Node-RED 결정이 Desktop IO Control
+  Panel의 Virtual Input Simulation 화면 제거로 잘못 일반화된 원인을 확인했다.
+- RF-014와 DEC-036에 simulation 읽기는 일반 `system/io/input_read`로 통합하고 Simulation
+  namespace는 input write/reset만 담당한다는 경계를 명시했다.
+- `MOTION_SERVER_SIMULATION_API_ENABLED` 설정을 제거하고 mock backend에서는 Virtual I/O Simulation을
+  기본 사용 가능하게 단순화했다.
+- `system/simulation/io/input_read`는 일반 `system/io/input_read`와 중복되므로 제거했다.
+  Simulation namespace는 virtual input을 주입하거나 초기화하는 write/reset 동작만
+  담당하고, 읽기는 real/mock 공통 input read 경로를 사용한다.
+- IO Control Panel의 Virtual Input Simulation 영역은 backend/capability probe 없이 항상 표시한다.
+  실제 write/reset 시 mock이면 적용하고 real backend이면 서버의 `UNSUPPORTED_OPERATION` 응답을
+  표시한다. 이를 위해 일반 status/feedback에 simulation availability나 backend 정보를 추가하지 않는다.
+- 전체 Python unittest 426개와 Node-RED reference client/flow 테스트 7개를 통과했다.
+
 ## 2026-09-07
 
 ### RF-003 I/O 관리 API 계약 정리
@@ -549,12 +567,12 @@
 
 ### 완료
 
-- `RF-014`에서 `system/simulation/io/input_read`, `input_write`, `input_reset` API와
-  `MOTION_SERVER_SIMULATION_API_ENABLED` 설정을 추가했다. API는 mock backend에서 명시적으로
-  활성화한 경우에만 동작하고 command authority와 독립적으로 DI boolean, AI raw integer와
+- `RF-014`에서 최초 구현 시 `system/simulation/io/input_read`, `input_write`, `input_reset` API를
+  추가했다. 현재 계약에서는 read를 일반 `system/io/input_read`로 통합하고 simulation write/reset만
+  mock backend에서 동작한다. command authority와 독립적으로 DI boolean, AI raw integer와
   IO-Link module raw input payload를 RF-001 Virtual CPX input state에 주입한다. 값은 다음 PDO
   cycle부터 기존 feedback에 반영되며 module/station reset과 bus reconnect/server restart에서
-  초기화된다. IO Control Panel은 capability probe 성공 시에만 Simulation UI를 표시한다. 다중
+  초기화된다. IO Control Panel은 mock backend에서 Simulation UI를 표시한다. 다중
   station 격리, 정책/target 거부와 panel 상태 보존을 포함해 전체 unittest 319개를 통과했다.
 - `RF-001`에서 station ESI와 설정된 AP module ESI를 기반으로 `VirtualCpxOdModel`, metadata 기반
   `VirtualApModule`과 `VirtualCpxApDevice`를 구현했다. 설정 크기에 맞는 고정

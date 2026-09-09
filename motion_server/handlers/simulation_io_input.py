@@ -52,11 +52,6 @@ def write_input(message, runtime, state, client):
     return simulation_snapshot(runtime, state, io_id=io_id)
 
 
-def read_inputs(message, runtime, state, client):
-    io_id = optional_io_id(message)
-    return simulation_snapshot(runtime, state, io_id=io_id)
-
-
 def reset_inputs(message, runtime, state, client):
     io_id = required_io_id(message)
     slot = request_int(message, "slot", required=False)
@@ -72,8 +67,6 @@ def simulation_snapshot(runtime, state, *, io_id=None):
     if io_id is not None:
         devices = [selected_device_record(devices, io_id)]
     return {
-        "available": True,
-        "backend": "mock",
         "devices": [
             {
                 "id": record["id"],
@@ -109,11 +102,6 @@ def virtual_cpx_devices(runtime, state):
 
 
 def require_simulation_available(runtime, state):
-    if not state.get("simulation_api_enabled", False):
-        raise UnsupportedOperationException(
-            "virtual_io_simulation",
-            "simulation_api_disabled",
-        )
     if not state.get("backend_is_mock", False) or not isinstance(
         runtime.ethercat_master,
         MockMaster,

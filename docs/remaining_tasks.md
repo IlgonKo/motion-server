@@ -199,9 +199,9 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 - 우선순위: 보통
 - 요약: Control Panel과 외부 simulator에서 Virtual CPX의 DI/AI/IO-Link input을 조작하는 별도 API를 제공한다.
 - 완료 조건:
-  - virtual I/O id, module, channel/port 기준 input 설정·조회·초기화 계약이 확정된다.
+  - virtual I/O id, module, channel/port 기준 input 설정·초기화와 공통 I/O input 조회 계약이 확정된다.
   - 주입한 DI/AI/IO-Link input이 다음 Model_Update cycle의 기존 I/O feedback에 반영된다.
-  - virtual backend 및 명시적 활성화 조건이 적용되고 real backend에서는 안전하게 거부된다.
+  - mock backend에서만 사용할 수 있고 real backend에서는 안전하게 거부된다.
   - Control Panel과 외부 reference client 시나리오 및 자동 테스트가 통과한다.
 - 상세: [RF-014 기능 명세](tasks/rf/RF-014-virtual-device-simulation-api.md)
 

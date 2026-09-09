@@ -454,33 +454,19 @@ class IoSimulationFeedbackTest(unittest.TestCase):
         self.assertEqual(panel.simulation_input_slots(simulation, "analog"), ["2"])
         self.assertEqual(panel.simulation_input_slots(simulation, "io_link"), ["3"])
 
-    def test_simulation_capability_survives_periodic_feedback(self):
+    def test_io_status_does_not_trigger_simulation_probe(self):
         client = MotionServerClient("127.0.0.1", 15000)
+        sent = []
+        client.sock = object()
+        client.send_json = sent.append
+
         client._store_message({
-            "type": "system/simulation/io/input_read",
+            "type": "system/io/status",
             "ok": True,
-            "available": True,
             "devices": [{"id": "io0", "modules": []}],
         })
-        client._store_message({
-            "type": "system/feedback",
-            "process_data_valid": True,
-            "io": {"devices": [{"id": "io0"}]},
-            "server_health": {"runtime_state": "normal"},
-        })
 
-        self.assertTrue(client.feedback["simulation"]["available"])
-
-    def test_failed_simulation_probe_marks_feature_unavailable(self):
-        client = MotionServerClient("127.0.0.1", 15000)
-        client._store_message({
-            "type": "system/simulation/io/input_read",
-            "ok": False,
-            "reason": "unsupported_operation",
-            "message": "Simulation API is disabled",
-        })
-
-        self.assertFalse(client.feedback["simulation"]["available"])
+        self.assertEqual(sent, [])
 
 
 if __name__ == "__main__":

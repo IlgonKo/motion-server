@@ -87,7 +87,6 @@ class MotionServerClient:
         with self.lock:
             message_type = message.get("type")
             command_authority = dict(self.feedback.get("command_authority", {}))
-            simulation = dict(self.feedback.get("simulation", {}))
             if message_type == "system/feedback":
                 io_feedback = message.get("io", {})
                 if io_feedback:
@@ -103,8 +102,6 @@ class MotionServerClient:
                         ),
                         "server_health": dict(message.get("server_health", {})),
                     }
-                    if simulation:
-                        self.feedback["simulation"] = simulation
                 else:
                     self.feedback["process_data_valid"] = bool(
                         message.get("process_data_valid", False)
@@ -125,7 +122,6 @@ class MotionServerClient:
                 "system/io/iol/param_catalog",
                 "system/io/iol/param_read",
                 "system/io/iol/param_write",
-                "system/simulation/io/input_read",
                 "system/simulation/io/input_write",
                 "system/simulation/io/input_reset",
                 "system/authority/request",
@@ -135,12 +131,6 @@ class MotionServerClient:
             }:
                 self.responses.append(message)
                 if is_fail_message(message):
-                    if message_type.startswith("system/simulation/io/"):
-                        self.feedback["simulation"] = {
-                            "available": False,
-                            "reason": message.get("reason", "unsupported"),
-                            "message": message.get("message", ""),
-                        }
                     if message.get("reason") in {
                         "authority_required",
                         "authority_busy",
@@ -160,10 +150,6 @@ class MotionServerClient:
                         self.feedback["server_health"] = server_health
                     if process_data_valid is not None:
                         self.feedback["process_data_valid"] = process_data_valid
-                    if simulation:
-                        self.feedback["simulation"] = simulation
-                elif message_type.startswith("system/simulation/io/"):
-                    self.feedback["simulation"] = dict(message)
                 elif message_type in {
                     "system/authority/request",
                     "system/authority/release",

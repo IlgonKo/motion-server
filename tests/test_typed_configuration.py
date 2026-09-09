@@ -112,7 +112,6 @@ class TypedConfigurationTest(unittest.TestCase):
         self.assertEqual(config.logging.pre_logging.length, 12)
         self.assertEqual(config.server.bus_reconnect_timeout, 10.0)
         self.assertEqual(config.server.axis_restart_timeout, 30.0)
-        self.assertFalse(config.server.simulation_api_enabled)
         self.assertFalse(config.server.expert_mode)
         self.assertIsInstance(config.devices[0].device, CmmtDeviceConfig)
         self.assertIsInstance(config.devices[1].device, CpxApIEcDeviceConfig)
@@ -127,15 +126,6 @@ class TypedConfigurationTest(unittest.TestCase):
         )
         with self.assertRaises(FrozenInstanceError):
             config.server.port = 16000
-
-    def test_simulation_api_requires_explicit_configuration(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            config = self.load_typed(
-                temp_dir,
-                "MOTION_SERVER_SIMULATION_API_ENABLED=1\n",
-            )
-
-        self.assertTrue(config.server.simulation_api_enabled)
 
     def test_expert_mode_requires_hidden_explicit_configuration(self):
         with tempfile.TemporaryDirectory() as temp_dir:

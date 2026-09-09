@@ -242,14 +242,14 @@ namespace, feedback 형식, 단위 정책을 변경한 경우에는 이후 ROS B
 
 5. Virtual input simulation 확인 (`mock` 전용)
 
-   - `04 Virtual I/O Simulation` Dashboard에서 Refresh를 눌렀을 때
-     `MOTION_SERVER_SIMULATION_API_ENABLED=1`과 `mock` 조건에서 API가 available로 표시되는지 확인한다.
+   - Desktop IO Control Panel과 `04 Virtual I/O Simulation` Dashboard에 Virtual I/O 조작 화면이
+     별도 capability 조회 없이 항상 표시되는지 확인한다.
+   - Refresh는 공통 `system/io/input_read`로 현재 입력을 읽고 backend 정보를 표시하지 않는지 확인한다.
    - DI checkbox, AI raw integer와 IO-Link hexadecimal payload를 설정한다.
    - 설정 직후 다음 PDO cycle의 기존 I/O feedback에 동일 값이 표시되는지 확인한다.
    - Reset Module은 선택 module만, Reset Station은 해당 station 전체 입력을 초기화하는지 확인한다.
+   - real backend에서 write/reset을 실행하면 화면은 유지되고 `UNSUPPORTED_OPERATION`이 표시되는지 확인한다.
    - command authority를 다른 client가 보유해도 simulation input 변경이 가능한지 확인한다.
-   - API 비활성 또는 `pysoem` backend에서는 Dashboard가 not available을 표시하고 API가 거부되는지
-     확인한다.
 
 6. EtherCAT parameter 확인
 

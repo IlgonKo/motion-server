@@ -158,6 +158,7 @@ class IOControlPanel:
             padding=8,
         )
         self.build_simulation_ui(self.simulation_frame)
+        self.simulation_frame.pack(fill="x", padx=8, pady=(0, 8))
 
         self.parameter_tabs = ttk.Notebook(self.root)
         self.parameter_tabs.pack(fill="x", padx=8, pady=(0, 8))
@@ -694,21 +695,9 @@ class IOControlPanel:
         for device in devices:
             self.add_device(device)
         self.restore_open_tree_paths(open_paths)
-        self.update_simulation_ui(self.status.get("simulation", {}))
+        self.update_simulation_ui({"devices": devices})
 
     def update_simulation_ui(self, simulation):
-        available = bool(simulation.get("available", False))
-        if not available:
-            if self.simulation_frame.winfo_manager():
-                self.simulation_frame.pack_forget()
-            return
-        if not self.simulation_frame.winfo_manager():
-            self.simulation_frame.pack(
-                fill="x",
-                padx=8,
-                pady=(0, 8),
-                before=self.parameter_tabs,
-            )
         device_ids = [
             str(device.get("id", ""))
             for device in simulation.get("devices", [])
@@ -758,7 +747,7 @@ class IOControlPanel:
         else:
             self.simulation_iol_entry.grid()
         if self.status:
-            simulation = self.status.get("simulation", {})
+            simulation = {"devices": self.status.get("devices", [])}
             slots = self.simulation_input_slots(simulation, kind)
             self.simulation_slot_combo["values"] = slots
             if slots and self.simulation_slot_var.get() not in slots:
@@ -930,7 +919,6 @@ class IOControlPanel:
                 message["payload"] = self.simulation_iol_var.get()
             response = self.client.request(message)
             self.require_successful_response(response)
-            self.status["simulation"] = response
             self.simulation_result_var.set("Virtual input updated")
             self.update_simulation_ui(response)
         except Exception as exc:
@@ -946,7 +934,6 @@ class IOControlPanel:
                 message["slot"] = int(self.simulation_slot_var.get())
             response = self.client.request(message)
             self.require_successful_response(response)
-            self.status["simulation"] = response
             self.simulation_result_var.set(
                 "Virtual module reset" if module_only else "Virtual station reset"
             )

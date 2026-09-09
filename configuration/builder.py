@@ -102,11 +102,6 @@ def build_motion_server_config(
             "MOTION_SERVER_AXIS_RESTART_TIMEOUT",
             30.0,
         ),
-        simulation_api_enabled=boolean(
-            values,
-            "MOTION_SERVER_SIMULATION_API_ENABLED",
-            False,
-        ),
         expert_mode=boolean(
             values,
             "MOTION_SERVER_EXPERT_MODE",

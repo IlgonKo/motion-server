@@ -38,7 +38,6 @@ from motion_server.app.startup import (
 from motion_server.handlers.command.io_output_write import write_output_target
 from motion_server.handlers.status.io_input_read import input_read_data
 from motion_server.handlers.simulation_io_input import (
-    read_inputs as read_simulation_inputs,
     reset_inputs as reset_simulation_inputs,
     write_input as write_simulation_input,
 )
@@ -396,9 +395,8 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
         self.assertTrue(snapshot["digital_outputs"][0])
 
     @staticmethod
-    def simulation_state(*, enabled=True, mock=True):
+    def simulation_state(*, mock=True):
         return {
-            "simulation_api_enabled": enabled,
             "backend_is_mock": mock,
         }
 
@@ -419,7 +417,9 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
             {},
         )
 
-        self.assertTrue(response["available"])
+        self.assertEqual(response["devices"][0]["id"], "io0")
+        self.assertNotIn("available", response)
+        self.assertNotIn("backend", response)
         before = input_read_data({"io": "io0"}, runtime)
         self.assertFalse(before["modules"][1]["inputs"]["digital"][3])
 
@@ -434,7 +434,7 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
         runtime = self.runtime()
         state = self.simulation_state()
         virtual_device = runtime.ethercat_master.virtual_device(1)
-        write_simulation_input(
+        snapshot = write_simulation_input(
             {
                 "io": "io0",
                 "slot": 2,
@@ -446,7 +446,6 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
             state,
             {},
         )
-        snapshot = read_simulation_inputs({}, runtime, state, {})
         self.assertTrue(
             snapshot["devices"][0]["modules"][0]["inputs"]["digital"][1]
         )
@@ -462,7 +461,7 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
     def test_simulation_analog_and_io_link_payload(self):
         runtime = self.runtime()
         state = self.simulation_state()
-        write_simulation_input(
+        snapshot = write_simulation_input(
             {
                 "io": "io0",
                 "slot": 3,
@@ -475,7 +474,7 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
             {},
         )
         payload = bytes(range(12))
-        write_simulation_input(
+        snapshot = write_simulation_input(
             {
                 "io": "io0",
                 "slot": 4,
@@ -486,12 +485,7 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
             state,
             {},
         )
-        snapshot = read_simulation_inputs(
-            {"io": "io0"},
-            runtime,
-            state,
-            {},
-        )["devices"][0]
+        snapshot = snapshot["devices"][0]
 
         self.assertEqual(snapshot["modules"][1]["inputs"]["analog"][2], -1234)
         self.assertEqual(snapshot["modules"][2]["inputs"]["io_link"], payload.hex())
@@ -506,21 +500,20 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
         )
 
         with self.assertRaises(UnsupportedOperationException):
-            read_simulation_inputs(
-                {},
-                runtime,
-                self.simulation_state(enabled=False),
-                {},
-            )
-        with self.assertRaises(UnsupportedOperationException):
-            read_simulation_inputs(
-                {},
+            write_simulation_input(
+                {
+                    "io": "io0",
+                    "slot": 2,
+                    "kind": "digital",
+                    "channel": 0,
+                    "value": True,
+                },
                 runtime,
                 self.simulation_state(mock=False),
                 {},
             )
         with self.assertRaises(ResourceNotFoundException):
-            read_simulation_inputs(
+            reset_simulation_inputs(
                 {"io": "missing"},
                 runtime,
                 self.simulation_state(),
@@ -556,7 +549,7 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
     def test_simulation_state_is_isolated_between_io_stations(self):
         runtime = self.runtime(io_count=2)
         state = self.simulation_state()
-        write_simulation_input(
+        snapshot = write_simulation_input(
             {
                 "io": "io0",
                 "slot": 2,
@@ -568,13 +561,12 @@ class VirtualCpxRuntimeIntegrationTest(unittest.TestCase):
             state,
             {},
         )
-        devices = {
-            device["id"]: device
-            for device in read_simulation_inputs({}, runtime, state, {})["devices"]
-        }
-
-        self.assertTrue(devices["io0"]["modules"][0]["inputs"]["digital"][0])
-        self.assertFalse(devices["io1"]["modules"][0]["inputs"]["digital"][0])
+        self.assertTrue(
+            snapshot["devices"][0]["modules"][0]["inputs"]["digital"][0]
+        )
+        self.assertFalse(
+            runtime.ethercat_master.virtual_device(2).module(1).digital_inputs[0]
+        )
 
 
 if __name__ == "__main__":

@@ -53,7 +53,6 @@ class ServerConfig:
     axis_restart_disable_settle_time: float
     bus_reconnect_timeout: float
     axis_restart_timeout: float
-    simulation_api_enabled: bool = False
     expert_mode: bool = False
 
 

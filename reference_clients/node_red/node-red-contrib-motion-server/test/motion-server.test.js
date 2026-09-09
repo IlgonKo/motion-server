@@ -423,7 +423,7 @@ describe("node-red-contrib-motion-server", function() {
             (node) => node.id === "build-simulation-request",
         );
         for (const command of [
-            "system/simulation/io/input_read",
+            "system/io/input_read",
             "system/simulation/io/input_write",
             "system/simulation/io/input_reset",
         ]) {

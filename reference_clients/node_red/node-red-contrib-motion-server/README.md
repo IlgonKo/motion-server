@@ -46,7 +46,7 @@ Simulation. It provides device/module status, optional raw process images, Digit
 EC/AP/IO-Link catalog and parameter access. Virtual input changes remain exclusive to flow `04`.
 The Virtual I/O dashboard at `/dashboard/virtual-io` reads the configured Mock CPX stations and modules,
 injects Digital, Analog and IO-Link input process data, and resets a selected module or station. It requires
-the Mock backend and `MOTION_SERVER_SIMULATION_API_ENABLED=1`, but does not require command authority.
+the Mock backend, but does not require command authority.
 The sample sequence at `/dashboard/sequence` demonstrates application composition without adding a dedicated
 sequence node. It connects the existing Request and Feedback nodes with small, visible standard Node-RED
 Function nodes for each command and completion condition. The supplied four-axis motion and I/O values are

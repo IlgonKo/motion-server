@@ -71,7 +71,6 @@ COMMAND_SPECS = {
         status("system/axes/status"),
         status("system/io/status"),
         status("system/io/input_read"),
-        status("system/simulation/io/input_read"),
         status("system/axis/param_read", transport_required=True),
         status("system/axis/param_catalog"),
         status("system/io/param_read", transport_required=True),
