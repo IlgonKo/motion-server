@@ -273,6 +273,30 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - absolute/relative move, homing, sequence, parameter write, safety bypass와 신규 Motion Server gamepad API는 포함하지 않는다.
 - 상세: [RF-018 기능 명세](tasks/rf/RF-018-gamepad-manual-velocity-control.md)
 
+### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
+
+- 상태: `planned`
+- 우선순위: 높음
+- 요약: 사용자가 예제 프롬프트를 수정하여 자연어로 Motion/I/O 요구사항을 정의하면, AI가
+  Motion Server의 정적 지식과 현재 시스템 정보를 바탕으로 검증 가능한 Python 시퀀스를 생성하는
+  개발 경험을 제공한다.
+- 1차 출력 형식: Python
+- 완료 조건:
+  - 사용자가 목적, 장치 역할, 초기 조건, 동작 순서, 완료 조건, timeout과 정지/Fault 정책을 수정할
+    수 있는 대표 예제 프롬프트를 제공한다.
+  - AI가 Motion Server의 개념, API 의미, 전제조건, 단위, 완료 판정, Failure와 복구 규칙을 추측 없이
+    이해할 수 있는 정적 지식 패키지를 제공한다.
+  - 현재 Axis/I/O 구성, 단위, limit와 지원 기능을 AI가 확인할 수 있는 runtime 정보 경계를 확정한다.
+  - Motion Server API를 시퀀스 구성 block의 단일 계약으로 유지하고 AI 생성 코드는 기존 Python
+    client로 API block을 직접 조합한다. Motion/I/O 명령을 중복 포장하는 helper는 만들지 않는다.
+  - 기존 Python client에는 예제에서 반복이 확인된 Feedback 조건 대기, timeout과 cancellation 같은
+    비도메인 실행 기능만 보완한다.
+  - 생성 코드는 preflight, command authority, timeout, feedback 기반 완료 판정, Stop/Fault 처리와
+    `finally` 안전 정리 구조를 따른다.
+  - 대표 단일축/다축, I/O handshake와 Motion/I/O 복합 시퀀스를 Mock 환경에서 자동 검증한다.
+  - Node-RED flow 생성은 Python 시퀀스 패턴이 안정화된 이후의 후속 출력 형식으로 둔다.
+- 상세: [RF-019 기능 명세](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)
+
 ## Tech Debt
 
 ### TD-003 Axis Server 과거 명칭 잔존

@@ -6,6 +6,21 @@
 
 ## 2026-09-09
 
+### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼 등록
+
+- 사용자가 예제 프롬프트를 수정하여 Motion/I/O 요구사항을 자연어로 정의하고, AI가 Motion Server
+  지식과 현재 시스템 구성을 바탕으로 애플리케이션을 생성하는 방향을 RF-019로 등록했다.
+- AI에는 사용자 요구와 별도로 정적 플랫폼 지식과 runtime 시스템 정보를 제공하며, 내부 backend가
+  아니라 현재 사용할 수 있는 기능과 제약을 중심으로 표현하기로 했다.
+- 1차 생성 결과물은 Python으로 확정했다. Motion Server API 자체를 시퀀스 구성 block의 단일 계약으로
+  유지하고 AI 생성 코드는 기존 Python client로 API request를 직접 조합한다.
+- Motion/I/O 명령을 Python 함수로 다시 감싸는 Sequence Helper는 만들지 않는다. 대표 예제를 먼저
+  작성하고 반복이 확인된 Feedback 조건 대기, timeout과 cancellation 같은 비도메인 기능만 기존
+  client 또는 작은 utility로 공통화한다.
+- Feedback 기반 완료 판정, timeout, Stop/Fault 처리와 `try/finally` 안전 정리 구조를 예제의 공통
+  생성 규칙으로 둔다.
+- Node-RED flow 생성은 Python에서 반복되는 시퀀스 패턴이 안정화된 이후의 후속 출력 형식으로 둔다.
+
 ### RF-014 Desktop IO Control Panel simulation 경계 정리
 
 - `03 I/O Control`과 `04 Virtual I/O Simulation`을 분리한 Node-RED 결정이 Desktop IO Control
