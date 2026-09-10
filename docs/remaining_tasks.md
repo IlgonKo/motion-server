@@ -281,12 +281,13 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   Motion Server의 정적 지식과 현재 시스템 정보를 바탕으로 검증 가능한 Python 시퀀스를 생성하는
   개발 경험을 제공한다.
 - 1차 출력 형식: Python
+- 책임 경계: 사용자 설치·commissioning·서버 설정/정상 구동 후, Agent가 설정을 읽어 시퀀스 프로그램을 생성한다.
 - 구현 진행: 설계 확정 / 구현 미착수. 다음 작업 `S01`.
 - 단계 계획:
   - S01 `planned`: Schema·서버·공식 client·예제·테스트·패키지 동시 전환
   - S02 `planned`: AI 안내·설정/시퀀스 가이드·사용자 프롬프트
   - S03 `planned`: Python Pick & Place, 선택적 Teaching, 공통 실행 코드 기반 Tkinter GUI
-  - S04 `planned`: Mock 통합 시험·배포물·문서 정합화
+  - S04 `planned`: Mock 통합 시험·사전 프로젝트 지식 없는 AI 다중 모델 반복 생성 평가·배포물·문서 정합화
 - S01 완료는 공식 client와 패키지까지 포함하며 서버 단독 전환으로 완료 처리하지 않는다.
 - 완료 조건:
   - 사용자가 목적, 장치 역할, 초기 조건, 동작 순서, 완료 조건, timeout과 정지/Fault 정책을 수정할
@@ -309,6 +310,13 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 생성 코드는 preflight, command authority, timeout, feedback 기반 단계 전환, Stop/Fault 처리와
     `finally` 안전 정리 구조를 따른다.
   - 대표 단일축/다축, I/O handshake와 Motion/I/O 복합 시퀀스를 Mock 환경에서 자동 검증한다.
+  - 신규 AI 세션에서 최소 2개 모델 × 4개 시나리오 × 3회 생성·시험하며 제공 자료만으로 요구를
+    구현하는지 확인한다. 추가 설명/수동 수정 여부와 실패 회차를 포함하여 기록한다.
+  - 최소 모델 버전 제한 대신 실제 검증 모델·설정·자료 버전·환경·시나리오별 결과를 안내한다.
+  - S04는 초기화된 환경과 독립 시험으로 평가한다. 문서 개선에 사용하지 않은 변형 시나리오를 포함하고
+    생성 전 합격 항목·예산을 고정한다. 필수 동작 실패는 미관/품질 점수로 상쇄하지 않는다.
+  - 자체 수정은 예산 내 무보조 수행에 포함하되 최초/최종/사람 보조 결과를 분리한다.
+    3/3 관측 성공을 일반 신뢰도 보장으로 표현하지 않으며 전 모델 실패 시나리오는 미완료로 남긴다.
   - Node-RED flow 생성은 Python 시퀀스 패턴이 안정화된 이후의 후속 출력 형식으로 둔다.
 - 상세: [RF-019 기능 명세](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)
 
