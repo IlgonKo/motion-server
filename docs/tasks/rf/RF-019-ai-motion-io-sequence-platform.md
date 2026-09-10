@@ -78,11 +78,12 @@ bus/...              → bus.json
 
 표준 JSON Schema 키워드로 request/response의 구조, 필수 필드와 데이터 타입을 정의한다. 표준 Schema가
 표현하지 못하는 Motion Server 고유 의미는 `x-motion-server` 확장에 둔다. 여기에는 command authority,
-실행 전제조건, 단위, 사용할 Feedback과 시퀀스의 다음 단계 전환 조건 등을 기록한다.
+실행 전제조건, 단위와 Feedback 필드의 의미 등 API 자체의 계약만 기록한다.
+`sequence-transition`, `completion-condition`, 완료 허용치와 단계 timeout은 Schema에 넣지 않는다.
 
 이 Schema는 Motion Server에 동작 완료 판단 기능을 추가하기 위한 설계가 아니다. Motion Server는 API로
 받은 명령을 장치에 전달하고 장치 Feedback을 client에 전달하는 현재 책임을 유지한다. 실제 장치와
-Virtual Device가 위치, 속도와 Statusword를 만들고, 생성된 Python/Node-RED 시퀀스가 Schema의 의미를
+Virtual Device가 위치, 속도와 Statusword를 만들고, 생성된 Python/Node-RED 시퀀스가 시퀀스 작성 가이드를
 바탕으로 Feedback을 해석하여 다음 단계 진행 여부와 전체 시퀀스 완료를 판단한다.
 
 ### Runtime 시스템 정보
@@ -97,16 +98,21 @@ AI가 존재하지 않는 축이나 I/O를 추측하지 않도록 현재 설정�
 - 장치별 지원 기능과 현재 사용 가능 조건
 - 현재 Server/Bus/Axis/I/O/Diagnostic 상태
 
-Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구성에서 사용할 수 있는 기능과 제약을
-중심으로 표현한다. 기존 API를 조합할지 별도의 system model/capability snapshot을 제공할지는 구현
-전에 결정한다.
+AI는 기존 `config.txt`, 관련 `.env`와 여기서 참조하는 장치 정의·카탈로그로 의도한 구성을 파악한다.
+별도의 시스템 구성 snapshot 파일이나 신규 조회 API는 만들지 않는다. X/Y/Z와 센서·출력의 실제 역할은
+사용자 프롬프트에서 지정한다. 실행 중 실제 상태는 기존 API로 확인하고 표시한다.
+
+Homing, Enable, Fault와 limit 등 서버가 검증하는 전제조건은 생성 프로그램에서 중복 검증하거나
+Run 버튼의 인터락으로 구현하지 않는다. API Fail을 받으면 이유를 표시하고 후속 단계를 중단한다.
+기존 절대 이동의 referenced 검증을 그대로 사용하며, 이 RF에서 다른 명령으로 검증 범위를 넓히지 않는다.
+포인트 누락·파일 형식·단위·역할 매핑 등 생성 프로그램 자체 데이터의 검증은 수행한다.
 
 ## AI 시퀀스 생성 규칙
 
 - 동시에 움직여야 하는 축은 가능한 경우 기존 다축 API를 사용한다.
 - API 요청의 Success와 시퀀스의 다음 단계 전환 조건을 구분한다. Success는 요청이 정상 처리되었다는
   의미이며 물리 동작 완료를 뜻하지 않는다.
-- 생성된 시퀀스는 Schema에 선언된 장치 Feedback 조건을 평가한 뒤 다음 단계로 진행한다. 이 판단을
+- 생성된 시퀀스는 작성 가이드의 장치 Feedback 조건을 평가한 뒤 다음 단계로 진행한다. 이 판단을
   Motion Server core에 추가하지 않는다.
 - 입력 대기와 동작 완료 대기에는 유한한 timeout을 둔다.
 - Fault, command authority 상실 또는 연결 단절 시 후속 단계로 진행하지 않는다.
@@ -118,13 +124,12 @@ Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구�
 
 ## API 응답과 시퀀스 전환 조건
 
-`x-motion-server.sequence-transition`은 서버가 실행할 로직이 아니라 AI가 Python/Node-RED 시퀀스를
-생성할 때 사용할 기계 판독 설명이다. Feedback 조건의 기본 허용치는 Schema에 정의하고 사용자가
-프롬프트에서 필요한 경우에만 덮어쓴다.
+완료 조건과 허용치는 AI용 시퀀스 작성 가이드에서 관리한다. 생성 프로그램이 이를 평가한다.
+사용자는 프롬프트에서 허용치를 재정의할 수 있다. API Schema에는 이 조건들을 포함하지 않는다.
 
 - `position-tolerance` 기본값: `0.5`, 단위는 해당 Axis의 position API 단위(`mm` 또는 `deg`)
 - `velocity-tolerance` 기본값: `1.0`, 단위는 해당 Axis의 velocity API 단위(`mm/s` 또는 `deg/s`)
-- 적용 우선순위: 사용자 지정값 → Schema 기본값
+- 적용 우선순위: 사용자 지정값 → 시퀀스 작성 가이드 기본값
 
 명령별 기본 전환 조건은 다음과 같다.
 
@@ -134,7 +139,7 @@ Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구�
 | `move_rel` | 실제 위치가 계산된 최종 목표 위치 허용 범위 안이고, Statusword `Target reached`와 `Standstill`을 모두 만족 |
 | `move_vel` | 요청 속도가 0이 아니면 실제 속도가 요청 속도 허용 범위 안이고, Statusword `Target reached`와 `Moving`을 모두 만족 |
 | `move_vel`의 속도 0인 Axis | `Standstill` 만족 |
-| `jog_start` | 장치가 Jog 목표 속도 도달 상태와 Statusword `Moving`을 보고 |
+| `jog_start` | API Success만 확인. Moving/목표 속도 도달 Feedback 대기 없음 |
 | `stop`, `jog_stop` | `Standstill` 만족 |
 | `enable` | Statusword가 `Operation enabled` 상태 |
 | `disable` | Statusword가 `Operation enabled` 상태가 아님 |
@@ -151,31 +156,75 @@ Runtime 정보는 `mock`/`pysoem` 같은 내부 구현 종류보다 현재 구�
 단계로 진행한다. 다축 `move_vel`에서 요청 속도가 0인 Axis에는 `Moving`을 요구하지 않고 `Standstill`을
 적용한다.
 
-예시 표현은 다음과 같다.
+요청과 응답은 기존 client의 unique `request_id`로 연결한다. 해당 요청의 Success를 확인한 뒤
+Feedback 조건을 기다리며 신규 operation ID는 추가하지 않는다.
+요청 응답 timeout은 client 설정, 단계/외부 입력 timeout은 예제 프롬프트와 시퀀스 설정에서 관리한다.
+Fail, timeout은 후속 단계를 중단하며 응답 timeout은 실행 결과 불명으로 취급하고 자동 재전송하지 않는다.
 
-```yaml
-x-motion-server:
-  sequence-transition:
-    feedback: system/feedback
-    target: selected-axis
-    defaults:
-      position-tolerance: 0.5
-      velocity-tolerance: 1.0
-    condition:
-      all-of:
-        - type: position-near-target
-          actual: actual_positions[axis]
-          target: target_positions[axis]
-          tolerance: position-tolerance
-        - type: statusword-bit
-          source: statuswords[axis]
-          bit: 10
-          value: true
-          meaning: target-reached
-        - type: standstill
-          actual-velocity: actual_velocities[axis]
-          tolerance: velocity-tolerance
+## 제공 문서와 대표 예제
+
+```text
+docs/ai/
+├─ README.md                 # 읽는 순서, 플랫폼 경계, Schema·설정·예제 링크
+├─ configuration.md          # config.txt/.env 우선순위와 장치 정의 참조 방법
+├─ sequence_guide.md         # 완료 조건, 허용치, 대기·중단·실패 처리
+└─ prompts/
+   ├─ motion_sequence.md
+   ├─ io_sequence.md
+   ├─ motion_io_sequence.md
+   └─ sequence_gui.md
 ```
+
+이는 생성 예정 산출물 목록이다. API Schema는 서버 코드 영역에 두고 Python 예제는 기존
+`reference_clients/python/examples`에 둔다. AI는 안내 → 설정 → 사용자 역할/요구 → Schema/가이드
+순서로 읽고 기존 client를 사용하는 프로그램을 생성한다.
+
+대표 예제는 X/Y/Z 3축 Pick & Place이며 기본 1회 실행이다.
+
+1. Pick 위치로 단계별 지정 속도와 시퀀스 공통 가감속을 사용하여 이동하고 완료 대기
+2. DO/AO를 파지 설정값으로 변경
+3. DI/AI 파지 완료 조건 대기
+4. Place 위치로 이동하고 완료 대기
+5. DO/AO를 해제 설정값으로 변경
+6. 선택적으로 DI/AI 해제 완료 조건 대기
+7. 지정된 종료 상태 적용 및 완료 처리
+
+축과 channel, 위치, 단계별 속도, 전체 시퀀스 공통 가감속, 출력값, 입력 조건과 timeout은 프롬프트 수정 항목이다.
+가감속은 실행 시작 시 지정값을 기존 설정 API로 적용하고 단계별 변경은 허용하지 않는다.
+속도는 단계의 이동 API 파라미터로 전달한다. 별도 속도 설정 API를 단계마다 호출하지 않는다.
+필요한 접근·후퇴 경로는 중간 포인트와 단계로 사용자가 지정한다.
+
+## Teaching 선택 기능
+
+Teaching은 시퀀스 생성 프롬프트의 선택 기능이다. 미사용 시 설정의 위치값을 사용하고, 사용 시
+이름 있는 포인트를 참조한다. GUI는 동일한 시퀀스 코드와 티칭 데이터를 사용하는 조작 화면이다.
+
+- 생성 프로그램 폴더의 `teaching_points.json`에 포인트 이름, 축 역할별 위치와 단위를 저장한다.
+- X/Y/Z → 실제 axis index 매핑은 시퀀스 설정에 둔다. 속도는 단계, 가감속은 시퀀스 공통 설정에 둔다.
+- 현재 위치 취득은 한 Feedback의 X/Y/Z를 편집값으로 가져오고, 명시적 저장 버튼으로 파일에 반영한다.
+- 포인트 생성·수정·삭제를 지원하며 필요한 포인트가 없으면 Run을 막고 표시한다.
+- Run 시 포인트 snapshot을 고정하고 실행 중 편집·수동 조작을 제한한다.
+- 축별 +/- hold Jog, Slow/Fast를 제공하고 release, 포커스 상실 또는 버튼 이탈 시 Jog Stop을 요청한다.
+- 별도 포인트 이동 버튼은 선택 포인트로 직접 이동하며 Teaching 이동 설정의 속도·가감속을 사용한다.
+- Enable/Disable/Fault Reset/Homing은 선택 축에 명시적으로 요청하고 Stop은 시퀀스 사용 축에 적용한다.
+- Homing 상태는 표시하되 Homing·Enable·Fault·limit 기반의 추가 Run 차단을 만들지 않는다.
+  앞서 제안한 client 측 software limit 사전 차단도 철회하며 기존 API Fail 처리를 사용한다.
+
+## 실행 방식과 GUI
+
+- 터미널: 연결 → 제어권 요청 → 1회 실행 → 정리 → 제어권 해제 → 종료. Ctrl+C로 취소한다.
+- GUI: 기존 Control Panel과 같은 Tkinter/ttk를 사용한다. 터미널과 동일한 시퀀스 코드를 공유한다.
+- Host/Port, 연결/해제, 제어권 요청/해제, 연결·제어권 상태를 제공한다.
+- GUI의 제어권은 사용자가 명시적으로 요청하며 Run 완료 후 유지하고 해제 버튼/종료 시 반환한다.
+- Run/Stop, 대기/실행 중/정지 처리 중/완료/중단/실패, 현재 단계·설명과 로그를 표시한다.
+- Run 중 중복 실행을 막는다. 수동 조작/Run은 제어권을 가진 연결에서 사용한다.
+- 통신·대기가 GUI를 멈추지 않도록 하고 실행 중 창 닫기는 중단·정리 후 종료한다.
+- 사용자 Stop/실패 시 사용 축 Stop과 지정된 I/O 정리를 수행한다. 지정이 없는 출력은 유지한다.
+- 정상 완료는 프롬프트의 종료 상태를 적용한다. GUI에서는 제어권을 유지한다.
+- 정상 완료·Stop·실패에서 자동 Disable하지 않는다. 명시적인 버튼 또는 사용자 종료 정책으로만
+  Disable을 수행하며, 기본 정리 절차에는 사용 축 Stop을 적용한다.
+- 통신 단절 시 전달하지 못한 정리 명령을 표시한다. 제어권 상실 시 재요청하지 않고 기존 권한 계약을
+  따른다. 재연결·재실행에서 중간 단계 자동 재개는 하지 않는다.
 
 ## Python 우선 전략
 
@@ -196,7 +245,7 @@ client는 재사용한다. 대표 예제를 먼저 작성하고 반복이 확인
 
 ```text
 reference_clients/python/
-├─ motion_server_client/   # 연결, request/response, Feedback, authority
+├─ motion_server_reference_client/   # 기존 연결, request/response, Feedback client
 └─ examples/               # 대표 AI 생성 및 사용자 수정 예제
 ```
 
@@ -207,7 +256,7 @@ reference_clients/python/
 
 ```text
 서버 연결
-→ 시스템 구성 및 요구사항 preflight
+→ 시퀀스 자체 설정·포인트 데이터 확인
 → command authority 요청
 → 초기 조건 확인/설정
 → 시퀀스 실행
@@ -284,13 +333,103 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
 - 특정 AI 제품에만 종속된 통합
 - 복잡한 자연어 의미 검증을 Motion Server core가 직접 수행하는 기능
 
-## 미결정 사항
+## 구현 쟁점 검토 이력
 
-- 기존 Python client에 추가할 Feedback 대기, timeout과 cancellation의 최소 범위
-- namespace별 JSON Schema의 실제 디렉터리 구조와 서버 specification loader 구현 방식
-- 현재 시스템 model/capability를 기존 API로 조합할지 별도 snapshot API로 제공할지
-- 사용자 Stop 입력 방식과 생성 프로그램의 실행/상태 표시 방법
-- 예제 프롬프트의 대표 산업 시나리오와 난이도 단계
+### 2026-09-10 구현 쟁점 점검
+
+아래는 점검 당시의 쟁점 이력이다. 최종 적용 기준은 뒤의 후속 확정 계약과 단계별 구현 계획이다.
+
+- Schema 전환 범위: 현재 specification은 CommandSpec metadata 중심이고 validator/handler가 별도로
+  동작한다. Schema loader가 기존 metadata를 대체하는 범위와 request/response 구조 정의 범위를
+  구현 계획에 명시해야 한다. 숫자 API 필드는 JSON number/integer로 통일하고 문자열 숫자는 거부한다.
+  공식 client의 UI 문자열은 전송 전에 숫자로 변환하며, 예제·테스트도 함께 수정한다. OD index의
+  16진수 표시는 UI에서 처리하고 전송은 JSON 숫자로 한다. Boolean은 숫자로 허용하지 않는다.
+  기존 입력을 보존하기 위한 fallback/alias는 만들지 않는다(DEC-043). 변경을 합의하지 않은
+  runtime 동작과 Failure 계약은 유지하며 검증 중복을 만들지 않는다.
+- Feedback 의미 확인: Jog 요청은 slow/fast/two_phase이고 숫자 목표 속도가 없다. 기존 장치 정의와
+  피드백에서 Jog 도달 상태를 어떻게 확인할지 점검해야 한다. Moving만으로 목표 속도 도달을 추정하지
+  않는다. 모드별 Target reached/Moving 의미와 Standstill 허용치 적용도 가이드 작성 시 확인한다.
+- Client 대기 구현: 기존 motion_server_reference_client는 request_id와 get_feedback 큐를 제공한다.
+  최신 snapshot 취급, timeout·취소, GUI thread 전달은 이를 재사용하여 구현한다. 요청 ID는 응답을
+  연결하며 무요청 주기 Feedback에는 ID가 없으므로 과거 큐 항목을 새 상태로 쓰지 않도록 점검한다.
+  신규 서버 operation tracker는 추가하지 않는다.
+- 값 반영: move_rel의 최종 목표 확인과 단계별 속도·가감속은 기존 API/응답으로 표현하는 방법을
+  확인한다. Teaching 이동도 같은 API를 사용한다.
+- 실제 디렉터리/Schema draft/공통 정의 참조/배포 포함, 예제의 구체적인 IO 채널·값과 timeout 기본값은
+  구현 계획에서 제시한다. 현재 단계에서 자동 실행 가능한 실장비 기본값으로 확정하지 않는다.
+
+위 점검의 후속 결정은 아래 확정 계약과 구현 계획으로 해소했다. 이력에 남긴 Jog 도달 대기와
+단계별 가감속 제안은 채택하지 않는다. 구체적인 Schema draft, 라이브러리와 예제 기본값은 기존
+의존성과 Mock 구성에 맞춰 구현 단계에서 선택·기록하며 별도 제품 기능 결정으로 취급하지 않는다.
+
+## 2026-09-10 후속 확정 계약
+
+- `motion_server/api/schema/`에 common.json, system.json, axis.json, io.json, bus.json,
+  simulation.json을 둔다. axis는 axis/axes, io는 AP/IOL 하위 API를 포함한다. system은 서버·제어권·
+  공통 Feedback 등 나머지 API를 담당한다. 공통 정의는 로컬 `$ref`로 재사용한다.
+- Schema는 API 계약의 단일 원본이며 시작 시 로딩·문법·참조·명령 중복을 확인한다.
+  기존 specification은 이를 읽어 CommandSpec을 구성한다. Handler 연결은 Python registry에 유지한다.
+- 기존 validator가 Schema 기반 요청 구조 검증과 기존 runtime 전제조건 검증을 담당한다.
+  응답/Feedback은 기존 encoder/status 경로에서 계약을 사용한다. 값 취득·단위 변환은 Python에 유지한다.
+  새 조립 계층, 실행 중 응답/Feedback 검증, client 응답 Schema 검증은 추가하지 않는다.
+- Python client의 request_id/get_feedback를 재사용한다. 시퀀스가 조건·timeout·취소를 처리하며
+  반복이 확인될 때만 `wait_for_feedback(predicate, timeout, cancel_event)` 같은 비도메인 utility를 둔다.
+- GUI는 같은 시퀀스를 worker thread에서 실행하고 GUI thread가 상태·로그를 표시한다.
+  대기는 짧은 간격으로 취소를 확인한다. 이미 전송한 요청은 취소된 것으로 간주하지 않으며 응답 또는
+  기존 request timeout 이후 후속 단계 대신 정리한다. 자동 재전송하지 않는다.
+- `jog_start`는 Success만 확인하고 `jog_stop`은 Success 이후 Standstill을 기다린다.
+- 가감속은 시퀀스 공통 설정, 속도는 이동 API의 단계별 파라미터다. 종료 시 자동 Disable하지 않는다.
+
+## 단계별 구현 계획
+
+현재 상태: 설계 확정, 구현 미착수. 다음 작업은 S01이다. 하위 번호를 계속 분할하지 않고 아래 단위를
+완료할 때 상태·검증 결과·변경 파일·다음 작업을 갱신한다.
+
+| 단계 | 상태 | 범위 | 완료 조건 |
+| --- | --- | --- | --- |
+| S01 | planned | Schema와 서버·공식 client 동시 전환 | 아래 전환 항목 전체와 패키지 검증 완료 |
+| S02 | planned | AI 안내·설정 가이드·시퀀스 가이드·프롬프트 | 합의된 책임 경계와 CLI/GUI/Teaching 선택 사항이 모두 문서화됨 |
+| S03 | planned | Python Pick & Place·Teaching·GUI 예제 | 동일 실행 코드의 CLI/GUI와 포인트 저장·사용, Run/Stop·상태 표시 동작 |
+| S04 | planned | 통합 검증·최종 문서 정합화 | Mock 정상/실패/중단 시험과 제공 파일·실행 안내 검증 완료 |
+
+### S01 Schema 및 공식 client 전환
+
+1. 기존 명령·요청·응답·Feedback 정의와 client 전송 경로를 대조하여 계약 목록을 만든다.
+2. namespace별 Schema와 loader를 작성하고 기존 specification/validator/encoder/status 경로에 연결한다.
+   형식 정의의 중복 하드코딩을 정리하되 값 계산·실행 책임은 유지한다.
+3. 숫자 필드는 JSON number/integer로 통일한다. Python client, Axis/IO Control Panel, Node-RED node와
+   sample flow의 전송값·관련 문서·테스트를 함께 수정한다. UI의 16진수 표시는 허용하되 숫자로 전송한다.
+4. 설치/Windows 패키지에 Schema와 로컬 참조 파일이 포함되어 시작 시 로딩되는지 확인한다.
+5. 숫자 문자열/Boolean 거부, 필수값·허용값, 기존 runtime/Failure parity, 응답/Feedback 계약을
+   자동 테스트로 확인한다. 호환성 제거로 의도한 차이는 테스트 기대값에 명시한다.
+
+S01은 서버·공식 client·예제·테스트·패키지가 함께 맞춰진 하나의 완료 단위다. 서버만 전환된 상태를
+완료 처리하지 않는다. 새 서버 모션 완료 판단, 중복 runtime 인터락, 응답 검증 계층은 없어야 한다.
+
+### S02 AI 지식 및 프롬프트
+
+- 앞서 정의한 docs/ai 파일을 작성하고 실제 Schema, 설정과 Python client 경로로 연결한다.
+- API Schema에는 시퀀스 조건을 넣지 않고 가이드에 명령별 조건·허용치·실패 처리 방법을 둔다.
+- 프롬프트에는 X/Y/Z 역할, 파지·해제 출력, 입력 조건, 단계 timeout과 공통 가감속을 수정 항목으로 둔다.
+- Teaching과 GUI를 선택할 수 있도록 하고 중복 API wrapper나 서버 인터락 재구현을 요청하지 않는다.
+
+### S03 대표 실행 예제
+
+- 기존 Python client로 API를 직접 조합한다. 필요성이 확인된 대기·취소 utility만 최소 추출한다.
+- 공통 가감속 적용 후 단계별 속도로 Pick 이동 → 파지 → 확인 → Place 이동 → 해제 → 선택적 확인을 수행한다.
+- teaching_points.json과 역할 매핑·단위, Run snapshot, 명시적 저장·편집·삭제를 구현한다.
+- Tkinter GUI의 연결·제어권·Run/Stop·Teaching·상태/로그를 동일 실행 코드에 연결한다.
+- server Fail로 실행을 중단하며 Homing/Enable/Fault/limit의 추가 Run 인터락을 두지 않는다.
+  포인트 누락/잘못된 파일과 중복 실행 같은 프로그램 자체 상태는 검사한다.
+
+### S04 검증 및 인계
+
+- Mock에서 정상 1회 완료, API Fail, 응답/조건 timeout, Stop, 연결·제어권 상실을 시험한다.
+- Jog release/포커스 상실, GUI 중단·종료, 티칭 파일 재로딩과 Run snapshot을 확인한다.
+- 자동 재전송·자동 재개·자동 Disable이 없고, 지정 없는 I/O 출력 유지 정책을 확인한다.
+- 배포물에 Schema와 안내/예제 등 의도한 산출물이 포함되는지 검증한다.
+- RF-019/remaining_tasks/worklog에 검증 결과와 변경 파일을 기록한다. 실장비 시험은 별도 명시적
+  실행 요청에 따르며 Mock 결과와 구분한다. Node-RED 신규 시퀀스 생성은 후속 범위로 유지한다.
 
 ## 완료 조건
 
@@ -301,7 +440,7 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
   Python client를 통해 API request를 직접 조합한다.
 - 대표 예제에서 반복이 확인된 Feedback 대기, timeout과 cancellation만 기존 Python client 또는
   비도메인 utility로 최소 공통화한다.
-- AI가 생성하는 Python 프로그램의 preflight, authority, timeout, Feedback 완료 판정, Stop/Fault 처리와
+- AI가 생성하는 Python 프로그램의 자체 데이터 검증, authority, timeout, Feedback 완료 판정, Stop/Fault 처리와
   안전 정리 구조가 일관된다.
 - 단일축, 다축 동시 이동, I/O handshake와 Motion/I/O 복합 시퀀스 예제가 제공된다.
 - 대표 생성 결과가 Mock에서 정상 완료, timeout, Stop과 Fault 시나리오를 자동 검증한다.

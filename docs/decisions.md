@@ -1019,26 +1019,37 @@ Device Profile + ESI
 - 영향: [RF-003](tasks/rf/RF-003-bus-io-management.md)은 I/O reset/restart/param_storage 구현으로
   재정의한다. CPX reset/restart 미지원 경로와 CPX `0x27F1` parameter storage 경로를 테스트한다.
 
-## DEC-042 API Schema는 서버 계약과 외부 시퀀스 전환 의미의 단일 원본으로 사용
+## DEC-042 API Schema와 외부 시퀀스 작성 가이드의 책임 분리
 
 - 상태: `accepted`
 - 결정일: 2026-09-09
+- 수정일: 2026-09-10 (완료 조건·허용치를 Schema에 넣는 이전 결정을 정정)
 - 결정:
   - API 계약은 namespace별 표준 JSON Schema 파일을 단일 원본으로 관리하고 서버 specification은 이를
     읽어서 구성한다. Motion Server 고유 의미는 `x-motion-server` 확장에 기록한다.
   - API 요청 Success는 요청이 정상 처리되었다는 의미이며 물리 동작 완료를 뜻하지 않는다.
   - Motion Server는 명령을 장치에 전달하고 Feedback을 중계하는 현재 책임을 유지한다. 범용 operation
     tracker나 모션 완료 판정 기능을 서버에 추가하지 않는다.
-  - 생성된 Python/Node-RED 시퀀스가 Schema에 선언된 Feedback 조건을 평가하여 다음 단계 진행과 전체
+  - 생성된 Python/Node-RED 시퀀스가 작성 가이드의 Feedback 조건을 평가하여 다음 단계 진행과 전체
     시퀀스 완료를 판단한다.
-  - 위치/속도 허용치 기본값은 Schema에 두고 사용자 프롬프트 지정값이 이를 덮어쓴다. 초기 기본값은
+  - 위치/속도 허용치 기본값은 시퀀스 작성 가이드에 두고 사용자 프롬프트 지정값이 이를 덮어쓴다. 초기 기본값은
     position `0.5`와 velocity `1.0`이며 해당 Axis의 API 단위를 따른다.
   - `move_abs`/`move_rel`은 위치 근접, Target reached와 Standstill을 모두 요구한다. 0이 아닌
     `move_vel`은 속도 근접, Target reached와 Moving을 요구하고 속도 0인 Axis는 Standstill을 요구한다.
-    `jog_start`는 목표 속도 도달과 Moving, stop 계열은 Standstill을 사용한다.
+    `jog_start`는 API Success만 확인하고 stop 계열은 Success 이후 Standstill을 사용한다(DEC-044).
   - `fault_reset`은 Fault 조건 제거를 보장하지 않는 write 성격의 명령이므로 I/O write와 같이 API
     Success로 block을 완료한다. 필요한 복구 확인은 별도의 명시적인 Feedback 대기 단계로 구성한다.
   - 다축 명령은 선택된 모든 Axis가 각 Axis에 해당하는 조건을 만족해야 다음 단계로 진행한다.
+  - Schema에는 API 구조, 타입, 단위, 필드 의미와 전제조건만 둔다. `sequence-transition`,
+    `completion-condition`, 허용치와 단계 timeout은 넣지 않는다.
+  - 단계/입력 timeout과 종료 정책은 프롬프트·시퀀스 설정, 요청 timeout은 기존 client에서 관리한다.
+  - 생성 프로그램은 서버의 Homing/Enable/Fault/limit 검증을 중복 인터락으로 구현하지 않는다.
+    API Fail 이유를 표시하고 후속 단계를 중단한다. 포인트 파일 누락 등 자체 데이터 검증은 유지한다.
+  - AI는 config.txt/.env와 장치 정의로 구성을 파악한다. 별도 구성 snapshot/API는 추가하지 않는다.
+  - Teaching은 시퀀스 프롬프트의 선택 기능이며 위치·단위를 teaching_points.json에 저장하고
+    속도는 이동 단계, 가감속은 시퀀스 공통 설정에 둔다(DEC-044). Run 시 포인트를 고정한다.
+  - GUI 생성 프롬프트는 Tkinter/ttk와 동일 시퀀스 코드 재사용을 기본으로 한다. GUI는 제어권을 명시적으로
+    관리하고 실행 후 유지하며, 터미널은 1회 실행 후 반환한다. 상세 조작·종료 계약은 RF-019를 따른다.
 - 이유: AI가 API 응답을 물리 동작 완료로 오해하거나 client마다 임의의 완료 조건을 만들지 않게 하면서도,
   Motion Server core의 기존 명령 전달 및 Feedback 중계 책임을 확장하지 않기 위해서다.
 - 검토한 대안:
@@ -1050,6 +1061,44 @@ Device Profile + ESI
 - 영향: [RF-019](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)에서 Schema 구조와 명령별 외부
   시퀀스 전환 조건을 구체화한다. 이 결정 자체로 Motion Server runtime 동작이나 API 응답을 변경하지
   않는다.
+
+## DEC-043 배포 전 하위 호환성 비유지와 API 숫자 타입 통일
+
+- 상태: `accepted`
+- 결정일: 2026-09-10
+- 대체 관계: RF-019에서 기존 문자열 숫자 입력·변환을 보존하려던 제안을 대체한다.
+- 결정:
+  - 사용자가 별도로 지시하기 전까지 프로젝트 전반에서 backward compatibility를 요구하지 않는다.
+    과거 계약 유지를 위한 fallback, alias, compatibility shim을 추가하지 않는다.
+  - 합의한 계약을 직접 적용하고 영향을 받는 공식 client, 예제, 문서와 테스트를 함께 수정한다.
+  - RF-019 숫자 API 필드는 JSON number/integer로 통일한다. 문자열 숫자는 서버에서 거부하며
+    UI 입력 문자열은 공식 client에서 전송 전에 변환한다. Boolean을 숫자로 허용하지 않는다.
+  - OD index 등 숫자 필드도 동일 원칙을 적용한다. 화면에서 16진수 입력을 지원하더라도 JSON에는
+    숫자로 전송한다. Hex payload, 식별자 등 본래 문자열인 필드는 해당 계약을 유지한다.
+  - 별도 합의된 장치 접근 실패 등의 운영상 fallback은 이 호환성 정책으로 일괄 제거하지 않는다.
+    이 결정은 관련 없는 계약 변경을 허가하지 않는다.
+- 이유: 배포 전 계약을 명확히 정리하고 기존 입력을 보존하기 위한 복잡성을 피한다.
+- 영향: RF-019 Schema 전환과 공식 client 수정에 적용하며 향후 작업도 같은 원칙을 따른다.
+
+## DEC-044 RF-019 구현 경계 및 일괄 전환 단위 확정
+
+- 상태: `accepted`
+- 결정일: 2026-09-10
+- 대체 관계: DEC-042의 Jog 목표 속도 도달 대기와 단계별 가감속 제안을 정정한다.
+- 결정:
+  - Jog Start는 API Success만 확인하고 Jog Stop은 Success 이후 Standstill을 확인한다.
+  - 가감속은 전체 시퀀스 공통 설정으로 시작 시 적용한다. 단계별 변경은 허용하지 않으며 속도는
+    이동 API 파라미터로 전달한다. 종료·실패·Stop에서 자동 Disable하지 않는다.
+  - 기존 Python client를 재사용하고 조건·timeout·취소는 시퀀스에서 처리한다. 반복될 때만 일반 대기
+    utility를 추출한다. GUI는 동일 시퀀스를 worker에서 실행하고 UI thread로 상태를 전달한다.
+  - Schema는 motion_server/api/schema의 common/system/axis/io/bus/simulation.json으로 분리한다.
+    시작 시 로딩·참조·중복 검사를 수행하고 기존 specification·validator·encoder 경로가 계약을 사용한다.
+  - 요청만 기존 validator에서 검사한다. 별도 응답 조립 계층과 runtime 응답/Feedback·client 검증을
+    추가하지 않는다. Python의 장치 값 취득·변환·handler 연결 책임은 유지한다.
+  - 서버, Python client, Control Panel, Node-RED, 예제·문서·테스트·패키지를 한 완료 단위로 전환한다.
+    이후 AI 지식/프롬프트와 대표 예제를 구현한다.
+- 이유: 기존 API 책임을 유지하면서 계약 원본을 통일하고 client가 깨진 중간 상태를 완료로 취급하지 않는다.
+- 영향: RF-019 S01~S04 계획에 따라 구현한다. 이번 기록은 구현 착수를 의미하지 않는다.
 
 ## 새 결정 작성 양식
 

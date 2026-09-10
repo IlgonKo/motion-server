@@ -4,6 +4,37 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-09-10
+
+### RF-019 후속 합의 및 S01~S04 구현 계획
+
+- Jog Start는 Success만 확인하고 Jog Stop은 Standstill을 기다리도록 정정했다.
+- 가감속은 시퀀스 공통, 속도는 이동 API 파라미터로 정하고 자동 Disable을 제외했다.
+- 기존 client 기반 Feedback 대기·취소와 GUI thread 경계, Schema 파일 분할과 기존 처리 경로 재사용을
+  DEC-044에 기록했다. runtime 응답/Feedback 검증이나 새 조립 계층은 추가하지 않는다.
+- S01 서버/client/패키지 일괄 전환 → S02 AI 문서/프롬프트 → S03 예제/Teaching/GUI → S04 통합 검증을
+  상세 RF와 작업 목록에 등록했다. 각 단계 완료 조건과 다음 작업(S01)을 명시했다.
+- 코드 구현은 착수하지 않았으며 문서 변경 형식 검사를 수행했다.
+
+### DEC-043 하위 호환성 비유지 원칙과 숫자 API 계약
+
+- 별도 사용자 지시 전까지 프로젝트 전반에서 과거 계약을 위한 호환 fallback/alias를 추가하지 않는
+  원칙을 decisions와 AGENTS.md에 기록했다.
+- RF-019 숫자 필드는 JSON 숫자로 통일하고 공식 client·예제·테스트를 함께 수정하도록 확정했다.
+  기존 문자열 숫자 허용을 보존한다는 문구를 정정했다. 이번 작업은 결정 기록이며 코드 전환은 아직이다.
+
+### RF-019 Schema 경계 정정 및 Teaching/GUI 계약 기록
+
+- DEC-042와 RF-019에서 완료 조건·기본 허용치를 Schema에서 시퀀스 가이드로 옮겼다.
+  단계 timeout·종료 정책은 프롬프트/시퀀스 설정, 요청 timeout은 client 설정으로 분리했다.
+- config.txt/.env와 참조 장치 정의로 구성 파악, docs/ai 안내·가이드·예제 프롬프트 구조를 확정했다.
+- 3축 Pick & Place, 선택적 Teaching과 teaching_points.json, Tkinter GUI와 CLI 실행 계약을 기록했다.
+- 서버의 Homing/Enable/Fault/limit 검증을 생성 프로그램에 중복하지 않으며 API Fail을 표시하고
+  후속 단계를 중단하도록 정정했다. 포인트 누락 등 자체 데이터 검증은 유지한다.
+- 현재 specification, Python client, GUI 및 절대 이동 referenced 검증을 확인했다. Schema 전환 범위,
+  Jog 도달 신호, 취소 가능한 Feedback 대기와 기존 API를 통한 목표/설정 반영을 구현 쟁점으로 기록했다.
+- 문서만 수정했으며 구현·실장비 실행은 수행하지 않았다.
+
 ## 2026-09-09
 
 ### RF-019 API Schema와 외부 시퀀스 전환 계약 확정

@@ -281,6 +281,13 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   Motion Server의 정적 지식과 현재 시스템 정보를 바탕으로 검증 가능한 Python 시퀀스를 생성하는
   개발 경험을 제공한다.
 - 1차 출력 형식: Python
+- 구현 진행: 설계 확정 / 구현 미착수. 다음 작업 `S01`.
+- 단계 계획:
+  - S01 `planned`: Schema·서버·공식 client·예제·테스트·패키지 동시 전환
+  - S02 `planned`: AI 안내·설정/시퀀스 가이드·사용자 프롬프트
+  - S03 `planned`: Python Pick & Place, 선택적 Teaching, 공통 실행 코드 기반 Tkinter GUI
+  - S04 `planned`: Mock 통합 시험·배포물·문서 정합화
+- S01 완료는 공식 client와 패키지까지 포함하며 서버 단독 전환으로 완료 처리하지 않는다.
 - 완료 조건:
   - 사용자가 목적, 장치 역할, 초기 조건, 동작 순서, 완료 조건, timeout과 정지/Fault 정책을 수정할
     수 있는 대표 예제 프롬프트를 제공한다.
@@ -290,8 +297,10 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
     읽도록 한다. Motion Server 고유 의미는 `x-motion-server` 확장으로 표현한다.
   - API Success와 외부 시퀀스의 Feedback 기반 다음 단계 전환 조건을 분리하며, Motion Server core에는
     범용 동작 완료 판정이나 operation tracker를 추가하지 않는다.
-  - 위치/속도 기본 허용치는 Schema에 정의하고 사용자 지정값이 이를 덮어쓴다. 명령별 전환 조건과
-    다축/속도 0 예외가 기계 판독 가능하게 정의된다.
+  - 완료 조건·위치/속도 기본 허용치와 다축/속도 0 예외는 시퀀스 작성 가이드에 정의한다.
+    API Schema에 시퀀스 정책을 넣지 않고 서버의 전제조건 검증을 client 인터락으로 중복하지 않는다.
+  - config.txt/.env 기반 구성 파악, docs/ai 안내·가이드·프롬프트, 3축 Pick & Place 예제를 제공한다.
+  - 선택적 Teaching과 Tkinter GUI 프롬프트를 제공하고 터미널/GUI는 동일 시퀀스 코드를 사용한다.
   - 현재 Axis/I/O 구성, 단위, limit와 지원 기능을 AI가 확인할 수 있는 runtime 정보 경계를 확정한다.
   - Motion Server API를 시퀀스 구성 block의 단일 계약으로 유지하고 AI 생성 코드는 기존 Python
     client로 API block을 직접 조합한다. Motion/I/O 명령을 중복 포장하는 helper는 만들지 않는다.
