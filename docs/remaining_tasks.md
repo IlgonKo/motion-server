@@ -275,20 +275,20 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
 
-- 상태: `planned`
+- 상태: `in_progress`
 - 우선순위: 높음
 - 요약: 사용자가 예제 프롬프트를 수정하여 자연어로 Motion/I/O 요구사항을 정의하면, AI가
   Motion Server의 정적 지식과 현재 시스템 정보를 바탕으로 검증 가능한 Python 시퀀스를 생성하는
   개발 경험을 제공한다.
 - 1차 출력 형식: Python
 - 책임 경계: 사용자 설치·commissioning·서버 설정/정상 구동 후, Agent가 설정을 읽어 시퀀스 프로그램을 생성한다.
-- 구현 진행: 설계 확정 / 구현 미착수. 다음 작업 `S01`.
+- 구현 진행: `S01` 코드·자동 테스트 반영. Python 443개 / Node-RED 8개 통과. 실제 패키지 검증은 사용자 결정으로 S04에 이관.
 - 단계 계획:
-  - S01 `planned`: Schema·서버·공식 client·예제·테스트·패키지 동시 전환
-  - S02 `planned`: AI 안내·설정/시퀀스 가이드·사용자 프롬프트
-  - S03 `planned`: Python Pick & Place, 선택적 Teaching, 공통 실행 코드 기반 Tkinter GUI
-  - S04 `planned`: Mock 통합 시험·사전 프로젝트 지식 없는 AI 다중 모델 반복 생성 평가·배포물·문서 정합화
-- S01 완료는 공식 client와 패키지까지 포함하며 서버 단독 전환으로 완료 처리하지 않는다.
+  - S01 `implemented`: Schema·서버·공식 client·예제·테스트·패키지 설정 전환
+  - S02 `implemented`: [AI 안내](ai/README.md)·설정/시퀀스 가이드·사용자 프롬프트 4종, 문서/Schema 정합성 검사
+  - S03 `implemented`: [Python AI 레퍼런스 프로그램](../reference_clients/python/examples/pick_place/README.md) — Pick & Place, 선택적 Teaching, 공통 CLI/Tkinter 실행 코드. 기본 자동 검증 완료
+  - S04 `in_progress`: 소스/독립 EXE Mock TCP 각 6개, Python 467개·Node-RED 8개 통과. 전체 GUI·독립 AI 24회 평가 남음. [검증 기록](tasks/rf/RF-019-S04-validation-2026-09-11.md)
+- S01은 공식 client까지 함께 전환하며 실제 패키지 빌드/실행 검증만 S04에서 일괄 진행한다.
 - 완료 조건:
   - 사용자가 목적, 장치 역할, 초기 조건, 동작 순서, 완료 조건, timeout과 정지/Fault 정책을 수정할
     수 있는 대표 예제 프롬프트를 제공한다.

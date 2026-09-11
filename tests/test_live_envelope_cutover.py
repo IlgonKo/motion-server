@@ -107,7 +107,7 @@ class LiveEnvelopeCutoverTest(unittest.TestCase):
             {"system/io/reset": lambda message, runtime, state, client: None},
         ):
             response = route_message(
-                {"cmd": "system/io/reset"},
+                {"cmd": "system/io/reset", "io": "io0"},
                 runtime(),
                 state,
                 active_client,
@@ -149,7 +149,7 @@ class LiveEnvelopeCutoverTest(unittest.TestCase):
             {"system/io/reset": fail_handler},
         ), patch("motion_server.api.router._LOGGER"):
             response = route_message(
-                {"cmd": "system/io/reset"},
+                {"cmd": "system/io/reset", "io": "io0"},
                 runtime(),
                 state,
                 active_client,

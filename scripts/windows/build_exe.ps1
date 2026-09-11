@@ -2,7 +2,8 @@ param(
     [string]$Python = "C:\Users\Festo\AppData\Local\Python\pythoncore-3.14-64\python.exe",
     [switch]$SkipInstall,
     [switch]$SkipLocalEnv,
-    [switch]$SkipNpcapDownload
+    [switch]$SkipNpcapDownload,
+    [string]$PackageDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -10,6 +11,12 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
 $PackageRoot = Join-Path $ProjectRoot "dist\Motion Server"
+if ($PackageDirectory) {
+    $PackageRoot = [System.IO.Path]::GetFullPath($PackageDirectory)
+    if (Test-Path -LiteralPath $PackageRoot) {
+        throw "Validation package destination must not already exist: $PackageRoot"
+    }
+}
 $ToolsRoot = Join-Path $PackageRoot "Tools"
 $PanelToolRoot = Join-Path $ToolsRoot "axis_control_panel"
 $IoPanelToolRoot = Join-Path $ToolsRoot "io_control_panel"
@@ -83,6 +90,10 @@ function Remove-DirectoryIfExists {
 Push-Location $ProjectRoot
 try {
     if (-not $SkipInstall) {
+        & $Python -B -m pip install -r (Join-Path $ProjectRoot "requirements.txt")
+        if ($LASTEXITCODE -ne 0) {
+            throw "Motion Server dependency installation failed"
+        }
         & $Python -B -m pip show pyinstaller *> $null
         if ($LASTEXITCODE -ne 0) {
             & $Python -B -m pip install pyinstaller
@@ -156,6 +167,10 @@ try {
     Copy-WindowsConfig "control_panel\io_control_panel\.env.example" (Join-Path $IoPanelToolRoot "config.example.txt")
     Copy-Item -Force "Reference\cmmt_error_catalog.json" (Join-Path $PackageRoot "Reference\cmmt_error_catalog.json")
     Copy-NodeRedReferenceClient
+    & $Python -B "scripts\windows\ai_reference_bundle.py" --destination (Join-Path $PackageRoot "AI Reference")
+    if ($LASTEXITCODE -ne 0) {
+        throw "AI reference bundle failed"
+    }
     $manualFiles = Get-ChildItem -Path "docs" -File -Filter "Motion_Server_*_Manual*"
     foreach ($manualFile in $manualFiles) {
         Copy-Item -Force $manualFile.FullName (Join-Path $ManualRoot $manualFile.Name)

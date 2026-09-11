@@ -11,6 +11,7 @@ a = Analysis(
     pathex=[str(ROOT), str(ROOT / "packaging")],
     binaries=[],
     datas=[
+        (str(ROOT / "motion_server" / "api" / "schema"), "motion_server/api/schema"),
         (str(ROOT / "device" / "cmmt" / "esi"), "device/cmmt/esi"),
         (str(ROOT / "device" / "cpx_ap_i_ec" / "esi"), "device/cpx_ap_i_ec/esi"),
         (str(ROOT / "device" / "io_link" / "iodd"), "device/io_link/iodd"),

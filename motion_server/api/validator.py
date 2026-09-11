@@ -164,6 +164,14 @@ def validate_command(spec, client, state, has_authority, *, message=None):
         return "authority_required"
     if not command_allowed_by_runtime_state(spec, state, message):
         return "runtime_fault"
+    if message is not None:
+        from motion_server.api.schema_loader import api_contracts
+        from motion_server.failure import InvalidArgumentException
+
+        error = next(api_contracts().request_errors(spec.name, message), None)
+        if error is not None:
+            field = ".".join(str(part) for part in error.absolute_path) or "request"
+            raise InvalidArgumentException(field, error.message)
     return None
 from motion_server.app.initialization import (
     InitializationRecoveryScope,

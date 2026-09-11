@@ -15,6 +15,8 @@
 
 ## Contract verification
 
+- Do not run Node-RED-related tests, including automated regression tests or Dashboard/manual tests, unless the user explicitly requests them again. This user-directed exclusion applies to S04 and future work; do not infer permission from a generic request to test or continue.
+
 - Until the user explicitly requests otherwise, do not preserve backward compatibility or add legacy-input fallbacks, aliases, or compatibility shims. Apply the agreed contract directly and update affected official clients, examples, documentation, and tests together.
 - This policy does not remove operational fallbacks explicitly required by other accepted decisions, and does not authorize unrelated contract changes.
 - RF-019 numeric API fields must use JSON numbers. Official clients must convert UI text before sending; the server must reject numeric strings rather than coerce them for compatibility.

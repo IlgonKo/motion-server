@@ -37,6 +37,9 @@ dist\Motion Server
   Reference\cmmt_error_catalog.json
   Reference Clients\node_red\node-red-contrib-motion-server\package.json
   Reference Clients\node_red\node-red-contrib-motion-server\examples\flows\*.json
+  AI Reference\docs\ai\README.md
+  AI Reference\motion_server\api\schema\*.json
+  AI Reference\reference_clients\python\examples\pick_place\
   Tools\axis_control_panel\axis_control_panel.exe
   Tools\axis_control_panel\config.txt
   Tools\axis_control_panel\config.example.txt
@@ -68,6 +71,12 @@ Windows packages, this external folder is searched before the bundled `_internal
 IODD files. The Node-RED reference client package and sample flows are copied
 under `Reference Clients\node_red`; install dependencies with npm on the target
 PC before importing the flows.
+
+`AI Reference` preserves the source-relative links between AI guides, prompts, API Schema,
+configuration references and the Python client/reference program. It contains only example settings,
+not the user's local `.env` files. Its Python program needs Python on the target machine; it is not an EXE.
+For isolated validation, `-PackageDirectory ABSOLUTE_PATH` builds into a new destination and refuses an
+existing destination. Use `-SkipLocalEnv -SkipNpcapDownload` for Mock-only validation packages.
 
 ## Run With Mock Axes
 

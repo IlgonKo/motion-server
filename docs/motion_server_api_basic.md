@@ -1,5 +1,9 @@
 # Motion Server Basic Mode API Manual
 
+구조·타입의 원본은 `motion_server/api/schema/`의 JSON Schema다. 숫자 필드는 JSON 숫자로 전송한다.
+`"0"`, `"0x6041"` 같은 숫자 문자열과 Boolean을 숫자 대신 보내면 `INVALID_ARGUMENT`로 거부한다.
+화면의 16진수 입력은 client에서 숫자로 변환한다. 문자열 값과 hexadecimal byte payload는 문자열을 유지한다.
+
 이 문서는 Basic mode 기준 Motion Server TCP JSON API를 설명한다. 요청은 JSON object 한 줄로 전송하며, 각 메시지는 newline으로 끝난다.
 
 ```text
@@ -356,8 +360,8 @@ Parameter read/write/save:
 {
   "cmd": "system/axis/param_read",
   "axis": 0,
-  "index": "0x6041",
-  "subindex": "0x00",
+  "index": 24641,
+  "subindex": 0,
   "data_type": "uint16"
 }
 ```
@@ -366,8 +370,8 @@ Parameter read/write/save:
 {
   "cmd": "system/axis/param_write",
   "axis": 0,
-  "index": "0x6081",
-  "subindex": "0x00",
+  "index": 24705,
+  "subindex": 0,
   "data_type": "uint32",
   "value": 1000
 }
@@ -615,8 +619,8 @@ I/O SDO parameter access는 `axis`가 아니라 `io` selector를 사용한다.
 {
   "cmd": "system/io/param_read",
   "io": "io0",
-  "index": "0x1000",
-  "subindex": "0x00",
+  "index": 4096,
+  "subindex": 0,
   "data_type": "uint32"
 }
 ```
@@ -625,8 +629,8 @@ I/O SDO parameter access는 `axis`가 아니라 `io` selector를 사용한다.
 {
   "cmd": "system/io/param_write",
   "io": "io0",
-  "index": "0x8000",
-  "subindex": "0x01",
+  "index": 32768,
+  "subindex": 1,
   "data_type": "uint16",
   "value": "1"
 }
@@ -655,7 +659,7 @@ Motion Server는 이 번호를 장치의 `0x27F0:02 Module` 필드에 맞게
   "cmd": "system/io/ap/param_read",
   "io": "io0",
   "module": 1,
-  "parameter_id": "0x00000001",
+  "parameter_id": 1,
   "instance": 0,
   "length": 1,
   "data_type": "uint8"
@@ -667,7 +671,7 @@ Motion Server는 이 번호를 장치의 `0x27F0:02 Module` 필드에 맞게
   "cmd": "system/io/ap/param_write",
   "io": "io0",
   "module": 1,
-  "parameter_id": "0x00000001",
+  "parameter_id": 1,
   "instance": 0,
   "data_type": "uint8",
   "value": "1"

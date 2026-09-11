@@ -128,6 +128,19 @@ class ReferencePythonClientTest(unittest.TestCase):
         self.assertRegex(success["request_id"], r"^python-[0-9a-f]{6}-1$")
         self.assertRegex(failure["request_id"], r"^python-[0-9a-f]{6}-2$")
 
+    def test_parameter_json_numeric_types_are_preserved_on_wire(self):
+        received = []
+        def handler(connection, request):
+            received.append(request)
+            send_message(connection, {"type": request["cmd"], "request_id": request["request_id"],
+                                      "result": "success", "data": {}})
+        server = self.track(JsonLineServer(handler).start())
+        client = self.client(server)
+        client.request({"cmd": "system/axis/param_write", "axis": 0, "index": 0x6081,
+                        "subindex": 0, "data_type": "uint32", "value": 100})
+        for field in ("axis", "index", "subindex", "value"):
+            self.assertIs(type(received[0][field]), int)
+
     def test_concurrent_requests_match_out_of_order_responses(self):
         received = []
         lock = threading.Lock()

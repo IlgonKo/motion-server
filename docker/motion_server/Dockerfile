@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     util-linux \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --no-cache-dir --break-system-packages pysoem
+COPY requirements.txt /tmp/motion-server-requirements.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages pysoem -r /tmp/motion-server-requirements.txt
 
 WORKDIR /workspace
 

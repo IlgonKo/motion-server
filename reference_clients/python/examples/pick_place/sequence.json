@@ -1,0 +1,20 @@
+{
+  "host": "127.0.0.1",
+  "port": 15000,
+  "roles": {"X": {"axis": 0, "unit": "mm"}, "Y": {"axis": 1, "unit": "mm"}, "Z": {"axis": 2, "unit": "mm"}},
+  "teaching": false,
+  "request_timeout": 5.0,
+  "feedback_timeout": 2.0,
+  "stage_timeout": 30.0,
+  "input_timeout": 10.0,
+  "position_tolerance": 0.5,
+  "profile": {"X": {"acceleration": 100.0, "deceleration": 100.0}, "Y": {"acceleration": 100.0, "deceleration": 100.0}, "Z": {"acceleration": 100.0, "deceleration": 100.0}},
+  "pick": {"point": "Pick", "positions": {"X": 10.0, "Y": 20.0, "Z": 5.0}, "velocities": {"X": 5.0, "Y": 5.0, "Z": 2.0}},
+  "place": {"point": "Place", "positions": {"X": 30.0, "Y": 40.0, "Z": 5.0}, "velocities": {"X": 5.0, "Y": 5.0, "Z": 2.0}},
+  "grasp_outputs": [{"io": "io0", "slot": 1, "kind": "digital", "channel": 0, "value": true}, {"io": "io0", "slot": 2, "kind": "analog", "channel": 0, "value": 100}],
+  "grasp_conditions": [{"io": "io0", "slot": 3, "kind": "digital", "channel": 0, "op": "eq", "value": true}, {"io": "io0", "slot": 4, "kind": "analog", "channel": 0, "op": "ge", "value": 50}],
+  "release_outputs": [{"io": "io0", "slot": 1, "kind": "digital", "channel": 0, "value": false}, {"io": "io0", "slot": 2, "kind": "analog", "channel": 0, "value": 0}],
+  "release_conditions": [],
+  "failure_outputs": [],
+  "teaching_motion": {"velocity": 2.0, "acceleration": 20.0, "deceleration": 20.0}
+}

@@ -1,0 +1,2683 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/io.json",
+  "$defs": {
+    "system_io_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "raw": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/status",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_status_response"
+        }
+      },
+      "description": "Request for system/io/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_input_read": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/input_read"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "raw": {
+          "type": "boolean"
+        },
+        "slave_index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/input_read",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_input_read_response"
+        }
+      },
+      "description": "Request for system/io/input_read. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_param_read": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/param_read"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "index",
+        "io"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/param_read",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_param_read_response"
+        }
+      },
+      "description": "Request for system/io/param_read. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_ethercat_param_catalog": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/ethercat/param_catalog"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/ethercat/param_catalog",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_ethercat_param_catalog_response"
+        }
+      },
+      "description": "Request for system/io/ethercat/param_catalog. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_ap_param_catalog": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/ap/param_catalog"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "module"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/ap/param_catalog",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_ap_param_catalog_response"
+        }
+      },
+      "description": "Request for system/io/ap/param_catalog. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_iol_param_catalog": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/iol/param_catalog"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "port": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "module",
+        "port"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/iol/param_catalog",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_iol_param_catalog_response"
+        }
+      },
+      "description": "Request for system/io/iol/param_catalog. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_ap_param_read": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/ap/param_read"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "parameter_id": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "instance": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string",
+            "bytes"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "module",
+        "parameter_id"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/ap/param_read",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_ap_param_read_response"
+        }
+      },
+      "description": "Request for system/io/ap/param_read. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_iol_param_read": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/iol/param_read"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "port": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string",
+            "bytes"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "module",
+        "port",
+        "index"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/iol/param_read",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_iol_param_read_response"
+        }
+      },
+      "description": "Request for system/io/iol/param_read. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_output_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/output_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "integer"
+        },
+        "channel": {
+          "type": "integer"
+        },
+        "slave_index": {
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "digital",
+            "analog",
+            "io_link"
+          ]
+        },
+        "value": {
+          "type": [
+            "integer",
+            "boolean"
+          ]
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          ]
+        },
+        "raw": {
+          "type": "boolean"
+        },
+        "writes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "io": {
+                "type": "string"
+              },
+              "slot": {
+                "type": "integer"
+              },
+              "channel": {
+                "type": "integer"
+              },
+              "slave_index": {
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  "digital",
+                  "analog",
+                  "io_link"
+                ]
+              },
+              "value": {
+                "type": [
+                  "integer",
+                  "boolean"
+                ]
+              },
+              "payload": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "digital"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "analog"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/output_write",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_output_write_response"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "digital"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "analog"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "writes"
+              ]
+            }
+          },
+          "then": {
+            "required": [
+              "slot",
+              "kind"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "digital",
+                        "analog"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "channel",
+                    "value"
+                  ]
+                },
+                "else": {
+                  "required": [
+                    "payload"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "digital"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "writes": {
+                "items": {
+                  "if": {
+                    "not": {
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "analog"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "writes": {
+                "items": {
+                  "if": {
+                    "not": {
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "Request for system/io/output_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "cmd",
+        "io"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/reset",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_reset_response"
+        }
+      },
+      "description": "Request for system/io/reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_restart": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/restart"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "cmd",
+        "io"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/restart",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_restart_response"
+        }
+      },
+      "description": "Request for system/io/restart. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_param_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/param_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "cmd",
+        "index",
+        "value",
+        "io"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "uint8",
+                  "int8",
+                  "uint16",
+                  "int16",
+                  "uint32",
+                  "int32",
+                  "udint"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "float32"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "char",
+                  "string",
+                  "ascii",
+                  "visible_string"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "data_type"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ],
+      "x-motion-server": {
+        "name": "system/io/param_write",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_param_write_response"
+        }
+      },
+      "description": "Request for system/io/param_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_param_storage": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/param_storage"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "volatile",
+            "non_volatile"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "mode",
+        "io"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/io/param_storage",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_param_storage_response"
+        }
+      },
+      "description": "Request for system/io/param_storage. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_ap_param_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/ap/param_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "parameter_id": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "instance": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string",
+            "bytes"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "cmd",
+        "module",
+        "parameter_id",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "uint8",
+                  "int8",
+                  "uint16",
+                  "int16",
+                  "uint32",
+                  "int32",
+                  "udint"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "float32"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "char",
+                  "string",
+                  "ascii",
+                  "visible_string"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "data_type"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-motion-server": {
+        "name": "system/io/ap/param_write",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_ap_param_write_response"
+        }
+      },
+      "description": "Request for system/io/ap/param_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_io_iol_param_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/io/iol/param_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "port": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string",
+            "bytes"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "cmd",
+        "module",
+        "port",
+        "index",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "uint8",
+                  "int8",
+                  "uint16",
+                  "int16",
+                  "uint32",
+                  "int32",
+                  "udint"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "float32"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "char",
+                  "string",
+                  "ascii",
+                  "visible_string"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "data_type"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-motion-server": {
+        "name": "system/io/iol/param_write",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/io.json#/$defs/system_io_iol_param_write_response"
+        }
+      },
+      "description": "Request for system/io/iol/param_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "device_snapshot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "slave_index": {
+          "type": "integer"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "input_bytes": {
+          "type": "integer"
+        },
+        "output_bytes": {
+          "type": "integer"
+        },
+        "digital_inputs": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "digital_outputs": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "analog_inputs": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "analog_outputs": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "$ref": "io.json#/$defs/module_snapshot"
+          }
+        },
+        "input_image": {
+          "type": "string"
+        },
+        "output_image": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "slave_index",
+        "profile",
+        "input_bytes",
+        "output_bytes",
+        "digital_inputs",
+        "digital_outputs",
+        "analog_inputs",
+        "analog_outputs",
+        "modules"
+      ],
+      "additionalProperties": false
+    },
+    "system_io_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io_count": {
+                    "type": "integer"
+                  },
+                  "devices": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "io.json#/$defs/device_snapshot"
+                    }
+                  },
+                  "diagnostic_status": {
+                    "$ref": "common.json#/$defs/diagnostic"
+                  }
+                },
+                "required": [
+                  "io_count",
+                  "devices",
+                  "diagnostic_status"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_input_read_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/input_read"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "io.json#/$defs/device_snapshot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_param_read_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/param_read"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "hex": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "length": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "io",
+                  "index",
+                  "subindex",
+                  "data_type",
+                  "value",
+                  "hex",
+                  "length"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_ethercat_param_catalog_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/ethercat/param_catalog"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "esi": {
+                    "type": "string"
+                  },
+                  "scope": {
+                    "const": "station"
+                  },
+                  "objects": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "common.json#/$defs/catalog_object"
+                    }
+                  }
+                },
+                "required": [
+                  "io",
+                  "slave_index",
+                  "esi",
+                  "scope",
+                  "objects"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_ap_param_catalog_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/ap/param_catalog"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": false
+            }
+          }
+        }
+      ]
+    },
+    "system_io_iol_param_catalog_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/iol/param_catalog"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "esi": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "integer"
+                  },
+                  "module_name": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer"
+                  },
+                  "isdu_access": {
+                    "const": true
+                  },
+                  "catalog_source": {
+                    "const": "iodd"
+                  },
+                  "validation": {
+                    "type": "string"
+                  },
+                  "object_index": {
+                    "type": "string"
+                  },
+                  "max_data_bytes": {
+                    "type": "integer"
+                  },
+                  "direction_values": {
+                    "type": "object",
+                    "properties": {
+                      "read": {
+                        "type": "integer"
+                      },
+                      "write": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "read",
+                      "write"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "devices": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "required": [
+                  "io",
+                  "slave_index",
+                  "esi",
+                  "module",
+                  "module_name",
+                  "port",
+                  "isdu_access",
+                  "catalog_source",
+                  "validation",
+                  "object_index",
+                  "max_data_bytes",
+                  "direction_values",
+                  "devices"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_ap_param_read_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/ap/param_read"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "object_index": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "integer"
+                  },
+                  "ap_access_module": {
+                    "type": "integer"
+                  },
+                  "parameter_id": {
+                    "type": "integer"
+                  },
+                  "parameter_id_hex": {
+                    "type": "string"
+                  },
+                  "instance": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "integer"
+                  },
+                  "length": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string",
+                      "array"
+                    ]
+                  }
+                },
+                "required": [
+                  "io",
+                  "object_index",
+                  "module",
+                  "ap_access_module",
+                  "parameter_id",
+                  "parameter_id_hex",
+                  "instance",
+                  "data_type",
+                  "status",
+                  "length",
+                  "data",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_iol_param_read_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/iol/param_read"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "object_index": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "integer"
+                  },
+                  "port": {
+                    "type": "integer"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "index_hex": {
+                    "type": "string"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "subindex_hex": {
+                    "type": "string"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "integer"
+                  },
+                  "length": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string",
+                      "array"
+                    ]
+                  }
+                },
+                "required": [
+                  "io",
+                  "object_index",
+                  "module",
+                  "port",
+                  "index",
+                  "index_hex",
+                  "subindex",
+                  "subindex_hex",
+                  "data_type",
+                  "status",
+                  "length",
+                  "data",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_output_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/output_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "oneOf": [
+                  {
+                    "$ref": "io.json#/$defs/device_snapshot"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "targets": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "io": {
+                              "type": [
+                                "string",
+                                "integer",
+                                "null"
+                              ]
+                            },
+                            "slot": {
+                              "type": "integer"
+                            },
+                            "channel": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "io",
+                            "slot"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "targets"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "result": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "io",
+                  "slave_index",
+                  "result",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_restart_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/restart"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "result": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "io",
+                  "slave_index",
+                  "result",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_param_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/param_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "hex": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "io",
+                  "index",
+                  "subindex",
+                  "data_type",
+                  "value",
+                  "hex"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_param_storage_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/param_storage"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "result": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "io",
+                  "slave_index",
+                  "result",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_ap_param_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/ap/param_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "object_index": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "integer"
+                  },
+                  "ap_access_module": {
+                    "type": "integer"
+                  },
+                  "parameter_id": {
+                    "type": "integer"
+                  },
+                  "parameter_id_hex": {
+                    "type": "string"
+                  },
+                  "instance": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "integer"
+                  },
+                  "length": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "io",
+                  "object_index",
+                  "module",
+                  "ap_access_module",
+                  "parameter_id",
+                  "parameter_id_hex",
+                  "instance",
+                  "data_type",
+                  "status",
+                  "length",
+                  "data"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_io_iol_param_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/io/iol/param_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "io": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "object_index": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "integer"
+                  },
+                  "port": {
+                    "type": "integer"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "index_hex": {
+                    "type": "string"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "subindex_hex": {
+                    "type": "string"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "integer"
+                  },
+                  "length": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "io",
+                  "object_index",
+                  "module",
+                  "port",
+                  "index",
+                  "index_hex",
+                  "subindex",
+                  "subindex_hex",
+                  "data_type",
+                  "status",
+                  "length",
+                  "data"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "iol_channel": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "string"
+        },
+        "qualifier": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decode_status": {
+          "enum": [
+            "ok",
+            "not_configured",
+            "invalid_data",
+            "unsupported"
+          ]
+        },
+        "decoded": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "profile": {
+                  "type": [
+                    "string",
+                    "integer",
+                    "null"
+                  ]
+                },
+                "profile_name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "subindex": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "subindex",
+                      "name",
+                      "value",
+                      "unit"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "status_bits": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "subindex": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "bit_offset": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "subindex",
+                      "bit_offset",
+                      "name",
+                      "active"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "profile",
+                "profile_name",
+                "values",
+                "status_bits"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "port",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "process_values": {
+      "type": "object",
+      "properties": {
+        "digital": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "analog": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "io_link": {
+          "type": "string"
+        },
+        "io_link_channels": {
+          "type": "array",
+          "items": {
+            "$ref": "io.json#/$defs/iol_channel"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "module_snapshot": {
+      "type": "object",
+      "properties": {
+        "slot": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "input_offset": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_offset": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_bytes": {
+          "type": "integer"
+        },
+        "output_bytes": {
+          "type": "integer"
+        },
+        "digital_inputs": {
+          "type": "integer"
+        },
+        "digital_outputs": {
+          "type": "integer"
+        },
+        "analog_inputs": {
+          "type": "integer"
+        },
+        "analog_outputs": {
+          "type": "integer"
+        },
+        "analog_bits": {
+          "type": "integer"
+        },
+        "analog_signed": {
+          "type": "boolean"
+        },
+        "io_link_ports": {
+          "type": "integer"
+        },
+        "io_link_input_data_bytes": {
+          "type": "integer"
+        },
+        "io_link_output_data_bytes": {
+          "type": "integer"
+        },
+        "inputs": {
+          "$ref": "io.json#/$defs/process_values"
+        },
+        "outputs": {
+          "$ref": "io.json#/$defs/process_values"
+        }
+      },
+      "required": [
+        "slot",
+        "type",
+        "raw",
+        "name",
+        "input_offset",
+        "output_offset",
+        "input_bytes",
+        "output_bytes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

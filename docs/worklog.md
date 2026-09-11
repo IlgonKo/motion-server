@@ -4,7 +4,89 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-09-11
+
+### RF-019 S04 GUI·Fault·지연 응답 확장 검증
+
+- `tests/test_ai_pick_place_extended.py`, `tests/sequence_tcp_proxy.py` 추가,
+  `tests/test_ai_pick_place_tcp.py`에 시험 전용 WKC 주입 launcher와 proxy 연결 지점 추가.
+- 실제 별도 Mock 서버에서 Teaching 저장/실행 snapshot, GUI Run·종료·Jog·가감속 복원,
+  WKC Fault, 늦은 응답 후 재개 금지를 자동 검증했다. 새 7개 포함 관련 Python 47개 통과.
+- 시험용 지연/timeout 설정과 Tk 종료 정리만 보완했다. 제품 코드 변경/실장비 접근/Node-RED 시험 없음.
+- RF-019 상세 및 S04 검증 기록에 결과·제약 기록. 독립 AI 생성은 0/24로 S04는 계속 진행 중이다.
+
+### Node-RED 테스트 보류
+
+- 사용자 지시에 따라 별도 명시적 지시 전까지 Node-RED 자동 회귀 및 Dashboard/수동 테스트를 실행하지 않는다.
+- AGENTS.md와 RF-019 S04 계획에 반영했다. 이미 수행한 결과는 이력으로 유지한다.
+- 이번 변경은 문서/지침만 수정했으며 테스트는 실행하지 않았다.
+
+### RF-019 S04 통합/패키지 검증 착수
+
+- `tests/test_ai_pick_place_tcp.py` 추가: 매 시험 별도 Mock 서버/임시 설정/미사용 TCP 포트를 사용한다.
+  정상·입력 timeout·Stop·API Fail/숫자 거부·연결/제어권 상실 6개를 소스와 독립 EXE에서 각각 통과했다.
+- 실제 응답의 granted/message가 authority request/release Schema에서 누락된 것을 발견해 보완하고
+  `tests/test_api_schema.py`에 실제 handler 응답 기반 회귀 시험을 추가했다. 서버 응답/동작 변경 없음.
+- `scripts/windows/ai_reference_bundle.py`, bundle 시험을 추가하고 build_exe.ps1에 AI 자료 포함 및
+  기존 출력 경로를 보존하는 PackageDirectory 검증 옵션을 추가했다. WINDOWS_EXE 문서 업데이트.
+- 서버/Axis Panel/IO Panel을 실제 빌드했다. 최종 패키지는 `.codex_output/rf019-s04-20260911-final/Motion Server`.
+  사용자 설정 복사/Npcap 다운로드는 생략했고 기존 dist 배포 폴더는 보존했다.
+- Python 467개, Node-RED 8개, 최종 독립 EXE TCP 6개 통과. `git diff --check` 검사.
+- 초기 시험 환경 모듈 불일치와 최초 패키지 Schema 실패를 RF-019-S04 검증 기록에 남겼다.
+- 독립 AI 24회는 아직 실행하지 않았다. Astra/Sol 별도 평가 에이전트 방식 확인을 요청한 상태이며,
+  전체 GUI/추가 장애 주입 및 독립 생성 평가가 남아 S04 상태는 in_progress다. 커밋하지 않았다.
+
 ## 2026-09-10
+
+### RF-019 S03 AI 레퍼런스 프로그램 구현
+
+- `reference_clients/python/examples/pick_place/`에 공통 시퀀스 `program.py`, CLI `__main__.py`,
+  Tkinter `gui.py`, 사용자 설정 `sequence.json`, `teaching_points.json`, 사용 안내를 추가했다.
+- API별 wrapper 없이 기존 client.request로 Pick → 파지 출력 → 입력 확인 → Place → 해제 순서를 구성했다.
+  공통 가감속·단계별 속도, 단일 Feedback 소비자, 다축 완료 대기, timeout/취소/실패 cleanup을 구현했다.
+- 선택적 Teaching은 동일 snapshot 캡처·메모리 편집·명시적 저장·Run snapshot과 수동 조작을 제공한다.
+  GUI와 CLI는 동일 실행 코드이며 자동 Disable/재전송/재개·중복 운전 인터락은 추가하지 않았다.
+- `tests/test_ai_pick_place.py` 13개를 추가했다. Python 전체 459개 통과, CLI --help 확인.
+  가짜 client와 실제 Schema를 사용하며 Tk GUI 생성/Run 취소/Jog release도 네트워크 없이 검사했다.
+- RF-019/remaining_tasks, AI 진입 문서와 Python client README에 산출물 및 다음 S04를 반영했다.
+- 서버/API/실제 설정은 변경하지 않았고 실장비 명령은 보내지 않았다. 실제 Mock TCP end-to-end·GUI 전체 조작,
+  패키지 빌드 및 독립 AI 생성 평가는 S04에 남아 있다. 아직 커밋하지 않았다.
+
+### RF-019 S02 AI 지식·사용자 프롬프트 구현
+
+- `docs/ai/README.md`, `configuration.md`, `sequence_guide.md`를 작성했다. 사용자 commissioning과
+  AI 시퀀스 생성 책임 경계, 설정 읽기 전용/우선순위, API 직접 조합, 완료 대기·timeout·cleanup을 정리했다.
+- `docs/ai/prompts/`에 Motion, I/O, X/Y/Z Pick & Place, 보조 GUI 프롬프트를 작성했다.
+  Teaching은 시퀀스 프롬프트의 선택 기능이며 CLI/GUI는 동일 실행 코드를 사용한다.
+- `tests/test_ai_documentation.py`를 추가해 자료 구성/로컬 링크와 JSON 요청 예시의 Schema 정합성을 검사한다.
+- RF-019/remaining_tasks에 S02 구현 상태를 반영하고 S03을 “AI 레퍼런스 프로그램”으로 명명했다.
+  기존 RF move_abs 예시의 속도 필드도 실제 계약인 `profile_velocities`로 바로잡았다.
+- 검증: 문서 3개 + API Schema 16개, 총 19개 테스트 통과. `git diff --check` 통과.
+- 서버 코드/설정·실장비는 변경하지 않았다. 독립 AI 생성 평가와 실제 패키지 실행 검증은 S04에서 수행한다.
+  다음 단계는 S03이며 이번 변경은 아직 커밋하지 않았다.
+
+### RF-019 S01 요청 검증·공식 client·응답 계약 전환
+
+- `api/validator.py`에 Schema 요청 검증을 연결했다. 숫자 문자열/Boolean 숫자 대용/NaN/Infinity는
+  `INVALID_ARGUMENT`로 거부하고 handler를 실행하지 않는다. 기존 runtime 판정은 유지했다.
+- `control_panel/request_values.py`를 추가하고 Axis client와 IO Panel 입력 변환을 반영했다.
+  Node-RED 02/03 Dashboard 파라미터 입력도 숫자로 전송한다. DO Boolean과 raw byte 문자열은 유지한다.
+- Schema에 명령별 응답과 Axis/Bus/서버/IO 상태·공통 Feedback 및 파라미터/catalog 구조를 추가했다.
+  실제 Mock 출력과 계약을 대조하며 runtime 응답 검증/새 모션 완료 판정은 추가하지 않았다.
+- `tests/test_api_schema.py`, runtime/envelope/Python client 테스트, Node-RED 테스트와 API/Python 안내를 갱신했다.
+- 검증: Python 443개 / Node-RED 8개 통과. 실장비 명령은 실행하지 않았다.
+- 사용자 결정으로 실제 패키지 빌드/실행 검증은 S04 일괄 검증으로 이관했다. RF-019/작업 목록/DEC-044에 반영.
+- 이번 코드 변경은 미커밋 상태다. 다음 단계는 S02다.
+
+### RF-019 S01 착수 — Schema loader 및 명령 metadata
+
+- 사용자/시퀀스 생성 Agent 책임 경계와 S04 평가 문서를 `6084863`으로 main에 커밋·푸쉬했다.
+- `motion_server/api/schema/*.json`, `schema_loader.py`를 생성하고 `specification.py`가 57개 명령의
+  metadata를 읽도록 변경했다. 로컬 참조만 해석하며 잘못된 참조·중복·필수 metadata 누락을 거부한다.
+- `requirements.txt`, Dockerfile, Windows build script와 motion_server.spec에 의존성·Schema 포함을 반영했다.
+- `tests/test_api_schema.py` 10개 포함 전체 436개 테스트 통과. 실장비 명령 실행 및 실제 패키지 빌드는 하지 않았다.
+- S01은 진행 중이다. 요청 Schema는 아직 기존 validator에 연결하지 않았고 공식 client 숫자 전환,
+  응답/Feedback 상세 계약·계약 시험·패키지 검증이 남아 있다. 다음 작업을 RF-019와 목록에 기록했다.
 
 ### RF-019 시퀀스 생성 Agent의 책임 경계 확정
 

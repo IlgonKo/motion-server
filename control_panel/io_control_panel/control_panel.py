@@ -8,6 +8,8 @@ if __package__ in {None, ""}:
     project_root = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(project_root))
 
+from control_panel.request_values import integer_input, parameter_input
+
 from control_panel.io_control_panel.client import MotionServerClient
 from control_panel.io_control_panel.config import read_runtime_config
 from control_panel.server_health import format_server_health
@@ -962,7 +964,7 @@ class IOControlPanel:
         try:
             self.require_command_authority()
             message = self.parameter_message("system/io/param_write")
-            message["value"] = self.param_value_var.get()
+            message["value"] = parameter_input(self.param_value_var.get(), self.param_type_var.get())
             response = self.client.request(
                 message,
                 expected_type="system/io/param_write",
@@ -990,13 +992,13 @@ class IOControlPanel:
         message = {
             "cmd": command,
             "io": self.device_var.get(),
-            "index": self.param_index_var.get(),
-            "subindex": self.param_subindex_var.get(),
+            "index": integer_input(self.param_index_var.get()),
+            "subindex": integer_input(self.param_subindex_var.get()),
             "data_type": self.param_type_var.get(),
         }
         length = self.param_length_from_type()
         if length:
-            message["length"] = length
+            message["length"] = integer_input(length)
         return message
 
     def show_parameter_response(self, response):
@@ -1119,7 +1121,7 @@ class IOControlPanel:
         try:
             self.require_command_authority()
             message = self.ap_parameter_message("system/io/ap/param_write")
-            message["value"] = self.ap_value_var.get()
+            message["value"] = parameter_input(self.ap_value_var.get(), self.ap_type_var.get())
             response = self.client.request(
                 message,
                 expected_type="system/io/ap/param_write",
@@ -1132,13 +1134,13 @@ class IOControlPanel:
         message = {
             "cmd": command,
             "io": self.device_var.get(),
-            "module": self.ap_module_var.get(),
-            "parameter_id": self.ap_parameter_id_var.get(),
-            "instance": self.ap_instance_var.get(),
+            "module": integer_input(self.ap_module_var.get()),
+            "parameter_id": integer_input(self.ap_parameter_id_var.get()),
+            "instance": integer_input(self.ap_instance_var.get()),
             "data_type": self.ap_type_var.get(),
         }
         if self.ap_length_var.get().strip():
-            message["length"] = self.ap_length_var.get()
+            message["length"] = integer_input(self.ap_length_var.get())
         return message
 
     def show_ap_parameter_response(self, response):
@@ -1169,7 +1171,7 @@ class IOControlPanel:
         try:
             self.require_command_authority()
             message = self.iol_parameter_message("system/io/iol/param_write")
-            message["value"] = self.iol_value_var.get()
+            message["value"] = parameter_input(self.iol_value_var.get(), self.iol_type_var.get())
             response = self.client.request(
                 message,
                 expected_type="system/io/iol/param_write",
@@ -1182,14 +1184,14 @@ class IOControlPanel:
         message = {
             "cmd": command,
             "io": self.device_var.get(),
-            "module": self.iol_module_var.get(),
-            "port": self.iol_port_var.get(),
-            "index": self.iol_index_var.get(),
-            "subindex": self.iol_subindex_var.get(),
+            "module": integer_input(self.iol_module_var.get()),
+            "port": integer_input(self.iol_port_var.get()),
+            "index": integer_input(self.iol_index_var.get()),
+            "subindex": integer_input(self.iol_subindex_var.get()),
             "data_type": self.iol_type_var.get(),
         }
         if self.iol_length_var.get().strip():
-            message["length"] = self.iol_length_var.get()
+            message["length"] = integer_input(self.iol_length_var.get())
         return message
 
     def show_iol_parameter_response(self, response):
@@ -1212,8 +1214,8 @@ class IOControlPanel:
                 {
                     "cmd": "system/io/iol/param_catalog",
                     "io": self.device_var.get(),
-                    "module": self.iol_module_var.get(),
-                    "port": self.iol_port_var.get(),
+                    "module": integer_input(self.iol_module_var.get()),
+                    "port": integer_input(self.iol_port_var.get()),
                 },
                 expected_type="system/io/iol/param_catalog",
             )

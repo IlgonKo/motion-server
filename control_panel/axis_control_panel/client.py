@@ -5,6 +5,8 @@ import socket
 import threading
 import time
 
+from control_panel.request_values import integer_input, parameter_input
+
 from control_panel.axis_control_panel.panel_update_data import (
     initial_feedback,
     merge_axis_status,
@@ -643,25 +645,25 @@ class AxisServerClient:
         message = {
             "cmd": "system/axis/param_read",
             "axis": int(axis_index),
-            "index": str(index),
-            "subindex": str(subindex),
+            "index": integer_input(index),
+            "subindex": integer_input(subindex),
             "data_type": str(data_type),
         }
         if length is not None and str(length).strip():
-            message["length"] = str(length)
+            message["length"] = integer_input(length)
         self.send_json(message)
 
     def send_param_write(self, axis_index, index, subindex, data_type, value, length=None):
         message = {
             "cmd": "system/axis/param_write",
             "axis": int(axis_index),
-            "index": str(index),
-            "subindex": str(subindex),
+            "index": integer_input(index),
+            "subindex": integer_input(subindex),
             "data_type": str(data_type),
-            "value": value,
+            "value": parameter_input(value, data_type),
         }
         if length is not None and str(length).strip():
-            message["length"] = str(length)
+            message["length"] = integer_input(length)
         self.send_json(message)
 
     def send_axis_param_catalog(self, axis_index):

@@ -1,7 +1,7 @@
 # RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
 
 - 등록일: 2026-09-09
-- 상태: `planned`
+- 상태: `in_progress`
 - 우선순위: 높음
 - 1차 생성 결과물: Python 시퀀스 프로그램
 
@@ -279,7 +279,7 @@ client.request({
     "cmd": "system/axes/move_abs",
     "axes": [0, 1],
     "positions": [100.0, 30.0],
-    "velocities": [50.0, 20.0],
+    "profile_velocities": [50.0, 20.0],
 })
 
 client.request({
@@ -388,38 +388,81 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
 
 ## 단계별 구현 계획
 
-현재 상태: 설계 확정, 구현 미착수. 다음 작업은 S01이다. 하위 번호를 계속 분할하지 않고 아래 단위를
+현재 상태: S01 코드 전환 및 자동 테스트 반영. 실제 패키지 빌드/실행 검증은 사용자 결정으로 S04 일괄 검증에 이관한다. 하위 번호를 계속 분할하지 않고 아래 단위를
 완료할 때 상태·검증 결과·변경 파일·다음 작업을 갱신한다.
 
 | 단계 | 상태 | 범위 | 완료 조건 |
 | --- | --- | --- | --- |
-| S01 | planned | Schema와 서버·공식 client 동시 전환 | 아래 전환 항목 전체와 패키지 검증 완료 |
-| S02 | planned | AI 안내·설정 가이드·시퀀스 가이드·프롬프트 | 합의된 책임 경계와 CLI/GUI/Teaching 선택 사항이 모두 문서화됨 |
-| S03 | planned | Python Pick & Place·Teaching·GUI 예제 | 동일 실행 코드의 CLI/GUI와 포인트 저장·사용, Run/Stop·상태 표시 동작 |
-| S04 | planned | 통합 검증·신규 AI 세션 다중 모델 평가·문서 정합화 | 공식 예제 Mock 시험과 제공 자료만 사용한 반복 생성·실행 검증 완료 |
+| S01 | implemented | Schema와 서버·공식 client 동시 전환 | 요청 검증·공식 client·응답/Feedback 계약 테스트 반영. 실제 패키지 검증은 S04로 이관 |
+| S02 | implemented | AI 안내·설정 가이드·시퀀스 가이드·프롬프트 | 책임 경계와 CLI/GUI/Teaching 문서화, 로컬 링크·JSON 예시 계약 검사. 독립 생성 평가는 S04 |
+| S03 | implemented | Python AI 레퍼런스 프로그램: Pick & Place·Teaching·GUI | 공통 실행 코드·명시적 포인트 저장·Run/Stop 구현 및 기본 자동 검사. 통합 실행/전체 GUI 평가는 S04 |
+| S04 | in_progress | 통합 검증·신규 AI 세션 다중 모델 평가·문서 정합화 | 공식 예제 Mock 시험과 제공 자료만 사용한 반복 생성·실행 검증 완료 |
 
 ### S01 Schema 및 공식 client 전환
+
+2026-09-10 진행 기록:
+
+- 반영: namespace Schema 6개와 로컬 전용 loader, 57개 명령 metadata를 읽는 기존 CommandSpec,
+  jsonschema 의존성 및 Windows/Docker 설치·리소스 포함 경로.
+- 기존 validator에 요청 구조 검증을 연결했다. 숫자 문자열·Boolean 숫자 대용·비유한 숫자는 거부하며
+  기존 authority/initialization/runtime Fault 판정은 유지한다. 필수 selector·중첩 trajectory/IO 숫자와
+  data_type별 parameter value를 Schema에서 검사한다.
+- Axis/IO Panel과 Node-RED Axis/I/O Dashboard의 입력 문자열을 전송 전에 변환했다. Python transport는
+  이미 숫자를 그대로 전송하므로 변환 계층을 추가하지 않고 wire test와 사용 안내를 보완했다.
+- 명령별 응답 envelope와 Axis/서버/Bus/IO 상태, 파라미터·catalog·공통 Feedback 계약을 추가했다.
+  실제 encoder/handler 출력과 비교하는 테스트용 validator만 제공하며 runtime 응답 검증은 하지 않는다.
+  장치별 metadata/진단 상세 등 가변 object는 기존 출력의 확장 영역을 유지한다.
+- 검증: Python 전체 443개, Node-RED 8개 통과. Mock Axis/IO 상태·Feedback, 요청 거부 전 handler 미실행,
+  numeric wire type, 잘못된 참조·중복 명령·필수 metadata 누락을 검사했다.
+- 실제 패키지 빌드/실행은 사용자 결정에 따라 나중에 일괄 수행한다. 현 테스트가 패키지/실장비 검증을
+  대신하지 않는다. S02 구현 후 다음 단계는 S03 AI 레퍼런스 프로그램이다.
 
 1. 기존 명령·요청·응답·Feedback 정의와 client 전송 경로를 대조하여 계약 목록을 만든다.
 2. namespace별 Schema와 loader를 작성하고 기존 specification/validator/encoder/status 경로에 연결한다.
    형식 정의의 중복 하드코딩을 정리하되 값 계산·실행 책임은 유지한다.
 3. 숫자 필드는 JSON number/integer로 통일한다. Python client, Axis/IO Control Panel, Node-RED node와
    sample flow의 전송값·관련 문서·테스트를 함께 수정한다. UI의 16진수 표시는 허용하되 숫자로 전송한다.
-4. 설치/Windows 패키지에 Schema와 로컬 참조 파일이 포함되어 시작 시 로딩되는지 확인한다.
+4. 설치/Windows 패키지에 Schema와 로컬 참조 파일을 포함하도록 구성한다. 실제 빌드/실행 검증은 S04에 이관한다.
 5. 숫자 문자열/Boolean 거부, 필수값·허용값, 기존 runtime/Failure parity, 응답/Feedback 계약을
    자동 테스트로 확인한다. 호환성 제거로 의도한 차이는 테스트 기대값에 명시한다.
 
-S01은 서버·공식 client·예제·테스트·패키지가 함께 맞춰진 하나의 완료 단위다. 서버만 전환된 상태를
-완료 처리하지 않는다. 새 서버 모션 완료 판단, 중복 runtime 인터락, 응답 검증 계층은 없어야 한다.
+S01은 서버·공식 client·예제·테스트·패키지 설정을 함께 전환한다. 2026-09-10 후속 사용자 결정으로
+실제 패키지 빌드 검증만 S04 일괄 검증에 이관했다. 서버만 전환된 상태를 완료 처리하지 않는다.
+새 서버 모션 완료 판단, 중복 runtime 인터락, 응답 검증 계층은 없어야 한다.
 
 ### S02 AI 지식 및 프롬프트
+
+2026-09-10 구현:
+
+- [AI 진입 안내](../../ai/README.md), 설정 해석, 시퀀스 가이드와 Motion/I/O/Pick & Place/GUI 프롬프트 4개를 작성했다.
+- 설정 읽기 전용·사용자 commissioning 경계, 기존 API 직접 조합, 공통 가감속/단계별 이동 속도,
+  명령별 대기 조건, timeout/취소/cleanup, 선택적 Teaching과 공통 CLI/GUI 실행 계약을 포함했다.
+- `tests/test_ai_documentation.py`가 자료 묶음/로컬 링크/JSON 요청 예시를 실제 Schema와 대조한다.
+  이는 문서 정합성 검사이며 독립 모델 생성/실행 평가가 아니다. 실제 패키지 검증과 AI 평가는 S04에 남긴다.
+- S03 명칭은 사용자 결정에 따라 “AI 레퍼런스 프로그램”으로 한다. 다음 구현은 S03이다.
 
 - 앞서 정의한 docs/ai 파일을 작성하고 실제 Schema, 설정과 Python client 경로로 연결한다.
 - API Schema에는 시퀀스 조건을 넣지 않고 가이드에 명령별 조건·허용치·실패 처리 방법을 둔다.
 - 프롬프트에는 X/Y/Z 역할, 파지·해제 출력, 입력 조건, 단계 timeout과 공통 가감속을 수정 항목으로 둔다.
 - Teaching과 GUI를 선택할 수 있도록 하고 중복 API wrapper나 서버 인터락 재구현을 요청하지 않는다.
 
-### S03 대표 실행 예제
+### S03 AI 레퍼런스 프로그램
+
+2026-09-10 구현:
+
+- [Pick & Place AI 레퍼런스](../../../reference_clients/python/examples/pick_place/README.md)에
+  `program.py`, CLI `__main__.py`, `gui.py`, `sequence.json`, `teaching_points.json`을 추가했다.
+- 공식 client를 사용해 기존 API를 직접 호출한다. 서버/API/client transport는 변경하지 않았다.
+  CLI/GUI가 동일 Sequence를 사용하고 Feedback 소비자는 하나로 공유한다.
+- 공통 가감속, 단계별 속도, 다축 위치/Reached/Standstill 대기, DI/AI 조건, bounded 취소/cleanup,
+  명시적 제어권, 선택적 Teaching 캡처/편집/저장/수동 Jog·포인트 이동을 구현했다.
+- 추가 Run 운전 인터락은 두지 않았다. API Fail은 표시하고 중단하며, 첫 이동 Success 뒤 발생한
+  Feedback Fault는 실행 중 실패로 처리한다. 자동 Disable/재전송/재개는 없다.
+- `tests/test_ai_pick_place.py` 13개: 가짜 client 주기 Feedback과 실제 요청 Schema를 사용해 정상 순서,
+  Fail/timeout/Stop/Fault/연결·권한 상실, 자료 신선도·다축 조건, Teaching snapshot/저장,
+  네트워크 없는 Tk GUI 생성·Run 취소·Jog release를 검사했다.
+- Python 전체 459개 통과. CLI `--help` 실행 확인. 실제 Mock 서버 TCP end-to-end, 전체 GUI 수동 조작,
+  실장비, 독립 AI 평가와 실제 패키지 빌드는 수행하지 않았다. 통합 검증은 S04이며 다음 단계다.
 
 - 기존 Python client로 API를 직접 조합한다. 필요성이 확인된 대기·취소 utility만 최소 추출한다.
 - 공통 가감속 적용 후 단계별 속도로 Pick 이동 → 파지 → 확인 → Place 이동 → 해제 → 선택적 확인을 수행한다.
@@ -429,6 +472,20 @@ S01은 서버·공식 client·예제·테스트·패키지가 함께 맞춰진 �
   포인트 누락/잘못된 파일과 중복 실행 같은 프로그램 자체 상태는 검사한다.
 
 ### S04 검증 및 인계
+
+2026-09-11 사용자 지시: 별도 명시적 지시가 있기 전까지 Node-RED 관련 테스트는 실행하지 않는다.
+자동 회귀·Dashboard/수동 시험 모두 제외하며 일반적인 검증/계속 진행 요청으로 재개하지 않는다.
+이미 수행한 결과는 과거 이력으로 보존하되 이후 S04 재검증 대상에는 포함하지 않는다.
+
+2026-09-11: [진행/실패 이력 및 결과](RF-019-S04-validation-2026-09-11.md).
+실제 Mock TCP 통합 시험과 Windows 빌드를 수행했고 authority 응답 Schema/AI 자료 패키징 누락을 보완했다.
+Python 467개, Node-RED 8개 통과. 독립 AI 생성 24회와 전체 GUI 평가는 아직 미완료다.
+후속 자동 확장 검증: Mock TCP에 연결한 GUI/Teaching/종료, WKC Fault 및 응답 지연 7개를 추가하고
+관련 Python 회귀 47개를 통과했다. 이번 Node-RED 시험은 없으며 이전 결과는 이력이다.
+GUI 수동 시각 확인 및 독립 생성 평가는 미완료다. 자세한 조건/한계는 위 검증 기록을 따른다.
+
+- S01에서 이관한 실제 Windows 패키지 빌드 및 독립 폴더에서의 Mock 기동/API 검증을 일괄 수행한다.
+  Schema 파일·로컬 참조·jsonschema 의존성 누락을 확인한다. 현재 미실행이며 실축 시험과 구분한다.
 
 - Mock에서 정상 1회 완료, API Fail, 응답/조건 timeout, Stop, 연결·제어권 상실을 시험한다.
 - Jog release/포커스 상실, GUI 중단·종료, 티칭 파일 재로딩과 Run snapshot을 확인한다.

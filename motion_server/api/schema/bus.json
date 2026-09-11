@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/bus.json",
+  "$defs": {
+    "system_bus_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/bus/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/bus/status",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/bus.json#/$defs/system_bus_status_response"
+        }
+      },
+      "description": "Request for system/bus/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_bus_fault_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/bus/fault_reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/bus/fault_reset",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/bus.json#/$defs/system_bus_fault_reset_response"
+        }
+      },
+      "description": "Request for system/bus/fault_reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_bus_reconnect": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/bus/reconnect"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/bus/reconnect",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/bus.json#/$defs/system_bus_reconnect_response"
+        }
+      },
+      "description": "Request for system/bus/reconnect. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_bus_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/bus/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "connected": {
+                    "type": "boolean"
+                  },
+                  "runtime_state": {
+                    "type": "string"
+                  },
+                  "device_count": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "axis_count": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wkc": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "expected_wkc": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wkc_ok": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "statuswords": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mode_displays": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "diagnostic_status": {
+                    "$ref": "common.json#/$defs/diagnostic"
+                  }
+                },
+                "required": [
+                  "available",
+                  "connected",
+                  "runtime_state",
+                  "device_count",
+                  "axis_count",
+                  "wkc",
+                  "expected_wkc",
+                  "wkc_ok",
+                  "diagnostic_status"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_bus_fault_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/bus/fault_reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "fault_count",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_bus_reconnect_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/bus/reconnect"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "connected": {
+                    "type": "boolean"
+                  },
+                  "elapsed": {
+                    "type": "number"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "connected",
+                  "elapsed",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

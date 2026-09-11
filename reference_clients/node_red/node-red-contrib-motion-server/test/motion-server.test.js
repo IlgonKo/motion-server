@@ -21,6 +21,22 @@ describe("node-red-contrib-motion-server", function() {
         servers = [];
     });
 
+    it("converts dashboard parameter text but preserves raw payload strings", function() {
+        for (const [file, id] of [["02_axis_control.json", "axis-parameter-panel"], ["03_io_control.json", "io-control-panel"]]) {
+            const flow = JSON.parse(fs.readFileSync(path.join(__dirname, "../examples/flows", file), "utf8"));
+            const template = flow.find(node => node.id === id);
+            const script = template.format.match(/<script>([\s\S]*?)<\/script>/)[1].replace("export default", "return");
+            const methods = new Function(script)().methods;
+            const input = {index: "0x6081", subindex: "00", length: "4", data_type: "uint32", value: "100"};
+            assert.deepEqual(methods.numericPayload(input), {index: 0x6081, subindex: 0, length: 4, data_type: "uint32", value: 100});
+            assert.equal(input.index, "0x6081");
+            assert.equal(methods.numericPayload({data_type: "bytes", value: "001122"}).value, "001122");
+            assert.equal(methods.numericPayload({kind: "digital", value: true}).value, true);
+            assert.throws(() => methods.numericPayload({...input, index: ""}));
+            assert.throws(() => methods.numericPayload({...input, value: true}));
+        }
+    });
+
     it("shares one socket and routes raw success, fail, feedback and status", async function() {
         let connectionCount = 0;
         const server = await createJsonServer((socket, request) => {

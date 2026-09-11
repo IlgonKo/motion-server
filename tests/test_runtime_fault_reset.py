@@ -114,7 +114,7 @@ class RuntimeFaultResetTest(unittest.TestCase):
                         {},
                         state,
                         True,
-                        message={"axis": 0},
+                        message={"cmd": command, **({"axis": 0} if "/axis/" in command else {})},
                     )
                 )
 
@@ -157,7 +157,7 @@ class RuntimeFaultResetTest(unittest.TestCase):
                         {},
                         state,
                         True,
-                        message={"type": message_type},
+                        message={"cmd": message_type, **({"axis": 0} if "/axis/" in message_type else {}), **({"module": 1, "port": 0} if "/iol/" in message_type else {})},
                     ),
                     "runtime_fault",
                 )
@@ -182,7 +182,7 @@ class RuntimeFaultResetTest(unittest.TestCase):
                         {},
                         state,
                         True,
-                        message={"type": message_type},
+                        message={"cmd": message_type, **({"axis": 0} if "/axis/" in message_type else {}), **({"module": 1, "port": 0} if "/iol/" in message_type else {})},
                     )
                 )
 
@@ -199,28 +199,28 @@ class RuntimeFaultResetTest(unittest.TestCase):
             {},
             state,
             True,
-            message={"axis": 0},
+            message={"cmd": "system/axis/enable", "axis": 0},
         )
         normal = validate_command(
             command_spec("system/axis/enable"),
             {},
             state,
             True,
-            message={"axis": 1},
+            message={"cmd": "system/axis/enable", "axis": 1},
         )
         safe = validate_command(
             command_spec("system/axis/disable"),
             {},
             state,
             True,
-            message={"axis": 0},
+            message={"cmd": "system/axis/disable", "axis": 0},
         )
         recovery = validate_command(
             command_spec("system/axis/restart"),
             {},
             state,
             True,
-            message={"axis": 0},
+            message={"cmd": "system/axis/restart", "axis": 0},
         )
 
         self.assertEqual(faulted, "runtime_fault")

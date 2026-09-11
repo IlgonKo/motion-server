@@ -1,0 +1,483 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/system.json",
+  "$defs": {
+    "system_authority_request": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/authority/request"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/authority/request",
+        "kind": "authority",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_authority_request_response"
+        }
+      },
+      "description": "Request for system/authority/request. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_authority_release": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/authority/release"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/authority/release",
+        "kind": "authority",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_authority_release_response"
+        }
+      },
+      "description": "Request for system/authority/release. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_authority_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/authority/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/authority/status",
+        "kind": "authority",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_authority_status_response"
+        }
+      },
+      "description": "Request for system/authority/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_server_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/server/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/server/status",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_server_status_response"
+        }
+      },
+      "description": "Request for system/server/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_server_fault_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/server/fault_reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/server/fault_reset",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_server_fault_reset_response"
+        }
+      },
+      "description": "Request for system/server/fault_reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_server_restart": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/server/restart"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/server/restart",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": true,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/system.json#/$defs/system_server_restart_response"
+        }
+      },
+      "description": "Request for system/server/restart. API success acknowledges handler execution, not physical motion completion."
+    },
+    "feedback": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "system/feedback"
+        },
+        "process_data_valid": {
+          "type": "boolean"
+        },
+        "server_health": {
+          "$ref": "common.json#/$defs/health"
+        },
+        "target_positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "actual_positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "actual_velocities": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "statuswords": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "mode_displays": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "command_authority": {
+          "$ref": "common.json#/$defs/authority"
+        },
+        "io": {
+          "type": "object",
+          "properties": {
+            "devices": {
+              "type": "array",
+              "items": {
+                "$ref": "io.json#/$defs/device_snapshot"
+              }
+            }
+          },
+          "required": [
+            "devices"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "process_data_valid",
+        "server_health",
+        "target_positions",
+        "actual_positions",
+        "actual_velocities",
+        "statuswords",
+        "mode_displays",
+        "command_authority"
+      ],
+      "additionalProperties": false
+    },
+    "system_authority_request_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/authority/request"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "common.json#/$defs/authority_action"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_authority_release_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/authority/release"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "common.json#/$defs/authority_action"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_authority_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/authority/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "common.json#/$defs/authority"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_server_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/server/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "server_mode": {
+                    "type": "string"
+                  },
+                  "initialized": {
+                    "type": "boolean"
+                  },
+                  "runtime_state": {
+                    "type": "string"
+                  },
+                  "initialization_failure": {
+                    "$ref": "common.json#/$defs/initialization_failure"
+                  },
+                  "cycle_time": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "feedback_type": {
+                    "anyOf": [
+                      {
+                        "const": "system/feedback"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "diagnostic_status": {
+                    "$ref": "common.json#/$defs/diagnostic"
+                  }
+                },
+                "required": [
+                  "server_mode",
+                  "initialized",
+                  "runtime_state",
+                  "initialization_failure",
+                  "cycle_time",
+                  "feedback_type",
+                  "diagnostic_status"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_server_fault_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/server/fault_reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "fault_count",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_server_restart_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/server/restart"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
