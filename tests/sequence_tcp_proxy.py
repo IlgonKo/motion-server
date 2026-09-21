@@ -9,6 +9,7 @@ import time
 class ResponseDelayProxy:
     def __init__(self, server_port):
         self.server_port = server_port
+        self.upstream = self._connect_upstream()
         self.listener = socket.socket()
         self.listener.bind(('127.0.0.1', 0))
         self.listener.listen()
@@ -23,6 +24,19 @@ class ResponseDelayProxy:
         self.thread = threading.Thread(target=self.run, daemon=True)
         self.thread.start()
 
+    def _connect_upstream(self):
+        deadline = time.monotonic() + 10.0
+        while True:
+            try:
+                return socket.create_connection(
+                    ('127.0.0.1', self.server_port),
+                    timeout=.1,
+                )
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(.02)
+
     def close(self):
         self.done.set()
         self.thread.join(3)
@@ -33,7 +47,8 @@ class ResponseDelayProxy:
             raise self.error
 
     def run(self):
-        downstream = upstream = None
+        downstream = None
+        upstream = self.upstream
         try:
             while not self.done.is_set():
                 try:
@@ -42,17 +57,6 @@ class ResponseDelayProxy:
                 except socket.timeout:
                     pass
             if downstream is None:
-                return
-            end = time.monotonic()+10
-            while not self.done.is_set():
-                try:
-                    upstream = socket.create_connection(('127.0.0.1', self.server_port), timeout=.1)
-                    break
-                except OSError:
-                    if time.monotonic() > end:
-                        raise
-                    time.sleep(.02)
-            if upstream is None:
                 return
             downstream.settimeout(1)
             upstream.settimeout(1)

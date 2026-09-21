@@ -5,7 +5,13 @@ import socket
 import threading
 import time
 
-from motion_server_client import decode_server_message, is_fail_message
+from motion_server_client import (
+    HEARTBEAT_POLL_SECONDS,
+    HEARTBEAT_TIMEOUT_SECONDS,
+    decode_server_message,
+    heartbeat_ack,
+    is_fail_message,
+)
 
 
 RECONNECT_PERIOD = 1.0
@@ -25,6 +31,7 @@ class MotionServerClient:
         self.last_error = ""
         self.feedback = {}
         self.responses = []
+        self.heartbeat_deadline = 0.0
         self.thread = threading.Thread(target=self._connection_loop, daemon=True)
 
     def start(self):
@@ -66,22 +73,41 @@ class MotionServerClient:
 
     def _connect(self):
         sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
-        sock.settimeout(None)
-        stream = sock.makefile("r", encoding="utf-8", newline="\n")
+        sock.settimeout(HEARTBEAT_POLL_SECONDS)
         with self.lock:
             self.sock = sock
-            self.stream = stream
+            self.stream = None
             self.connected = True
             self.last_error = ""
+            self.heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
             self.condition.notify_all()
 
     def _read_loop(self):
+        buffer = bytearray()
         while not self.stop_event.is_set():
-            line = self.stream.readline()
-            if not line:
+            try:
+                chunk = self.sock.recv(65536)
+            except socket.timeout:
+                if time.monotonic() >= self.heartbeat_deadline:
+                    raise ConnectionError("Motion Server Heartbeat timed out")
+                continue
+            if not chunk:
                 raise ConnectionError("Motion Server closed the connection")
-            message = decode_server_message(json.loads(line))
-            self._store_message(message)
+            buffer.extend(chunk)
+            while b"\n" in buffer:
+                line, _, remainder = buffer.partition(b"\n")
+                buffer = bytearray(remainder)
+                if not line.strip():
+                    continue
+                raw_message = json.loads(line.decode("utf-8"))
+                ack = heartbeat_ack(raw_message)
+                if ack is not None:
+                    self.send_json(ack)
+                    self.heartbeat_deadline = (
+                        time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
+                    )
+                    continue
+                self._store_message(decode_server_message(raw_message))
 
     def _store_message(self, message):
         with self.lock:

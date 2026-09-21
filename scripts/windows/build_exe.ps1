@@ -20,6 +20,7 @@ if ($PackageDirectory) {
 $ToolsRoot = Join-Path $PackageRoot "Tools"
 $PanelToolRoot = Join-Path $ToolsRoot "axis_control_panel"
 $IoPanelToolRoot = Join-Path $ToolsRoot "io_control_panel"
+$GamepadPanelToolRoot = Join-Path $ToolsRoot "gamepad_control_panel"
 $ManualRoot = Join-Path $PackageRoot "Manual"
 $IoddRoot = Join-Path $PackageRoot "device\io_link\iodd"
 $ReferenceClientsRoot = Join-Path $PackageRoot "Reference Clients"
@@ -146,6 +147,11 @@ try {
         throw "io_control_panel PyInstaller build failed"
     }
 
+    & $Python -B -m PyInstaller "packaging\gamepad_control_panel.spec" --noconfirm --distpath $PyInstallerDistRoot --workpath $PyInstallerWorkRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "gamepad PyInstaller build failed"
+    }
+
     New-Item -ItemType Directory -Force $PackageRoot | Out-Null
     Copy-Item -Recurse -Force (Join-Path $PyInstallerDistRoot "motion_server\*") $PackageRoot
 
@@ -157,14 +163,18 @@ try {
     New-Item -ItemType Directory -Force $ToolsRoot | Out-Null
     New-Item -ItemType Directory -Force $PanelToolRoot | Out-Null
     New-Item -ItemType Directory -Force $IoPanelToolRoot | Out-Null
+    New-Item -ItemType Directory -Force $GamepadPanelToolRoot | Out-Null
     Copy-Item -Recurse -Force (Join-Path $PyInstallerDistRoot "axis_control_panel\*") $PanelToolRoot
     Copy-Item -Recurse -Force (Join-Path $PyInstallerDistRoot "io_control_panel\*") $IoPanelToolRoot
+    Copy-Item -Recurse -Force (Join-Path $PyInstallerDistRoot "gamepad_control_panel\*") $GamepadPanelToolRoot
 
     Copy-WindowsConfig ".env.example" (Join-Path $PackageRoot "config.example.txt")
     Copy-WindowsConfig "device\cmmt\.env.example" (Join-Path $PackageRoot "device\cmmt\config.example.txt")
     Copy-WindowsConfig "device\cpx_ap_i_ec\.env.example" (Join-Path $PackageRoot "device\cpx_ap_i_ec\config.example.txt")
     Copy-WindowsConfig "control_panel\axis_control_panel\.env.example" (Join-Path $PanelToolRoot "config.example.txt")
     Copy-WindowsConfig "control_panel\io_control_panel\.env.example" (Join-Path $IoPanelToolRoot "config.example.txt")
+    Copy-Item -Force "control_panel\gamepad_control_panel\config.example.json" (Join-Path $GamepadPanelToolRoot "config.example.json")
+    Copy-Item -Force "control_panel\gamepad_control_panel\device_profiles.json" (Join-Path $GamepadPanelToolRoot "device_profiles.json")
     Copy-Item -Force "Reference\cmmt_error_catalog.json" (Join-Path $PackageRoot "Reference\cmmt_error_catalog.json")
     Copy-NodeRedReferenceClient
     & $Python -B "scripts\windows\ai_reference_bundle.py" --destination (Join-Path $PackageRoot "AI Reference")
@@ -200,6 +210,9 @@ try {
         }
         if (Test-Path "control_panel\io_control_panel\.env") {
             Copy-WindowsConfig "control_panel\io_control_panel\.env" (Join-Path $IoPanelToolRoot "config.txt")
+        }
+        if (Test-Path "control_panel\gamepad_control_panel\config.json") {
+            Copy-Item -Force "control_panel\gamepad_control_panel\config.json" (Join-Path $GamepadPanelToolRoot "config.json")
         }
     }
 

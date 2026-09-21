@@ -1,6 +1,6 @@
 # Windows EXE Packaging
 
-Motion Server and Axis Control Panel can run on Windows without Docker after
+Motion Server and the Axis, I/O, and Gamepad Control Panels can run on Windows without Docker after
 packaging with PyInstaller.
 
 ## Build
@@ -46,6 +46,10 @@ dist\Motion Server
   Tools\io_control_panel\io_control_panel.exe
   Tools\io_control_panel\config.txt
   Tools\io_control_panel\config.example.txt
+  Tools\gamepad_control_panel\gamepad_control_panel.exe
+  Tools\gamepad_control_panel\config.json
+  Tools\gamepad_control_panel\config.example.json
+  Tools\gamepad_control_panel\device_profiles.json
   Tools\list_ethercat_nics.ps1
   Tools\npcap-1.88.exe
 ```
@@ -60,6 +64,7 @@ dist\Motion Server\device\cmmt\config.txt
 dist\Motion Server\device\cpx_ap_i_ec\config.txt
 dist\Motion Server\Tools\axis_control_panel\config.txt
 dist\Motion Server\Tools\io_control_panel\config.txt
+dist\Motion Server\Tools\gamepad_control_panel\config.json
 ```
 
 Mock and real devices use the same profile configuration files. Virtual CMMT
@@ -84,6 +89,7 @@ existing destination. Use `-SkipLocalEnv -SkipNpcapDownload` for Mock-only valid
 cd "dist\Motion Server"
 .\motion_server.exe --backend mock --bus cmmt,cmmt,cmmt --server-mode basic --port 15000
 .\Tools\axis_control_panel\axis_control_panel.exe
+.\Tools\gamepad_control_panel\gamepad_control_panel.exe
 ```
 
 ## Run With Real EtherCAT Hardware

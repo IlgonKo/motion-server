@@ -28,6 +28,24 @@
         "null"
       ]
     },
+    "heartbeat_challenge": {
+      "type": "object",
+      "properties": {
+        "type": {"const": "system/heartbeat"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 4294967295}
+      },
+      "required": ["type", "sequence"],
+      "additionalProperties": false
+    },
+    "heartbeat_ack": {
+      "type": "object",
+      "properties": {
+        "type": {"const": "system/heartbeat/ack"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 4294967295}
+      },
+      "required": ["type", "sequence"],
+      "additionalProperties": false
+    },
     "failure": {
       "type": "object",
       "required": [
@@ -110,7 +128,13 @@
         "owned_by_this_client": {"type": "boolean"},
         "available": {"type": "boolean"},
         "granted": {"type": "boolean"},
-        "message": {"type": "string"}
+        "message": {"type": "string"},
+        "release_mode": {
+          "enum": ["controlled_stop", "quick_stop_fallback"]
+        },
+        "fallback_reason": {
+          "enum": ["stop_failed", "standstill_timeout"]
+        }
       },
       "required": ["owner", "owned_by_this_client", "available", "granted", "message"],
       "additionalProperties": false

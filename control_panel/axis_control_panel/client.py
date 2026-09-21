@@ -13,7 +13,13 @@ from control_panel.axis_control_panel.panel_update_data import (
     merge_system_feedback,
 )
 from control_panel.axis_control_panel.units import api_to_user_unit_factor
-from motion_server_client import decode_server_message, is_fail_message
+from motion_server_client import (
+    HEARTBEAT_POLL_SECONDS,
+    HEARTBEAT_TIMEOUT_SECONDS,
+    decode_server_message,
+    heartbeat_ack,
+    is_fail_message,
+)
 
 RECONNECT_PERIOD = 1.0
 
@@ -49,6 +55,7 @@ class AxisServerClient:
         self.last_diagnosis_result = ""
         self.last_axis_param_catalog = None
         self.sdo_read_results = []
+        self.heartbeat_deadline = 0.0
         self.thread = threading.Thread(target=self._connection_loop, daemon=True)
 
     def start(self):
@@ -107,50 +114,69 @@ class AxisServerClient:
 
     def _connect(self):
         sock = socket.create_connection((self.host, self.port), timeout=5.0)
-        sock.settimeout(None)
-        sock_file = sock.makefile("r", encoding="utf-8", newline="\n")
+        sock.settimeout(HEARTBEAT_POLL_SECONDS)
         with self.lock:
             self.sock = sock
-            self.sock_file = sock_file
+            self.sock_file = None
             self.connected = True
             self.last_error = ""
+            self.heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
 
     def _read_loop(self):
+        buffer = bytearray()
         while not self.stop_event.is_set():
-            line = self.sock_file.readline()
-            if not line:
+            try:
+                chunk = self.sock.recv(65536)
+            except socket.timeout:
+                if time.monotonic() >= self.heartbeat_deadline:
+                    raise OSError("Motion Server Heartbeat timed out")
+                continue
+            if not chunk:
                 raise OSError("server closed connection")
+            buffer.extend(chunk)
+            while b"\n" in buffer:
+                line, _, remainder = buffer.partition(b"\n")
+                buffer = bytearray(remainder)
+                if not line.strip():
+                    continue
+                self._route_received_message(json.loads(line.decode("utf-8")))
 
-            message = decode_server_message(json.loads(line))
-            if is_fail_message(message):
-                self._store_notice(message)
-            elif message.get("type") == "system/axes/status":
-                self._store_feedback(message)
-            elif message.get("type") == "system/axis/status":
-                self._merge_axis_status(message)
-            elif message.get("type") == "system/feedback":
-                if self._merge_system_feedback(message):
-                    self.request_system_status()
-            elif message.get("type") in {
-                "system/authority/request",
-                "system/authority/release",
-                "system/authority/status",
-                "command_rejected",
-            }:
-                self._store_notice(message)
-            elif message.get("type") in {
-                "system/axis/param_read",
-                "system/axis/param_write",
-                "system/axis/param_catalog",
-                "system/axis/param_save",
-                "system/axis/restart",
-                "system/axis/fault_reset",
-                "system/axes/fault_reset",
-                "system/server/fault_reset",
-                "system/server/restart",
-                "system/bus/reconnect",
-            }:
-                self._store_diagnosis_result(message)
+    def _route_received_message(self, raw_message):
+        ack = heartbeat_ack(raw_message)
+        if ack is not None:
+            self.send_json(ack)
+            self.heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
+            return
+        message = decode_server_message(raw_message)
+        if is_fail_message(message):
+            self._store_notice(message)
+        elif message.get("type") == "system/axes/status":
+            self._store_feedback(message)
+        elif message.get("type") == "system/axis/status":
+            self._merge_axis_status(message)
+        elif message.get("type") == "system/feedback":
+            if self._merge_system_feedback(message):
+                self.request_system_status()
+        elif message.get("type") in {
+            "system/authority/request",
+            "system/authority/release",
+            "system/authority/status",
+            "command_rejected",
+        }:
+            self._store_notice(message)
+        elif message.get("type") in {
+            "system/axis/param_read",
+            "system/axis/param_write",
+            "system/axis/param_catalog",
+            "system/axis/param_save",
+            "system/axis/restart",
+            "system/axis/fault_reset",
+            "system/axes/fault_reset",
+            "system/server/fault_reset",
+            "system/server/restart",
+            "system/bus/reconnect",
+        }:
+            self._store_diagnosis_result(message)
 
     def _store_feedback(self, message):
         with self.lock:

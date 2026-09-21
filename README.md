@@ -96,6 +96,8 @@ PYSOEM_INTERFACE=enp1s0
 MOTION_SERVER_BACKEND=pysoem
 MOTION_SERVER_BUS=cmmt
 MOTION_SERVER_PORT=15000
+MOTION_SERVER_HEARTBEAT_PERIOD=0.05
+MOTION_SERVER_HEARTBEAT_TIMEOUT=0.2
 PYSOEM_CYCLE_TIME=0.01
 ```
 
@@ -213,10 +215,19 @@ bash scripts/host/panel.sh --build
 Control panel source code is grouped under `control_panel/`.
 `control_panel/axis_control_panel` contains the motion-axis panel, and
 `control_panel/io_control_panel` contains the CPX remote I/O monitoring and
-digital output control panel. On Windows, the I/O panel can be started from:
+digital output control panel. `control_panel/gamepad_control_panel` contains the
+DualSense/Gamepad manual motion panel. On Windows, the I/O panel can be started from:
 
 ```powershell
 .\scripts\windows\io_panel.ps1
+```
+
+The Axis panel and Gamepad Control Panel use the same direct Windows launch flow:
+
+```powershell
+.\scripts\windows\axis_panel.ps1
+.\scripts\windows\gamepad.ps1 -ListDevices
+.\scripts\windows\gamepad.ps1
 ```
 
 The Motion Server accepts multiple TCP clients. Command messages require command
@@ -538,6 +549,7 @@ Runtime `.env` files remain local to the Linux host and are not tracked by Git.
 
 ```text
 motion_server/         Motion Server TCP API, backend selection, local panel, and host entrypoint
+control_panel/         Axis, I/O, and Gamepad Control Panels
 diagnostics/         Adapter listing, PDO dump, and smoke-test utilities
 docker/motion_server/  Motion Server Dockerfile and compose file
 docker/axis_panel/   Axis Control Panel Dockerfile

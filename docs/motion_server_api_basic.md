@@ -42,6 +42,14 @@ system/io/*          I/O 장치 명령
 
 기본 포트는 `MOTION_SERVER_PORT`로 설정한다. 일반 기본값은 `15000`이다.
 
+모든 TCP 연결은 transport Heartbeat에 응답해야 한다. server는 기본 50 ms마다
+`{"type":"system/heartbeat","sequence":N}` challenge를 보내며 client는 일반 request를 만들지 않고
+`{"type":"system/heartbeat/ack","sequence":(N+1) mod 2^32}`를 반환한다. ACK에는 `cmd`와
+`request_id`를 넣지 않는다. 기본 200 ms 안에 유효한 ACK가 없으면 server는 해당 연결을 종료하며,
+연결이 command authority owner였다면 전체 Axis를 Disable/Quick Stop한다. 주기와 timeout은 각각
+`MOTION_SERVER_HEARTBEAT_PERIOD`, `MOTION_SERVER_HEARTBEAT_TIMEOUT`으로 설정하며 timeout은 주기보다
+커야 한다.
+
 ```python
 import json
 import socket

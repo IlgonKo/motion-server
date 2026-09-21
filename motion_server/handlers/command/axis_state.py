@@ -8,14 +8,9 @@ from motion_server.handlers.command.homing import finish_homing
 from motion_server.app.cycle import exchange
 from motion_server.handlers.status import axes_status_message
 from motion_server.control.axis_operations import (
-    actual_positions,
     axis_count,
     hold_axis_at_actual_position,
     operation_enabled_axes,
-    reject_if_any_axis_disabled,
-)
-from motion_server.control.setpoint_output import (
-    command_profile_velocities,
 )
 from motion_server.api import (
     public_command_name,
@@ -43,6 +38,63 @@ def request_axis_halt(runtime, axis_index):
     slave.rxpdo.controlword = int(slave.rxpdo.controlword) | HALT_BIT
 
 
+def stop_axis_motion(runtime, state, axis_index):
+    try:
+        hold_axis_at_actual_position(runtime, state, axis_index)
+        runtime.sync_trajectory_to_actual_position(axis_index)
+
+        slave = runtime.slaves[axis_index]
+        enabled = axis_index in operation_enabled_axes(runtime, [axis_index])
+        motion_mode = state["motion_modes"][axis_index]
+
+        if motion_mode == "pv":
+            slave.rxpdo.target_velocity = 0
+            runtime.sync_velocity_command(axis_index, 0.0)
+        elif motion_mode == "jog":
+            jog_bits = (1 << 4) | (1 << 5) | (1 << 11) | (1 << 12)
+            slave.rxpdo.controlword = int(slave.rxpdo.controlword) & ~jog_bits
+
+        if enabled and motion_mode in {"pp", "csp"}:
+            request_axis_halt(runtime, axis_index)
+    except (OSError, AttributeError, IndexError, TypeError, ValueError) as exc:
+        raise DeviceAccessException("axis_stop") from exc
+
+
+def stop_motion_axes(runtime, state, axes):
+    result = collect_target_results(
+        axes,
+        lambda axis_index: stop_axis_motion(runtime, state, axis_index),
+    )
+    runtime.set_target_positions(state["target_positions"])
+    return result
+
+
+def disable_axis_motion(runtime, state, axis_index):
+    stop_failure = None
+    try:
+        stop_axis_motion(runtime, state, axis_index)
+    except MotionServerException as exc:
+        stop_failure = exc
+
+    try:
+        set_axis_controlword(runtime, axis_index, 0x0007)
+    except MotionServerException:
+        if stop_failure is None:
+            raise
+
+    if stop_failure is not None:
+        raise stop_failure
+
+
+def disable_motion_axes(runtime, state, axes):
+    result = collect_target_results(
+        axes,
+        lambda axis_index: disable_axis_motion(runtime, state, axis_index),
+    )
+    runtime.set_target_positions(state["target_positions"])
+    return result
+
+
 def stop_system(message, runtime, state):
     mode = str(message.get("mode", "controlled")).strip().lower()
     if mode != "controlled":
@@ -53,32 +105,14 @@ def stop_system(message, runtime, state):
         finish_homing(runtime, state, "stopped", "Homing stopped by system/stop.")
 
     state["trajectory"] = inactive_trajectory_state("system_stop")
-    positions = actual_positions(runtime)
-    state["target_positions"] = positions
-    runtime.set_target_positions(positions)
-    runtime.sync_trajectory_to_actual_positions()
-    enabled_axes = set(operation_enabled_axes(runtime, range(axis_count(runtime))))
-    for axis_index, motion_mode in enumerate(state["motion_modes"]):
-        if axis_index not in enabled_axes:
-            continue
-        if motion_mode == "pp":
-            request_axis_halt(runtime, axis_index)
-        elif motion_mode == "pv":
-            command_profile_velocities(
-                runtime,
-                state,
-                [axis_index],
-                [0.0],
-                "system/axes/stop",
-                None,
-            )
-        elif motion_mode == "csp":
-            request_axis_halt(runtime, axis_index)
+    axes = list(range(axis_count(runtime)))
+    result = stop_motion_axes(runtime, state, axes)
 
     runtime.logger.status(
         "Received system/stop: "
-        f"mode={mode} hold_positions={positions}",
+        f"mode={mode} hold_positions={state['target_positions']}",
     )
+    return result
 
 
 def stop_axes(message, runtime, state, client):
@@ -88,42 +122,18 @@ def stop_axes(message, runtime, state, client):
     except Exception as exc:
         raise_operation_rejected(client, command, str(exc))
         return
-    if reject_if_any_axis_disabled(runtime, axes, client, command):
-        return
-
     if state.get("homing", {}).get("active"):
         finish_homing(runtime, state, "stopped", "Homing stopped by axis/stop.")
 
     state["trajectory"] = inactive_trajectory_state("axis_stop")
-    positions = list(state["target_positions"])
-    actual = actual_positions(runtime)
-    for axis_index in axes:
-        positions[axis_index] = actual[axis_index]
-        hold_axis_at_actual_position(runtime, state, axis_index)
+    result = stop_motion_axes(runtime, state, axes)
+    if isinstance(result, PartialFailure):
+        return result
 
-    state["target_positions"] = positions
-    runtime.set_target_positions(positions)
-    runtime.sync_trajectory_to_actual_positions()
-    enabled_axes = set(operation_enabled_axes(runtime, axes))
-    for axis_index in axes:
-        if axis_index not in enabled_axes:
-            continue
-        motion_mode = state["motion_modes"][axis_index]
-        if motion_mode == "pp":
-            request_axis_halt(runtime, axis_index)
-        elif motion_mode == "pv":
-            command_profile_velocities(
-                runtime,
-                state,
-                [axis_index],
-                [0.0],
-                command,
-                client,
-            )
-        elif motion_mode == "csp":
-            request_axis_halt(runtime, axis_index)
-        elif motion_mode == "jog":
-            runtime.slaves[axis_index].rxpdo.controlword = 0x000F
+    runtime.logger.status(
+        "Received axis stop: "
+        f"command={command} axes={axes} hold_positions={state['target_positions']}",
+    )
 
 
 def reset_faults(runtime, state, axis_indices=None):

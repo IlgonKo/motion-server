@@ -1,0 +1,51 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 15000,
+    "request_timeout": 3.0,
+    "axes": {
+      "x": 0,
+      "y": 1,
+      "z": 2,
+      "rotation": 3
+    }
+  },
+  "device": {
+    "name": "REPLACE_WITH_PYGAME_DEVICE_NAME",
+    "guid": "replace_with_pygame_guid",
+    "profile": "dualsense_windows"
+  },
+  "axes": {
+    "x": "left_x",
+    "y": "left_y",
+    "z": "right_y",
+    "rotation": "right_x"
+  },
+  "actions": {
+    "enable": {
+      "control": "l2",
+      "threshold": 0.5,
+      "pressed_when": "above"
+    },
+    "authority_toggle": "options",
+    "fault_reset": "square",
+    "stop": "triangle",
+    "all_axes_stop": "create",
+    "mode_toggle": "touchpad",
+    "homing": "cross",
+    "speed_up": "dpad_up",
+    "speed_down": "dpad_down",
+    "previous_axis": "dpad_left",
+    "next_axis": "dpad_right"
+  },
+  "invert": {
+    "x": false,
+    "y": true,
+    "z": true,
+    "rotation": false
+  },
+  "deadzone": 0.08,
+  "update_period_ms": 50,
+  "speed_scale_default": 0.1,
+  "speed_scales": [0.05, 0.1, 0.25, 0.5, 1.0]
+}

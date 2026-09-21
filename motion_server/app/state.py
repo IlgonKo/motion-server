@@ -101,6 +101,7 @@ def initial_server_state(
         "homing": inactive_homing_state(),
         "jog_previous_modes": [None for _ in range(axis_count_value)],
         "command_authority_owner": None,
+        "authority_release": None,
     }
 
 
@@ -111,4 +112,5 @@ def initial_degraded_state(server_session, server_mode="basic"):
         "initialization_status": server_session.initialization_status,
         "server_mode": str(server_mode),
         "command_authority_owner": None,
+        "authority_release": None,
     }

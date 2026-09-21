@@ -1,10 +1,23 @@
 import unittest
 
 from control_panel.axis_control_panel.panel_update_data import initial_feedback, merge_axis_status
-from motion_server_client import decode_server_message, is_fail_message
+from motion_server_client import decode_server_message, heartbeat_ack, is_fail_message
 
 
 class ClientResponseContractTest(unittest.TestCase):
+    def test_heartbeat_ack_uses_uint32_wrap_without_request_fields(self):
+        self.assertEqual(
+            heartbeat_ack(
+                {"type": "system/heartbeat", "sequence": 4294967295}
+            ),
+            {"type": "system/heartbeat/ack", "sequence": 0},
+        )
+
+    def test_invalid_heartbeat_sequence_is_rejected(self):
+        for sequence in (-1, 4294967296, True, 1.5):
+            with self.subTest(sequence=sequence), self.assertRaises(ValueError):
+                heartbeat_ack({"type": "system/heartbeat", "sequence": sequence})
+
     def test_success_envelope_is_decoded(self):
         message = decode_server_message({
             "type": "system/axes/status", "request_id": "r1", "result": "success",

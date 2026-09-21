@@ -69,9 +69,13 @@ from motion_server.app.client_transport import (
     allocate_client_id,
     close_client,
     flush_client_output,
+    heartbeat_timed_out,
+    initialize_client_heartbeat,
     send_feedback_if_due,
+    send_heartbeat_if_due,
     service_client,
 )
+from motion_server.app.authority_release import process_pending_authority_release
 from device import get_device_profile
 from ethercat.distributed_clock import (
     DcCycleScheduler,
@@ -142,6 +146,8 @@ def run_server_loop(
                     state,
                     clients,
                     server_config.feedback_period,
+                    server_config.heartbeat_period,
+                    server_config.heartbeat_timeout,
                 )
                 if action is not None:
                     return action
@@ -193,6 +199,8 @@ def run_server_loop(
                 state,
                 clients,
                 server_config.feedback_period,
+                server_config.heartbeat_period,
+                server_config.heartbeat_timeout,
             )
             if action is not None:
                 return action
@@ -210,6 +218,8 @@ def run_server_loop(
                 state,
                 clients,
                 server_config.feedback_period,
+                server_config.heartbeat_period,
+                server_config.heartbeat_timeout,
             )
             if action is not None:
                 return action
@@ -233,6 +243,7 @@ def run_server_loop(
         dc_phase_lock.update(getattr(runtime, "last_tx_dc_time_ns", None), cycle_stats)
         record_pre_log_snapshot(runtime, state, cycle_stats)
         update_homing_state(runtime, state)
+        process_pending_authority_release(runtime, state)
         log_csp_command_step_anomalies(runtime, state)
         log_position_feedback_lag(runtime, state)
         log_velocity_anomalies(
@@ -273,6 +284,7 @@ def run_server_loop(
                     "last_feedback_time": 0.0,
                 }
                 clients.append(client)
+                initialize_client_heartbeat(client)
                 runtime.logger.status(
                     f"Client connected: id={client['id']} addr={addr}",
                 )
@@ -285,6 +297,15 @@ def run_server_loop(
                     close_client(client, runtime, state)
                     clients.remove(client)
                     continue
+                if heartbeat_timed_out(client):
+                    close_client(client, runtime, state)
+                    clients.remove(client)
+                    continue
+                send_heartbeat_if_due(
+                    client,
+                    server_config.heartbeat_period,
+                    server_config.heartbeat_timeout,
+                )
                 send_feedback_if_due(
                     client,
                     runtime,
@@ -319,14 +340,15 @@ def run_bus_disconnected_loop(
     state,
     clients,
     feedback_period,
+    heartbeat_period,
+    heartbeat_timeout,
 ):
     while state["server_session"].runtime_state is ServerRuntimeState.BUS_DISCONNECTED:
         try:
             conn, addr = server.accept()
             conn.setblocking(False)
             client_id = allocate_client_id(clients)
-            clients.append(
-                {
+            client = {
                     "id": client_id,
                     "addr": addr,
                     "conn": conn,
@@ -334,7 +356,8 @@ def run_bus_disconnected_loop(
                     "output_buffer": bytearray(),
                     "last_feedback_time": 0.0,
                 }
-            )
+            initialize_client_heartbeat(client)
+            clients.append(client)
         except BlockingIOError:
             pass
 
@@ -344,6 +367,11 @@ def run_bus_disconnected_loop(
                     close_client(client, runtime, state)
                     clients.remove(client)
                     continue
+                if heartbeat_timed_out(client):
+                    close_client(client, runtime, state)
+                    clients.remove(client)
+                    continue
+                send_heartbeat_if_due(client, heartbeat_period, heartbeat_timeout)
                 send_feedback_if_due(
                     client,
                     runtime,
@@ -390,6 +418,7 @@ def run_degraded_server_loop(
                 "last_feedback_time": 0.0,
             }
             clients.append(client)
+            initialize_client_heartbeat(client)
             next_client_id += 1
             print(f"Client connected: id={client['id']} addr={addr}", flush=True)
 
@@ -399,6 +428,15 @@ def run_degraded_server_loop(
                     close_client(client, None, state)
                     clients.remove(client)
                     continue
+                if heartbeat_timed_out(client):
+                    close_client(client, None, state)
+                    clients.remove(client)
+                    continue
+                send_heartbeat_if_due(
+                    client,
+                    getattr(server_config, "heartbeat_period", 0.05),
+                    getattr(server_config, "heartbeat_timeout", 0.2),
+                )
                 send_feedback_if_due(
                     client,
                     None,

@@ -27,7 +27,13 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 from ros.axis_runtime_config import get_axis_count
 from ros.axis_runtime_config import get_axis_names
-from motion_server_client import decode_server_message, is_fail_message
+from motion_server_client import (
+    HEARTBEAT_POLL_SECONDS,
+    HEARTBEAT_TIMEOUT_SECONDS,
+    decode_server_message,
+    heartbeat_ack,
+    is_fail_message,
+)
 
 
 DEFAULT_HOST = "192.168.0.12"
@@ -65,6 +71,7 @@ class Cia402CommandBridgeNode(Node):
         self.sock_file = None
         self.sock_lock = threading.Lock()
         self.has_motion_server_authority = False
+        self.heartbeat_deadline = 0.0
         self.feedback_lock = threading.Lock()
         self.latest_actual_positions = [0.0 for _ in range(self.axis_count)]
         self.latest_actual_velocities = [0.0 for _ in range(self.axis_count)]
@@ -804,12 +811,12 @@ class Cia402CommandBridgeNode(Node):
     def connect(self):
         self.get_logger().info(f"Connecting to Motion Server {self.host}:{self.port}")
         sock = socket.create_connection((self.host, self.port), timeout=5.0)
-        sock.settimeout(None)
-        sock_file = sock.makefile("r", encoding="utf-8", newline="\n")
+        sock.settimeout(HEARTBEAT_POLL_SECONDS)
 
         with self.sock_lock:
             self.sock = sock
-            self.sock_file = sock_file
+            self.sock_file = None
+            self.heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
 
         self.get_logger().info("Connected to Motion Server")
         self.has_motion_server_authority = False
@@ -819,31 +826,51 @@ class Cia402CommandBridgeNode(Node):
             self.get_logger().info("Auto authority request is disabled")
 
     def read_loop(self):
+        buffer = bytearray()
         while not self.stop_event.is_set():
-            line = self.sock_file.readline()
-            if not line:
+            try:
+                chunk = self.sock.recv(65536)
+            except socket.timeout:
+                if time.monotonic() >= self.heartbeat_deadline:
+                    raise OSError("Motion Server Heartbeat timed out")
+                continue
+            if not chunk:
                 raise OSError("server closed connection")
+            buffer.extend(chunk)
+            while b"\n" in buffer:
+                line, _, remainder = buffer.partition(b"\n")
+                buffer = bytearray(remainder)
+                if not line.strip():
+                    continue
+                self.route_server_message(json.loads(line.decode("utf-8")))
 
-            message = decode_server_message(json.loads(line))
-            if message.get("type") in {"feedback", "system/feedback"}:
-                self.publish_feedback(message)
-            elif message.get("type") == "log":
-                self.get_logger().info(message.get("text", ""))
-            elif is_fail_message(message):
-                self.update_motion_server_authority_state(message)
-                self.publish_string(self.command_rejected_pub, message)
-                self.get_logger().warn(message.get("message", "Command rejected"))
-            elif message.get("type") in {
-                "authority/acquire",
-                "authority/release",
-                "authority/status",
-                "system/authority/request",
-                "system/authority/release",
-                "system/authority/status",
-            }:
-                self.update_motion_server_authority_state(message)
-                self.publish_string(self.command_authority_pub, message)
-                self.get_logger().info(message.get("message", ""))
+    def route_server_message(self, raw_message):
+        ack = heartbeat_ack(raw_message)
+        if ack is not None:
+            if not self.send_json(ack):
+                raise OSError("Motion Server disconnected during Heartbeat ACK")
+            self.heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
+            return
+        message = decode_server_message(raw_message)
+        if message.get("type") in {"feedback", "system/feedback"}:
+            self.publish_feedback(message)
+        elif message.get("type") == "log":
+            self.get_logger().info(message.get("text", ""))
+        elif is_fail_message(message):
+            self.update_motion_server_authority_state(message)
+            self.publish_string(self.command_rejected_pub, message)
+            self.get_logger().warn(message.get("message", "Command rejected"))
+        elif message.get("type") in {
+            "authority/acquire",
+            "authority/release",
+            "authority/status",
+            "system/authority/request",
+            "system/authority/release",
+            "system/authority/status",
+        }:
+            self.update_motion_server_authority_state(message)
+            self.publish_string(self.command_authority_pub, message)
+            self.get_logger().info(message.get("message", ""))
 
     def publish_feedback(self, message):
         target_positions = [

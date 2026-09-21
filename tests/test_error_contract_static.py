@@ -22,6 +22,8 @@ APPROVED_BROAD_CATCHES = {
     "control_panel/axis_control_panel/client.py::_connection_loop",
     "control_panel/axis_control_panel/connection.py::try_send",
     "control_panel/axis_control_panel/diagnosis.py::process_panel_sdo_read_queue",
+    "control_panel/gamepad_control_panel/controller.py::_request",
+    "control_panel/gamepad_control_panel/input.py::_read_snapshot",
     "control_panel/io_control_panel/client.py::_connection_loop",
     "control_panel/io_control_panel/control_panel.py::apply_digital_output",
     "control_panel/io_control_panel/control_panel.py::load_ec_catalog",

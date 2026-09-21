@@ -30,6 +30,7 @@ Thumbs.db
 # Local runtime artifacts
 .env
 device/*/.env
+control_panel/gamepad_control_panel/config.json
 .runtime/
 tmp_test_logs/
 *.log

@@ -87,6 +87,8 @@ def build_motion_server_config(
         port=bootstrap.port,
         mode=cli.server_mode or enum_value(ServerMode, value(values, "MOTION_SERVER_MODE", "basic")),
         feedback_period=number(values, "MOTION_SERVER_FEEDBACK_PERIOD", 0.05),
+        heartbeat_period=number(values, "MOTION_SERVER_HEARTBEAT_PERIOD", 0.05),
+        heartbeat_timeout=number(values, "MOTION_SERVER_HEARTBEAT_TIMEOUT", 0.2),
         axis_restart_disable_settle_time=number(
             values,
             "MOTION_SERVER_AXIS_RESTART_DISABLE_SETTLE_TIME",
@@ -341,6 +343,10 @@ def build_cpx_config(values, bus_device):
 def validate_motion_server_config(config):
     if config.server.feedback_period <= 0.0:
         raise ValueError("Motion Server feedback period must be > 0")
+    if config.server.heartbeat_period <= 0.0:
+        raise ValueError("Motion Server Heartbeat period must be > 0")
+    if config.server.heartbeat_timeout <= config.server.heartbeat_period:
+        raise ValueError("Motion Server Heartbeat timeout must be greater than period")
     if config.server.axis_restart_disable_settle_time < 0.0:
         raise ValueError("Axis restart disable settle time must be >= 0")
     if config.server.bus_reconnect_timeout <= 0.0:

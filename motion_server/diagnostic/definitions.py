@@ -81,3 +81,23 @@ AXIS_DRIVE_WARNING = DiagnosticDefinition(
     description="The axis statusword reports the CiA 402 warning bit.",
     latching=False,
 )
+
+AUTHORITY_RELEASE_FALLBACK = DiagnosticDefinition(
+    code="AUTHORITY_RELEASE_FALLBACK",
+    level=DiagnosticLevel.ALARM,
+    title="Authority release required Quick Stop fallback",
+    description=(
+        "A normal command authority release could not finish with controlled Stop."
+    ),
+    latching=False,
+)
+
+AUTHORITY_SHUTDOWN_FAILED = DiagnosticDefinition(
+    code="AUTHORITY_SHUTDOWN_FAILED",
+    level=DiagnosticLevel.FAULT,
+    title="Authority motion shutdown failed",
+    description=(
+        "One or more Axis shutdown operations failed while command authority was ending."
+    ),
+    latching=True,
+)

@@ -35,6 +35,9 @@ package.
 
 The client reconnects every second. Requests that were pending when the connection was lost fail and are
 never retransmitted. Command authority is connection-owned and is never reacquired automatically.
+Every connection also answers the required 50 ms Motion Server Heartbeat challenge. If no new challenge is
+received for 200 ms, the client closes the socket, fails all pending requests, clears feedback, and reconnects
+without reacquiring authority.
 
 ## AI reference program
 

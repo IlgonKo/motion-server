@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const net = require("net");
 
 const RECONNECT_PERIOD_MS = 1000;
+const HEARTBEAT_TIMEOUT_MS = 200;
+const UINT32_MAX = 0xffffffff;
 
 module.exports = function registerMotionServerNodes(RED) {
     function MotionServerConnectionNode(config) {
@@ -26,6 +28,7 @@ module.exports = function registerMotionServerNodes(RED) {
         node.sessionPrefix = `node-red-${crypto.randomBytes(3).toString("hex")}`;
         node.requestSequence = 0;
         node.reconnectTimer = null;
+        node.heartbeatTimer = null;
         node.stopped = false;
 
         node.endpointSnapshot = () => ({
@@ -143,6 +146,10 @@ module.exports = function registerMotionServerNodes(RED) {
             const socket = node.socket;
             node.socket = null;
             node.buffer = Buffer.alloc(0);
+            if (node.heartbeatTimer !== null) {
+                clearTimeout(node.heartbeatTimer);
+                node.heartbeatTimer = null;
+            }
             node.setConnectionState(false, message);
             node.failPending("connection_lost", message);
             if (socket !== null && !socket.destroyed) {
@@ -197,6 +204,30 @@ module.exports = function registerMotionServerNodes(RED) {
         };
 
         node.routeMessage = (message) => {
+            if (message.type === "system/heartbeat") {
+                const sequence = message.sequence;
+                if (!Number.isInteger(sequence) || sequence < 0 || sequence > UINT32_MAX) {
+                    node.disconnect("Motion Server protocol error: invalid Heartbeat sequence");
+                    return;
+                }
+                const ack = {
+                    type: "system/heartbeat/ack",
+                    sequence: sequence === UINT32_MAX ? 0 : sequence + 1,
+                };
+                node.socket.write(`${JSON.stringify(ack)}\n`, (error) => {
+                    if (error) {
+                        node.disconnect(`Motion Server connection lost: ${error.message}`);
+                    }
+                });
+                if (node.heartbeatTimer !== null) {
+                    clearTimeout(node.heartbeatTimer);
+                }
+                node.heartbeatTimer = setTimeout(() => {
+                    node.disconnect("Motion Server Heartbeat timed out");
+                    node.scheduleReconnect();
+                }, HEARTBEAT_TIMEOUT_MS);
+                return;
+            }
             if (message.type === "system/feedback" && !("request_id" in message)) {
                 for (const listener of node.feedbackListeners) {
                     listener(message);
@@ -280,6 +311,10 @@ module.exports = function registerMotionServerNodes(RED) {
                 node.buffer = Buffer.alloc(0);
                 node.cancelReconnect();
                 node.setConnectionState(true, "");
+                node.heartbeatTimer = setTimeout(() => {
+                    node.disconnect("Motion Server Heartbeat timed out");
+                    node.scheduleReconnect();
+                }, HEARTBEAT_TIMEOUT_MS);
             });
             socket.on("data", (chunk) => {
                 if (node.socket === socket) {

@@ -1,6 +1,7 @@
 from motion_server.api.specification import authority_message_types
 from motion_server.failure import AuthorityBusyException, AuthorityRequiredException
 from motion_server.handlers.authority.status import authority_status_payload
+from motion_server.app.authority_release import begin_authority_release
 
 
 def log_authority(runtime, message):
@@ -30,31 +31,9 @@ def acquire_authority(client, state, runtime):
     raise AuthorityBusyException(owner)
 
 
-def release_authority(client, state, runtime):
-    owner = state.get("command_authority_owner")
-    if owner == client["id"]:
-        state["command_authority_owner"] = None
-        reason = None
-        message = "Command authority released."
-        log_authority(runtime, f"Command authority released by client {client['id']}")
-    elif owner is None:
-        reason = "authority_required"
-        message = "This connection does not hold command authority."
-    else:
-        reason = "authority_busy"
-        message = "This client does not hold command authority."
-
-    if owner != client["id"]:
-        if owner is None:
-            raise AuthorityRequiredException()
-        raise AuthorityBusyException(owner)
-    return {
-        "granted": False,
-        "owner": None,
-        "owned_by_this_client": False,
-        "available": True,
-        "message": message,
-    }
+def release_authority(client, state, runtime, message=None):
+    request = message or {"cmd": "system/authority/release"}
+    return begin_authority_release(request, client, state, runtime)
 
 
 AUTHORITY_HANDLERS = {
@@ -83,11 +62,13 @@ def validate_authority_registry():
 validate_authority_registry()
 
 
-def handle_authority(message_type, client, state, runtime):
+def handle_authority(message_type, message, client, state, runtime):
     handler = AUTHORITY_HANDLERS.get(message_type)
     if handler is None:
         from motion_server.failure import UnknownCommandException
         raise UnknownCommandException(message_type)
+    if message_type == "system/authority/release":
+        return handler(client, state, runtime, message)
     return handler(client, state, runtime)
 
 

@@ -8,6 +8,13 @@ import queue
 import secrets
 import socket
 import threading
+import time
+
+from motion_server_reference_client.heartbeat import (
+    HEARTBEAT_POLL_SECONDS,
+    HEARTBEAT_TIMEOUT_SECONDS,
+    heartbeat_ack,
+)
 
 from motion_server_reference_client.exceptions import (
     ConnectionLostError,
@@ -71,6 +78,7 @@ class MotionServerClient:
         self._session_prefix = f"python-{secrets.token_hex(3)}"
         self._request_sequence = 0
         self._last_error = ""
+        self._heartbeat_deadline = 0.0
 
     @property
     def is_connected(self) -> bool:
@@ -179,12 +187,13 @@ class MotionServerClient:
             (self.host, self.port),
             timeout=CONNECT_TIMEOUT,
         )
-        sock.settimeout(None)
+        sock.settimeout(HEARTBEAT_POLL_SECONDS)
         with self._state_lock:
             if self._stop_event.is_set():
                 sock.close()
                 return
             self._socket = sock
+            self._heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
             self._last_error = ""
             self._connected_event.set()
 
@@ -195,7 +204,12 @@ class MotionServerClient:
                 sock = self._socket
             if sock is None:
                 return
-            chunk = sock.recv(RECEIVE_SIZE)
+            try:
+                chunk = sock.recv(RECEIVE_SIZE)
+            except socket.timeout:
+                if time.monotonic() >= self._heartbeat_deadline:
+                    raise ConnectionResetError("Motion Server Heartbeat timed out")
+                continue
             if not chunk:
                 raise ConnectionResetError("server closed the connection")
             buffer.extend(chunk)
@@ -213,6 +227,15 @@ class MotionServerClient:
                 self._route_message(message)
 
     def _route_message(self, message: dict) -> None:
+        ack = heartbeat_ack(message)
+        if ack is not None:
+            payload = (json.dumps(ack, separators=(",", ":")) + "\n").encode("utf-8")
+            with self._send_lock:
+                if self._socket is None:
+                    raise ConnectionResetError("Motion Server disconnected")
+                self._socket.sendall(payload)
+            self._heartbeat_deadline = time.monotonic() + HEARTBEAT_TIMEOUT_SECONDS
+            return
         if message.get("type") == "system/feedback" and "request_id" not in message:
             self._put_latest_feedback(message)
             return

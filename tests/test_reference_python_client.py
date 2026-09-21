@@ -21,8 +21,9 @@ from motion_server_reference_client import (  # noqa: E402
 
 
 class JsonLineServer:
-    def __init__(self, handler, *, port=0):
+    def __init__(self, handler, *, port=0, heartbeat=True):
         self.handler = handler
+        self.heartbeat = heartbeat
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listener.bind(("127.0.0.1", port))
         self.listener.listen()
@@ -66,10 +67,37 @@ class JsonLineServer:
 
     def handle_connection(self, connection):
         stream = connection.makefile("rb")
+        heartbeat_acknowledged = threading.Event()
+
+        def heartbeat_loop():
+            sequence = 0
+            while not self.stop_event.is_set():
+                try:
+                    send_message(
+                        connection,
+                        {"type": "system/heartbeat", "sequence": sequence},
+                    )
+                except OSError:
+                    return
+                if not heartbeat_acknowledged.wait(0.2):
+                    return
+                heartbeat_acknowledged.clear()
+                sequence = (sequence + 1) % (1 << 32)
+                self.stop_event.wait(0.05)
+
+        if self.heartbeat:
+            threading.Thread(target=heartbeat_loop, daemon=True).start()
         try:
             for line in stream:
                 request = json.loads(line.decode("utf-8"))
-                self.handler(connection, request)
+                if request.get("type") == "system/heartbeat/ack":
+                    heartbeat_acknowledged.set()
+                    continue
+                threading.Thread(
+                    target=self.handler,
+                    args=(connection, request),
+                    daemon=True,
+                ).start()
         except OSError:
             return
         finally:
@@ -127,6 +155,19 @@ class ReferencePythonClientTest(unittest.TestCase):
         self.assertEqual(failure["result"], "fail")
         self.assertRegex(success["request_id"], r"^python-[0-9a-f]{6}-1$")
         self.assertRegex(failure["request_id"], r"^python-[0-9a-f]{6}-2$")
+
+    def test_missing_server_heartbeat_disconnects_and_fails_pending(self):
+        server = self.track(
+            JsonLineServer(lambda _connection, _request: None, heartbeat=False).start()
+        )
+        client = self.client(server)
+
+        deadline = time.monotonic() + 1.0
+        while client.is_connected and time.monotonic() < deadline:
+            time.sleep(0.01)
+
+        self.assertFalse(client.is_connected)
+        self.assertIn("Heartbeat timed out", client.last_error)
 
     def test_parameter_json_numeric_types_are_preserved_on_wire(self):
         received = []

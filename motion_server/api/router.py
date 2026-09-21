@@ -15,6 +15,7 @@ from motion_server.api.encoder import (
     success_response,
 )
 from motion_server.api.validator import validate_command
+from motion_server.api.deferred import DeferredResponse
 from motion_server.failure import (
     AuthorityBusyException,
     AuthorityRequiredException,
@@ -35,6 +36,8 @@ def request_response(request, operation, *, logger=None):
     context = ResponseContext.from_request(request)
     try:
         result = operation()
+        if isinstance(result, DeferredResponse):
+            return result
         if isinstance(result, PartialFailure):
             return partial_fail_response(context, result)
         return success_response(context, result)
@@ -70,6 +73,8 @@ def route_message(message, runtime, state, client):
         message,
         lambda: _route_message_to_handler(message, runtime, state, client),
     )
+    if isinstance(response, DeferredResponse):
+        return response
     send_client_message(client, response)
     return response
 
@@ -122,9 +127,14 @@ def _route_message_to_handler(message, runtime, state, client):
             operation=message_type,
             state=runtime_state,
         )
+    if validation_error == "authority_releasing":
+        raise InvalidStateException(
+            operation=message_type,
+            state="authority_releasing",
+        )
 
     if spec.is_authority:
-        return handle_authority(message_type, client, state, runtime)
+        return handle_authority(message_type, message, client, state, runtime)
 
     if spec.is_status:
         return handle_status(message_type, message, runtime, state, client)

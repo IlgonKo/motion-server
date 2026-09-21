@@ -54,6 +54,8 @@ class ServerConfig:
     bus_reconnect_timeout: float
     axis_restart_timeout: float
     expert_mode: bool = False
+    heartbeat_period: float = 0.05
+    heartbeat_timeout: float = 0.2
 
 
 @dataclass(frozen=True)

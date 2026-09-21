@@ -162,6 +162,11 @@ def validate_command(spec, client, state, has_authority, *, message=None):
         return "invalid_recovery_scope"
     if command_requires_authority(spec) and not has_authority:
         return "authority_required"
+    if (
+        command_requires_authority(spec)
+        and state.get("authority_release") is not None
+    ):
+        return "authority_releasing"
     if not command_allowed_by_runtime_state(spec, state, message):
         return "runtime_fault"
     if message is not None:
