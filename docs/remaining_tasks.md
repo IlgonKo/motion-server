@@ -859,3 +859,18 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 기존 degraded TCP 및 recovery 계약, 실패 자원 정리가 유지된다.
   - 실패 분류/로그와 정상 연결 회귀가 통과하고 예상하지 못한 오류 정보는 유지한다.
 - 상세: [TD-039 기술 명세](tasks/td/TD-039-ethercat-discovery-failure-classification.md)
+
+### TD-040 32 bit DC Clock Rollover 연속 시간 보정
+
+- 상태: `complete`
+- 우선순위: 높음
+- 관련 작업: `TD-018`, `TD-030`, `RF-005`
+- 요약: 기준 ESC의 32 bit DC 시각을 연속 누적해 rollover에서 송신 scheduling 위상이
+  바뀌는 문제를 수정하고 64 bit 시각은 보존한다.
+- 완료 조건:
+  - 기준 slave의 실제 DC 폭을 판별하며 수신, 송신 추정과 phase lock이 같은 시각을 사용한다.
+  - 1/2/4 ms 다중 rollover에서 위상과 송신 deadline 연속성이 자동 검증된다.
+  - startup/cyclic 수신, 반복 조회, timeout, 재연결과 불연속 실패 처리가 검증된다.
+  - 관련 PDO/backend/초기화/복구 회귀가 통과한다.
+- 후속 확인: 구현 및 자동 검증 완료. 실장비 2 ms CSP 재캡처와 축 소음 해소 여부는 미확인이다.
+- 상세: [TD-040 기술 명세](tasks/td/TD-040-dc-clock-rollover-continuity.md)

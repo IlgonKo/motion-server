@@ -153,6 +153,7 @@ def run_server_loop(
                     return action
                 next_cycle_time = time.monotonic()
                 last_cycle_start_time = None
+                dc_phase_lock.reset()
                 continue
 
             next_cycle_time, dc_schedule_wait = (
@@ -206,6 +207,7 @@ def run_server_loop(
                 return action
             next_cycle_time = time.monotonic()
             last_cycle_start_time = None
+            dc_phase_lock.reset()
             continue
 
         try:
@@ -225,6 +227,7 @@ def run_server_loop(
                 return action
             next_cycle_time = time.monotonic()
             last_cycle_start_time = None
+            dc_phase_lock.reset()
             continue
 
         direct_tx_dc_time_ns = getattr(runtime, "last_direct_tx_dc_time_ns", None)

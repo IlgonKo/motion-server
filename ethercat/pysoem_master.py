@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import time
 
-from ethercat.distributed_clock import DistributedClock
+from ethercat.distributed_clock import DistributedClock, _DcTimeUnwrapper
 from ethercat.exceptions import EtherCATDiscoveryException, EtherCATStateTransitionException
 from ethercat.master_pdo_runtime import MasterPdoRuntime
 from ethercat.sdo_access import SdoAccess
@@ -57,6 +57,7 @@ class PySOEMMaster:
         self.working_counter = WorkingCounter()
         self.wkc = 0
         self.dc_time_ns = 0
+        self._dc_clock = None
         self.last_tx_dc_time_ns = 0
         self.last_direct_tx_dc_time_ns = 0
         self.last_rx_dc_time_ns = 0
@@ -425,10 +426,7 @@ class PySOEMMaster:
             self.wkc = self._master.receive_processdata(timeout_us)
         except Exception as exception:
             self._raise_processdata_exception(exception, "processdata_receive")
-        receive_monotonic_ns = time.monotonic_ns()
-        self.dc_time_ns = self.get_dc_time_ns()
-        self.last_rx_dc_time_ns = self.dc_time_ns
-        self.last_rx_monotonic_ns = receive_monotonic_ns
+        self._record_dc_sample()
         try:
             payloads = self._validate_input_payloads()
         except Exception as exception:
@@ -463,11 +461,24 @@ class PySOEMMaster:
     def get_dc_time_ns(self):
         if self._master is None:
             return self.dc.get_time_ns()
-        try:
-            value = self._master._get_dc_time()
-        except Exception:
-            value = self._master.dc_time
-        return int(value)
+        return self.dc_time_ns
+
+    def _record_dc_sample(self):
+        # A timeout must not advance the host timestamp of a stale DC sample.
+        if self.wkc <= 0:
+            return
+        received_ns = time.monotonic_ns()
+        raw_ns = int(self._master.dc_time)
+        if self._dc_clock is None:
+            value = raw_ns
+        else:
+            try:
+                value = self._dc_clock.update(raw_ns, received_ns)
+            except ValueError as exception:
+                raise CommunicationException("dc_clock_discontinuity") from exception
+        self.dc_time_ns = value
+        self.last_rx_dc_time_ns = value
+        self.last_rx_monotonic_ns = received_ns
 
     def expected_wkc(self):
         if self._master is not None:
@@ -559,6 +570,7 @@ class PySOEMMaster:
                     slave.commit_transmitted_output(payload)
                 remaining_us = max(1, int((deadline - time.monotonic()) * 1_000_000))
                 self.wkc = self._master.receive_processdata(min(2000, remaining_us))
+                self._record_dc_sample()
             except Exception as exception:
                 self._raise_processdata_exception(exception, "ethercat_state_transition")
             if requested and time.monotonic() < deadline:
@@ -605,13 +617,37 @@ class PySOEMMaster:
         return readings
 
     def _configure_distributed_clocks(self):
+        self._dc_clock = None
+        self.dc_time_ns = 0
+        self.last_tx_dc_time_ns = 0
+        self.last_direct_tx_dc_time_ns = 0
+        self.last_rx_dc_time_ns = 0
+        self.last_rx_monotonic_ns = None
+        self.last_tx_monotonic_ns = None
         if not self.dc_enabled:
             return
 
         found_dc_slaves = self._master.config_dc()
+        if not found_dc_slaves:
+            raise CommunicationException("dc_reference_not_found")
+        # SOEM selects the first DC-capable slave as its reference clock.
+        # ESC feature bit 2 indicates DC support; bit 3 indicates 64-bit time.
+        try:
+            for slave in self._master.slaves:
+                payload = slave._fprd(0x0008, 2)
+                if len(payload) != 2:
+                    raise CommunicationException("dc_reference_features")
+                features = int.from_bytes(payload, "little")
+                if features & 0x04:
+                    self._dc_clock = _DcTimeUnwrapper(64 if features & 0x08 else 32)
+                    break
+        except Exception as exception:
+            self._raise_processdata_exception(exception, "dc_reference_features")
+        if self._dc_clock is None:
+            raise CommunicationException("dc_reference_not_found")
         print(
             "Configured EtherCAT distributed clocks: "
-            f"dc_available={bool(found_dc_slaves)}",
+            f"dc_available=True, reference_clock_bits={self._dc_clock.bits}",
             flush=True,
         )
 
@@ -767,6 +803,7 @@ class PySOEMMaster:
             raise CommunicationException("bus_transport_disconnected")
 
     def _reset_processdata_state(self):
+        self._dc_clock = None
         self._processdata_prepared = False
         self._processdata_sent = False
         self.wkc = 0

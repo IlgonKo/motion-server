@@ -47,7 +47,10 @@ APPROVED_BROAD_CATCHES = {
     "ethercat/mock_master.py::write_sdo",
     "ethercat/pysoem_master.py::connect",
     "ethercat/pysoem_master.py::describe_slaves",
-    "ethercat/pysoem_master.py::get_dc_time_ns",
+    "ethercat/pysoem_master.py::_configure_distributed_clocks",
+    # DC startup transport translation and failure-only best-effort diagnostics.
+    "ethercat/pysoem_master.py::_transition_with_processdata",
+    "ethercat/pysoem_master.py::_read_sync_diagnostics",
     "ethercat/pysoem_master.py::read_slave_identity",
     "ethercat/pysoem_master.py::prepare_processdata",
     "ethercat/pysoem_master.py::receive_processdata",

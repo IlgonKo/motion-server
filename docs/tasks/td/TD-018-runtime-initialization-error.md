@@ -507,6 +507,14 @@ INITIALIZATION_RECOVERY_SCOPE = {
   포함한 자동 테스트 125개가 통과했다. 실장비 시험과 Node-RED 시험은 수행하지 않았다.
   실장비 SAFE_OP 진입 여부는 재기동 로그로 확인해야 한다.
 
+## 2026-10-20 32 bit DC rollover 연속 시간 보정
+
+- startup 이후 cyclic scheduling까지 이어지는 시간 연속성 수정은
+  [TD-040](TD-040-dc-clock-rollover-continuity.md)으로 분리해 원인, 구현 범위와 검증을 관리한다.
+- DC 초기화에서 기준 ESC의 시계 폭을 판별하고 startup/cyclic 수신에 같은 누적 기준을
+  적용한다. close/connect/DC 재구성 시 epoch를 초기화하고 기존 명시적 bus 복구 경계를 유지한다.
+- 관련 unittest 80개가 통과했다. 실장비 소음 해소 여부와 재캡처 확인은 TD-040의 후속 확인으로 남긴다.
+
 ## 완료 증거
 
 - typed Initialization model과 Cause Definition Registry, runtime 없는 degraded server 및

@@ -4,6 +4,28 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-10-20
+
+### TD-040 32 bit DC Clock Rollover 연속 시간 보정 완료
+
+- PLC와 Motion Server의 2 ms CSP capture 비교에서 기준 CMMT slave의 32 bit DC 시각이
+  rollover할 때 raw modulo 기반 scheduling 위상이 바뀌는 경로를 확인하고 수정했다.
+  velocity offset 활성화와 초기화 후 PP mode는 사용자 의도에 따른 조건으로 유지했다.
+- 기준 slave의 ESC feature register로 32/64 bit 폭을 판별하고, startup/cyclic 수신에서
+  32 bit 시각을 연속 누적하도록 구현했다. getter, 송신 시각 추정과 phase lock이 같은 시각을 사용한다.
+- 정상 rollover에서는 초기화하지 않고 close/connect/DC 재구성 시 누적 기준을 초기화한다.
+  bus 복구 후 phase-lock 적분/보정값을 초기화하고 긴 수신 공백이나 큰 시각 불연속은 기존
+  통신 오류 및 명시적 reconnect 경로로 전달한다.
+- 캡처의 `4293473308 → 505822`가 `1,999,810 ns`로 이어지는 것과 1/2/4 ms 각각
+  12,000 cycle의 rollover에서 위상/송신 deadline이 유지되는 것을 검증했다.
+- 전용 13개를 포함한 관련 unittest 80개가 통과했다. 마지막 timing field 초기화 보완 후
+  전용 13개 재검증 및 `git diff --check`도 통과했다. 기존 DC startup의 오류 경계 두 곳을
+  정적 검사 승인 목록에 동기화했다.
+- [TD-040](tasks/td/TD-040-dc-clock-rollover-continuity.md)에 원인, 구현 경계, 검증과 후속 확인을
+  정리하고 TD-018 및 Remaining Tasks에서 연결했다.
+- 실장비 구동, Node-RED 시험과 배포는 수행하지 않았다. 실제 소음 해소 여부와 rollover
+  전후의 주기 안정성은 수정 버전의 실장비 재캡처로 확인해야 한다.
+
 ## 2026-09-22
 
 ### TD-039 EtherCAT Slave 탐색 실패 traceback 노출 등록

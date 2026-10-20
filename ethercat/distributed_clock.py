@@ -1,6 +1,41 @@
 import time
 
 
+class _DcTimeUnwrapper:
+    """Extend the reference ESC clock without resetting phase at a 32-bit wrap."""
+
+    def __init__(self, bits):
+        if bits not in (32, 64):
+            raise ValueError("DC clock width must be 32 or 64 bits")
+        self.bits = bits
+        self.mask = (1 << bits) - 1
+        self.raw_ns = None
+        self.monotonic_ns = None
+        self.time_ns = 0
+
+    def update(self, raw_ns, monotonic_ns):
+        raw_ns = int(raw_ns) & self.mask
+        monotonic_ns = int(monotonic_ns)
+        if self.raw_ns is None:
+            value = raw_ns
+        else:
+            host_elapsed = monotonic_ns - self.monotonic_ns
+            elapsed = (raw_ns - self.raw_ns) & self.mask
+            # Long gaps make 32-bit wrap counting ambiguous. A clock reset must
+            # not become a multi-second jump in the cyclic scheduling timeline.
+            if host_elapsed < 0 or (
+                self.bits == 32 and host_elapsed >= (1 << 31)
+            ):
+                raise ValueError("DC sample interval is ambiguous")
+            if abs(elapsed - host_elapsed) > max(100_000_000, host_elapsed // 10):
+                raise ValueError("DC clock discontinuity")
+            value = self.time_ns + elapsed if self.bits == 32 else raw_ns
+        self.raw_ns = raw_ns
+        self.monotonic_ns = monotonic_ns
+        self.time_ns = value
+        return value
+
+
 class DistributedClock:
 
     def __init__(self):
@@ -31,6 +66,9 @@ class DcPhaseLock:
         self.kp = float(kp)
         self.ki = float(ki)
         self.max_correction = abs(float(max_correction))
+        self.reset()
+
+    def reset(self):
         self.integral_error_s = 0.0
         self.correction_s = 0.0
 
