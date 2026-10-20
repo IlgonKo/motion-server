@@ -164,6 +164,15 @@ Broad catch 허용 목록은 process, connection, thread, UI callback, CLI tool�
 | IOL 199 | ISDU status 실패를 DeviceRejectedException으로 변경 |
 | IOL 372 | wrapper RuntimeError 제거, typed cause와 step context 유지 |
 
+초기화 경로 적용(2026-10-20): EtherCAT 상태 미도달은 `CommunicationTimeoutException` 하위
+`EtherCATStateTransitionException`, 음수 discovery 반환은 `CommunicationException` 하위
+`EtherCATDiscoveryException`으로 전달한다. 음수 반환은 발견 장치 수로 표시하지 않는다.
+정상 탐색 결과의 slave 부족과 PySOEM import 실패는 `ConfigurationException`으로 전달한다.
+이 예외들은 initialization boundary에서 기존 stage별 cause와 `SERVER_INITIALIZATION_FAILED`
+Fault로 처리한다. 로그는 예상 실패의 상세만 출력하고, API는 registry message만 노출한다.
+상태/탐색 전용 속성은 API mapper allowlist에 추가하지 않는다. programming invariant의
+`RuntimeError`는 이 분류로 바꾸지 않으며 예상하지 못한 오류의 traceback은 유지한다.
+
 ## 나머지 Typed Raise/Catch 분류 규칙
 
 | 현재 패턴 | 대상 위치 | 목표 |

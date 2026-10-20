@@ -258,19 +258,42 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-018 Gamepad Manual Multi-Axis Velocity Control
 
-- 상태: `planned`
+- 상태: `in_progress`
 - 우선순위: 보통
-- 요약: DualSense 같은 gamepad를 외부 reference client로 사용하여 3축 + rotation 수동 velocity 제어를 제공한다.
-- 선행 작업: `TD-034`
+- 요약: DualSense Gamepad Control Panel로 3축 + rotation 수동 제어를 제공한다.
+- 선행 작업: `TD-034`, `TD-036`, `TD-037`, `TD-038`
 - 완료 조건:
-  - Motion Server core에는 gamepad/HID dependency를 추가하지 않고 `reference_clients/gamepad`에 구현된다.
+  - Motion Server core에는 gamepad/HID dependency를 추가하지 않고 `control_panel/gamepad_control_panel`에 구현된다.
+  - Windows 입력은 `pygame-ce / pygame.joystick` adapter를 사용하고 name/GUID별 mapping profile과 SDL
+    runtime을 배포 artifact에 포함한다.
   - Multi-axis mode는 기존 `system/axes/move_vel` API를 사용하여 X/Y/Z/Rotation role을 동시에 속도 지령한다.
-  - Single-axis mode는 선택 축 하나를 stick으로 velocity 제어하고 D-pad left/right로 선택 축을 변경한다.
+  - Single-axis mode는 선택 축 하나를 Left Stick Y 반대 방향의 `jog_start`/`jog_stop`으로 제어하고
+    D-pad left/right로 선택 축을 변경한다.
+  - `actions.homing`으로 설정한 button은 Single-axis Armed·stick 중립·모든 Axis Standstill에서만
+    선택 축 Homing을 시작하고 완료까지 Jog를 억제한다. 기본값은 Cross이며 Multi-axis mode에서는
+    Homing 입력을 거부한다.
+  - `actions`로 설정한 mode 전환과 axis 선택은 Disarmed, stick 중립과 모든 Axis Standstill에서만
+    허용하며 Single-axis mode에서는 Left Stick Y와 선택 Axis만 사용한다.
   - Multi-axis mode에서 Left Stick X/Y는 X/Y, Right Stick Y/X는 Z/Rotation velocity로 매핑된다.
-  - L1 deadman이 눌린 상태에서만 velocity command를 보내고, deadman release/input timeout/gamepad disconnect/server disconnect 시 mapped axes stop을 우선 수행한다.
-  - axis role-to-index, axis별 max velocity, deadzone, update period와 speed scale은 client 설정으로 관리된다.
+  - 모든 Axis Standstill과 stick 중립에서 설정 가능한 Enable trigger의 상승 edge로 mapped axes를 enable하고,
+    Operation Enabled 확인 후에만 Armed로 진입한다. DualSense 기본 매핑은 L2 axis 4이다.
+  - stick 중립에서는 mapped axes를 Stop하고 Enabled/Armed 상태를 유지한다.
+  - Enable trigger release에서는 Stop/Standstill 대기 없이 mapped axes를 즉시 Disable하여 Quick Stop으로
+    전환하고 Disarmed 상태로 전환한다.
+  - server와 client 사이의 단절은 TD-037의 모든 TCP client 공통 왕복 Heartbeat로 감지한다.
+  - Heartbeat timeout에서는 client가 즉시 Disarmed로 전환하고 Disable을 시도하며, server는 owner
+    연결이면 모든 Axis motion target 제거, Disable/Quick Stop, authority 회수와 연결 종료를 수행한다.
+  - 명시적인 authority release에서는 모든 Axis를 Stop하고 Enabled 상태를 유지하며, Feedback에서 모든
+    Axis Standstill을 확인한 뒤 authority를 해제한다.
+  - DualSense와 gamepad client 사이의 단절 및 input-loop timeout은 1차 범위에 포함하지 않는다.
+  - `server.axes`의 axis role-to-index와 루트 `axes`의 role-to-logical-stick, deadzone, update period와
+    speed scale은 client 설정으로 관리되며 axis별 max velocity는 server `motion_limits`를 사용한다.
+  - scaled deadzone, role별 invert, 최신 command coalescing, strict axis/limit/device 검증과 Windows 상태
+    GUI를 제공한다.
+  - command reject, authority/Enabled 상실, Axis Fault와 runtime/bus 이상에서 즉시 Disarmed 및 안전
+    Disable을 수행한다.
   - command authority, runtime state, fault state, motion limit와 software limit는 기존 Motion Server API 계약을 따른다.
-  - absolute/relative move, homing, sequence, parameter write, safety bypass와 신규 Motion Server gamepad API는 포함하지 않는다.
+  - absolute/relative move, sequence, parameter write, safety bypass와 신규 Motion Server gamepad API는 포함하지 않는다.
 - 상세: [RF-018 기능 명세](tasks/rf/RF-018-gamepad-manual-velocity-control.md)
 
 ### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
@@ -287,7 +310,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - S01 `implemented`: Schema·서버·공식 client·예제·테스트·패키지 설정 전환
   - S02 `implemented`: [AI 안내](ai/README.md)·설정/시퀀스 가이드·사용자 프롬프트 4종, 문서/Schema 정합성 검사
   - S03 `implemented`: [Python AI 레퍼런스 프로그램](../reference_clients/python/examples/pick_place/README.md) — Pick & Place, 선택적 Teaching, 공통 CLI/Tkinter 실행 코드. 기본 자동 검증 완료
-  - S04 `in_progress`: 소스/독립 EXE Mock TCP 각 6개, Python 467개·Node-RED 8개 통과. 전체 GUI·독립 AI 24회 평가 남음. [검증 기록](tasks/rf/RF-019-S04-validation-2026-09-11.md)
+  - S04 `in_progress`: 통합/패키지 검증 완료. 기본 Pick & Place r2 독립 시험 8/8 및 사용자 수동 테스트 완료, 유효 평가 1/24. GUI r1 새 독립 생성물의 실제 Tk/Mock 기능 시험 9/9 통과, GUI 수동 확인 후 최종 승인 예정. 케이스별 토큰과 결과는 [RF-019 검증 기록](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)에 통합 관리.
 - S01은 공식 client까지 함께 전환하며 실제 패키지 빌드/실행 검증만 S04에서 일괄 진행한다.
 - 완료 조건:
   - 사용자가 목적, 장치 역할, 초기 조건, 동작 순서, 완료 조건, timeout과 정지/Fault 정책을 수정할
@@ -756,3 +779,83 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - `system/axes/move_vel`이 X/Y/Z/Rotation 동시 수동 velocity command에 사용할 수 있음을 자동 테스트로 확인한다.
   - Axis Control Panel의 PV/velocity 관련 표시가 서버 계약과 일치한다.
 - 상세: [TD-034 기술 명세](tasks/td/TD-034-linear-rotary-velocity-command.md)
+
+### TD-035 TCP Listener 기동 실패 예외 처리
+
+- 상태: `open`
+- 우선순위: 높음
+- 요약: 예약/점유 포트 등으로 TCP listener 기동이 실패하면 traceback 대신 명확한 원인을 기록하고 자원을 정리한 뒤 통제된 실패 종료로 처리한다.
+- 완료 조건:
+  - 정상/degraded/configuration-error 시작 모두 socket 생성/bind/listen의 예상 가능한 OS 오류를 처리한다.
+  - endpoint, 실패 단계, OS 오류 번호와 원인을 보존하고 비정상 종료 코드를 반환한다.
+  - 획득한 runtime/bus/socket을 정리하며 임의 포트 변경이나 OS 설정 변경은 하지 않는다.
+  - 접근 거부/포트 점유/listen 실패 및 정상 재기동 회귀 시험이 통과한다.
+- 상세: [TD-035 기술 명세](tasks/td/TD-035-listener-startup-failure-handling.md)
+
+### TD-036 Stop Command의 Enabled 상태 독립성
+
+- 상태: `complete`
+- 우선순위: 높음
+- 요약: Stop은 대상 Axis의 Enabled 상태와 관계없이 motion target을 제거하고 Disabled 상태를 유지한다.
+- 후속 작업: `RF-018`
+- 완료 조건:
+  - `system/axis/stop`과 `system/axes/stop`이 Enabled, Disabled와 혼합 대상에서 거부되지 않는다.
+  - PV target velocity는 Enabled 여부와 관계없이 0으로 초기화된다.
+  - Enabled Axis에는 mode별 controlled stop을 적용하고 Disabled Axis는 자동 enable하지 않는다.
+  - 실제 장치 접근 실패만 기존 PartialFailure 계약으로 보고한다.
+- 상세: [TD-036 기술 명세](tasks/td/TD-036-stop-command-enabled-state-independence.md)
+
+### TD-037 모든 TCP Client 왕복 Heartbeat와 Authority Owner 연결 종료 감지
+
+- 상태: `complete`
+- 우선순위: 높음
+- 요약: 모든 TCP client에 순차 challenge/response Heartbeat를 적용하고 authority owner 연결 종료에서
+  TD-038의 공통 motion 안전 종료를 호출한 뒤 authority와 session을 정리한다.
+- 선행 작업: `TD-038`
+- 후속 작업: `RF-018`
+- 완료 조건:
+  - server가 모든 TCP client에 기본 50 ms 주기로 증가 sequence를 보내고 `N + 1` 응답을 검증한다.
+  - server와 client가 기본 200 ms timeout을 단조 시계로 판정하며 stale/duplicate 응답은 deadline을
+    갱신하지 않는다.
+  - non-owner 연결 종료는 원인과 관계없이 해당 연결만 정리한다. authority owner 연결 종료는 Heartbeat
+    timeout, EOF, reset과 송수신 오류 모두에서 TD-038의 전체 Axis motion 안전 종료, authority 회수와
+    연결 종료를 수행한다.
+  - 공통 client library와 Axis/IO Control Panel을 포함한 모든 공식 client 및 adapter가 동일 Heartbeat
+    계약으로 일괄 전환된다.
+  - timeout 연결의 pending request와 늦은 frame이 폐기되고 재연결 후 authority를 자동 획득하지 않는다.
+  - 정상 왕복, 양방향별 blackhole, client 종료, stale/duplicate sequence와 owner/non-owner timeout이
+    자동 테스트로 검증된다.
+- 상세: [TD-037 기술 명세](tasks/td/TD-037-tcp-client-heartbeat.md)
+
+### TD-038 Command Authority 정상/비정상 해제의 전체 Axis Motion 종료
+
+- 상태: `complete`
+- 우선순위: 높음
+- 요약: explicit authority release에서는 모든 Axis를 Stop하고 Enabled를 유지하며, owner 연결 종료에서는
+  모든 Axis를 Disable/Quick Stop한 뒤 authority를 해제한다.
+- 후속 작업: `TD-037`, `RF-018`
+- 완료 조건:
+  - `system/authority/release`는 모든 Axis에 Stop을 적용하고 Enabled 상태를 유지하며, Feedback에서 모든 Axis
+    Standstill을 확인한 뒤 authority를 해제한다.
+  - owner connection close는 모든 Axis motion target을 제거하고 Disable/Quick Stop을 적용한다.
+  - PV, PP, CSP, trajectory, Jog와 Homing의 진행 중 동작 및 pending target이 모두 정리된다.
+  - release 대기 중에는 새 motion command를 거부하고 server cycle을 막지 않는 비동기 상태로 진행한다.
+  - Standstill 대기 timeout은 2초이며 Stop 일부 실패나 timeout에서는 전체 Axis Disable/Quick Stop으로
+    전환한다. fallback 성공 시 authority를 해제하고 response/Diagnostic에 원인을 남기며 fallback 일부
+    실패 시 authority를 유지한다.
+  - connection close는 일부 실패에도 나머지 Axis 처리와 authority 해제를 계속하고 Diagnostic으로 결과를
+    남긴다.
+  - non-owner 연결 종료와 authority 없는 release 실패는 Axis motion에 영향을 주지 않는다.
+- 상세: [TD-038 기술 명세](tasks/td/TD-038-authority-release-motion-shutdown.md)
+
+### TD-039 EtherCAT Slave 탐색 실패 예외 분류 및 로그 정리
+
+- 상태: `open`
+- 우선순위: 높음
+- 요약: EtherCAT 탐색 실패/장치 수 부족을 예상 연결 실패로 분류하고 일반 RuntimeError traceback 대신 상세 원인을 안내한다.
+- 완료 조건:
+  - 음수 탐색 결과와 정상 탐색 후 장치 수 부족을 구분한다.
+  - 예상 실패의 기본 로그에서 traceback을 제거하되 기대 수/반환값/원인 정보는 보존한다.
+  - 기존 degraded TCP 및 recovery 계약, 실패 자원 정리가 유지된다.
+  - 실패 분류/로그와 정상 연결 회귀가 통과하고 예상하지 못한 오류 정보는 유지한다.
+- 상세: [TD-039 기술 명세](tasks/td/TD-039-ethercat-discovery-failure-classification.md)

@@ -15,9 +15,11 @@ from control_panel.gamepad_control_panel.controller import (  # noqa: E402
     PendantController,
     scaled_deadzone,
 )
+from control_panel.gamepad_control_panel.gui import control_assignments  # noqa: E402
 from control_panel.gamepad_control_panel.input import (  # noqa: E402
     InputSnapshot,
     PygameJoystickAdapter,
+    device_profile_error,
 )
 
 
@@ -80,6 +82,22 @@ class FakeJoystick:
         return self.button_value
 
 
+class CountedJoystick:
+    def __init__(self, *, axes=6, buttons=16, hats=0):
+        self.axes = axes
+        self.buttons = buttons
+        self.hats = hats
+
+    def get_numaxes(self):
+        return self.axes
+
+    def get_numbuttons(self):
+        return self.buttons
+
+    def get_numhats(self):
+        return self.hats
+
+
 def neutral_input(**buttons):
     return InputSnapshot(
         sticks={"left_x": 0.0, "left_y": 0.0, "right_x": 0.0, "right_y": 0.0},
@@ -129,6 +147,14 @@ class GamepadClientTest(unittest.TestCase):
         controller = PendantController(self.config, client, FakeInput())
         controller.update_feedback(feedback())
         return controller, client
+
+    def three_axis_config(self):
+        value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+        value["server"]["axes"] = {"x": 2, "y": 1, "z": 0, "rotation": None}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            return load_config(path)
 
     def test_scaled_deadzone_uses_remaining_full_range(self):
         self.assertEqual(scaled_deadzone(0.08, 0.08), 0.0)
@@ -260,6 +286,100 @@ class GamepadClientTest(unittest.TestCase):
 
         self.assertEqual(client.messages[-1]["cmd"], "system/axes/move_vel")
         self.assertEqual(client.messages[-1]["velocities"], [10.0, 0.0, 0.0, 0.0])
+
+    def test_three_axis_configuration_never_commands_rotation(self):
+        config = self.three_axis_config()
+        client = FakeClient()
+        controller = PendantController(config, client, FakeInput())
+        controller.update_feedback(feedback([0x0023] * 4))
+        self.assertEqual(config.server_axes, {"x": 2, "y": 1, "z": 0})
+        self.assertTrue(controller._validate_axis_contract())
+
+        controller.tick(neutral_input())
+        controller.tick(neutral_input(enable=True))
+        self.assertIn({"cmd": "system/axes/enable", "axes": [2, 1, 0]}, client.messages)
+        controller.update_feedback(feedback([0x0027] * 3 + [0x0023]))
+        controller.tick(neutral_input(enable=True))
+        moving = replace(
+            neutral_input(enable=True),
+            sticks={"left_x": 1.0, "left_y": 0.0, "right_x": 0.0, "right_y": 0.0},
+        )
+        controller.tick(moving)
+        self.assertEqual(client.messages[-1]["cmd"], "system/axes/move_vel")
+        self.assertEqual(client.messages[-1]["axes"], [2, 1, 0])
+        self.assertEqual(len(client.messages[-1]["velocities"]), 3)
+        controller.tick(neutral_input())
+        self.assertIn({"cmd": "system/axes/disable", "axes": [2, 1, 0]}, client.messages)
+
+    def test_config_accepts_one_to_four_axes_and_rotation_only(self):
+        combinations = (
+            ({"x": 0}, [0]),
+            ({"x": 0, "z": 2}, [0, 2]),
+            ({"x": 2, "y": 1, "z": 0}, [2, 1, 0]),
+            ({"x": 0, "y": 1, "z": 2, "rotation": 3}, [0, 1, 2, 3]),
+            ({"rotation": 3}, [3]),
+        )
+        for active, expected_axes in combinations:
+            with self.subTest(active=active), tempfile.TemporaryDirectory() as directory:
+                value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+                value["server"]["axes"] = {
+                    role: active.get(role) for role in ("x", "y", "z", "rotation")
+                }
+                path = Path(directory) / "config.json"
+                path.write_text(json.dumps(value), encoding="utf-8")
+                config = load_config(path)
+                client = FakeClient()
+                controller = PendantController(config, client, FakeInput())
+                controller.update_feedback(feedback())
+                self.assertEqual(controller._mapped_axes(), expected_axes)
+                self.assertEqual(controller.selected_axis, expected_axes[0])
+                self.assertTrue(controller._validate_axis_contract())
+
+    def test_config_rejects_missing_server_axis_role(self):
+        value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+        value["server"]["axes"].pop("rotation")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "server.axes must contain exactly"):
+                load_config(path)
+
+    def test_config_rejects_no_active_axes(self):
+        value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+        value["server"]["axes"] = dict.fromkeys(value["server"]["axes"])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "at least one Axis"):
+                load_config(path)
+
+    def test_one_axis_mode_uses_only_the_active_axis(self):
+        value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+        value["server"]["axes"] = {
+            "x": 0, "y": None, "z": None, "rotation": None,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            config = load_config(path)
+        client = FakeClient()
+        controller = PendantController(config, client, FakeInput())
+        controller.update_feedback(feedback())
+        controller.tick(neutral_input())
+        controller.tick(neutral_input(enable=True))
+        self.assertIn({"cmd": "system/axis/enable", "axis": 0}, client.messages)
+        controller.update_feedback(feedback([0x0027, 0x0023, 0x0023, 0x0023]))
+        controller.tick(neutral_input(enable=True))
+        moving = replace(
+            neutral_input(enable=True),
+            sticks={"left_x": 1.0, "left_y": 0.0, "right_x": 0.0, "right_y": 0.0},
+        )
+        controller.tick(moving)
+        self.assertEqual(client.messages[-1]["cmd"], "system/axes/move_vel")
+        self.assertEqual(client.messages[-1]["axes"], [0])
+        self.assertEqual(len(client.messages[-1]["velocities"]), 1)
+        controller.tick(neutral_input())
+        self.assertIn({"cmd": "system/axis/disable", "axis": 0}, client.messages)
 
     def test_cross_starts_homing_only_in_single_mode(self):
         controller, client = self.controller()
@@ -440,6 +560,64 @@ class GamepadClientTest(unittest.TestCase):
         self.assertEqual(mapping.threshold, 0.5)
         self.assertEqual(mapping.pressed_when, "above")
         self.assertEqual(self.config.actions["homing"], "cross")
+
+    def test_control_table_lists_assigned_and_unassigned_profile_inputs(self):
+        rows = control_assignments(self.config)
+        by_name = {name: (physical, action) for name, physical, action in rows}
+        self.assertEqual(len(rows), len(self.config.buttons) + len(self.config.trigger_axes) + 4)
+        self.assertEqual(by_name["l2"], ("axis 4", "enable"))
+        self.assertEqual(by_name["cross"], ("button 0", "homing"))
+        self.assertEqual(by_name["circle"], ("button 1", "Unassigned"))
+        self.assertEqual(by_name["r2"], ("axis 5", "Unassigned"))
+        self.assertEqual(by_name["dpad_up"], ("button 11", "speed_up"))
+
+    def test_profile_rejects_an_unassigned_button_outside_device_count(self):
+        error = device_profile_error(self.config, CountedJoystick(buttons=15))
+        self.assertIn("button touchpad index 15", error)
+
+    def test_profile_rejects_missing_trigger_or_hat(self):
+        self.assertIn(
+            "trigger axis r2 index 5",
+            device_profile_error(self.config, CountedJoystick(axes=5)),
+        )
+        hat_config = replace(self.config, hat=0, dpad_buttons=None)
+        self.assertIn("hat index 0", device_profile_error(hat_config, CountedJoystick()))
+
+    def test_profile_accepts_device_with_all_configured_indices(self):
+        self.assertEqual(device_profile_error(self.config, CountedJoystick()), "")
+
+    def test_adapter_rejects_matching_device_with_invalid_profile(self):
+        config = self.config
+
+        class MatchingJoystick(CountedJoystick):
+            def __init__(self):
+                super().__init__(buttons=15)
+                self.closed = False
+
+            def init(self):
+                pass
+
+            def quit(self):
+                self.closed = True
+
+            def get_name(self):
+                return config.device_name
+
+            def get_guid(self):
+                return config.device_guid
+
+        device = MatchingJoystick()
+        pygame = type("FakePygame", (), {
+            "joystick": type("FakeJoystickModule", (), {
+                "get_count": lambda self: 1,
+                "Joystick": lambda self, index: device,
+            })(),
+        })()
+        adapter = PygameJoystickAdapter(config)
+
+        self.assertIsNone(adapter._select_device(pygame))
+        self.assertTrue(device.closed)
+        self.assertIn("button touchpad index 15", adapter._selection_error)
 
     def test_enable_input_can_be_mapped_to_a_button(self):
         value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))

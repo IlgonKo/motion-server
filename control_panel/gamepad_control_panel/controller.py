@@ -34,7 +34,7 @@ class PendantController:
         self.input = input_adapter
         self.state = "Disconnected"
         self.mode = "multi"
-        self.selected_axis = config.server_axes["x"]
+        self.selected_axis = next(iter(config.server_axes.values()))
         self.scale_index = config.speed_scales.index(config.speed_scale_default)
         self.feedback = {}
         self.axis_contract = None

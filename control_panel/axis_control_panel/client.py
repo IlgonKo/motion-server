@@ -423,6 +423,11 @@ class AxisServerClient:
                 diagnosis_result,
             )
 
+    def owns_command_authority(self):
+        with self.lock:
+            authority = self.feedback.get("command_authority", {})
+            return bool(authority.get("owned_by_this_client", False))
+
     def get_topology_snapshot(self):
         with self.lock:
             return self.axis_count, self.topology_error

@@ -4,7 +4,7 @@ from enum import Enum, IntEnum
 import traceback
 
 from device.exceptions import DeviceIdentityMismatchException, DeviceModelException
-from motion_server.failure import ConfigurationException
+from motion_server.failure import ConfigurationException, MotionServerException, map_exception
 
 
 class InitializationStage(str, Enum):
@@ -29,7 +29,7 @@ class InitializationCause(str, Enum):
     DEVICE_INITIALIZATION_FAILED = "device_initialization_failed"
 
 
-class InitializationException(Exception):
+class InitializationException(MotionServerException):
     """Carries a stable cause from a specific initialization check."""
 
     def __init__(self, cause):
@@ -279,7 +279,12 @@ def log_initialization_failure(failure, exception):
         flush=True,
     )
     if should_log_initialization_detail(exception):
-        print(f"Initialization failure detail:\n{exception}", flush=True)
+        detail = str(exception)
+        if isinstance(exception, MotionServerException):
+            fields = map_exception(exception).details
+            if fields:
+                detail += f" {fields}"
+        print(f"Initialization failure detail:\n{detail}", flush=True)
     elif should_log_initialization_traceback(exception):
         traceback.print_exception(exception)
 
@@ -288,8 +293,7 @@ def should_log_initialization_detail(exception):
     if not isinstance(exception, Exception):
         raise TypeError("Initialization log policy requires source Exception")
     detailed_expected_exceptions = (
-        InitializationException,
-        ConfigurationException,
+        MotionServerException,
         DeviceModelException,
         ValueError,
         TypeError,
@@ -304,8 +308,7 @@ def should_log_initialization_traceback(exception):
     if not isinstance(exception, Exception):
         raise TypeError("Initialization log policy requires source Exception")
     expected_exceptions = (
-        InitializationException,
-        ConfigurationException,
+        MotionServerException,
         DeviceModelException,
         ValueError,
         TypeError,

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from control_panel.axis_control_panel.client import AxisServerClient
 from control_panel.axis_control_panel.control_panel import AxisServerControlPanel
 from control_panel.axis_control_panel.diagnosis import DiagnosisMixin
+from control_panel.axis_control_panel.motion import MotionMixin
 from control_panel.axis_control_panel.motion_settings import MotionSettingsMixin
 from control_panel.io_control_panel.client import MotionServerClient
 from control_panel.io_control_panel.control_panel import IOControlPanel
@@ -115,6 +116,40 @@ class AxisMotionSettingsTest(unittest.TestCase):
         self.assertNotIn(id(panel.profile_vars[1]), panel.dirty_vars)
         self.assertNotIn(id(panel.profile_vars[2]), panel.dirty_vars)
         self.assertIn(id(panel.profile_vars[3]), panel.dirty_vars)
+
+
+class AxisTabMotionTest(unittest.TestCase):
+    def test_tab_change_does_not_send_pv_stop_without_authority(self):
+        sent = []
+        panel = MotionMixin()
+        panel.axis_count = 1
+        panel.latest_motion_modes = ["pv"]
+        panel.selected_axis = lambda: 0
+        panel.try_send = lambda send_func: send_func()
+        panel.client = SimpleNamespace(
+            owns_command_authority=lambda: False,
+            send_axis_stop=lambda axis: sent.append(axis),
+        )
+
+        panel.stop_selected_pv_axis()
+
+        self.assertEqual(sent, [])
+
+    def test_tab_change_sends_pv_stop_when_panel_owns_authority(self):
+        sent = []
+        panel = MotionMixin()
+        panel.axis_count = 1
+        panel.latest_motion_modes = ["pv"]
+        panel.selected_axis = lambda: 0
+        panel.try_send = lambda send_func: send_func()
+        panel.client = SimpleNamespace(
+            owns_command_authority=lambda: True,
+            send_axis_stop=lambda axis: sent.append(axis),
+        )
+
+        panel.stop_selected_pv_axis()
+
+        self.assertEqual(sent, [0])
 
 
 class AxisFeedbackBootstrapTest(unittest.TestCase):

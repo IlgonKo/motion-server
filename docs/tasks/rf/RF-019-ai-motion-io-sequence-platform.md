@@ -5,7 +5,7 @@
 - 우선순위: 높음
 - 1차 생성 결과물: Python 시퀀스 프로그램
 
-## 사용자 가치
+## 배경
 
 사용자는 Motion Server API나 통신 코드를 직접 설계하지 않고, 제공된 예제 프롬프트를 자신의
 장비와 목적에 맞게 수정하여 원하는 Motion/I/O 시퀀스를 자연어로 정의한다. AI는 Motion Server의
@@ -329,7 +329,7 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
 초기 RF에서는 AI가 생성한 Python과 Node-RED flow 사이의 자동 변환이나 공통 sequence engine을
 구현하지 않는다.
 
-## 초기 제외 범위
+## 제외 범위
 
 - AI가 실장비에 생성 코드를 자동 배포하거나 승인 없이 실행하는 기능
 - AI의 Expert Mode 및 protection bypass 자동 사용
@@ -388,7 +388,8 @@ Python 시퀀스로 대표 애플리케이션을 구현하면서 반복되는 mo
 
 ## 단계별 구현 계획
 
-현재 상태: S01 코드 전환 및 자동 테스트 반영. 실제 패키지 빌드/실행 검증은 사용자 결정으로 S04 일괄 검증에 이관한다. 하위 번호를 계속 분할하지 않고 아래 단위를
+현재 상태: S01~S03 implemented, S04 in_progress. 통합·패키지 검증과 r1c 생성물 실행 시험을 수행했으며,
+독립 AI 반복 평가와 GUI 수동 확인이 남아 있다. 하위 번호를 계속 분할하지 않고 아래 단위를
 완료할 때 상태·검증 결과·변경 파일·다음 작업을 갱신한다.
 
 | 단계 | 상태 | 범위 | 완료 조건 |
@@ -477,7 +478,7 @@ S01은 서버·공식 client·예제·테스트·패키지 설정을 함께 전�
 자동 회귀·Dashboard/수동 시험 모두 제외하며 일반적인 검증/계속 진행 요청으로 재개하지 않는다.
 이미 수행한 결과는 과거 이력으로 보존하되 이후 S04 재검증 대상에는 포함하지 않는다.
 
-2026-09-11: [진행/실패 이력 및 결과](RF-019-S04-validation-2026-09-11.md).
+2026-09-11: [진행/실패 이력 및 결과](#s04-validation).
 실제 Mock TCP 통합 시험과 Windows 빌드를 수행했고 authority 응답 Schema/AI 자료 패키징 누락을 보완했다.
 Python 467개, Node-RED 8개 통과. 독립 AI 생성 24회와 전체 GUI 평가는 아직 미완료다.
 후속 자동 확장 검증: Mock TCP에 연결한 GUI/Teaching/종료, WKC Fault 및 응답 지연 7개를 추가하고
@@ -485,7 +486,7 @@ Python 467개, Node-RED 8개 통과. 독립 AI 생성 24회와 전체 GUI 평가
 GUI 수동 시각 확인 및 독립 생성 평가는 미완료다. 자세한 조건/한계는 위 검증 기록을 따른다.
 
 - S01에서 이관한 실제 Windows 패키지 빌드 및 독립 폴더에서의 Mock 기동/API 검증을 일괄 수행한다.
-  Schema 파일·로컬 참조·jsonschema 의존성 누락을 확인한다. 현재 미실행이며 실축 시험과 구분한다.
+  Schema 파일·로컬 참조·jsonschema 의존성 누락을 확인한다. 2026-09-11 수행 결과는 아래 검증 기록을 따르며 실축 시험과 구분한다.
 
 - Mock에서 정상 1회 완료, API Fail, 응답/조건 timeout, Stop, 연결·제어권 상실을 시험한다.
 - Jog release/포커스 상실, GUI 중단·종료, 티칭 파일 재로딩과 Run snapshot을 확인한다.
@@ -529,6 +530,12 @@ S04는 공식 예제 검증과 위 생성 평가를 모두 수행하고 계약 �
 #### 시험 환경과 수행 절차
 
 평가 대상은 모델 단독이 아니라 모델·Agent 프로그램·도구·실행 환경의 조합이다.
+
+2026-09-11 정정: 생성 시간 15분은 합의된 값이 아니다. r1c에는 별도 시간/토큰 제한을
+부과하지 않았다. 아래 예산 기록 절차는 평가자가 임의 숫자를 합의 사항으로 추가할 권한이 아니다.
+새 제한을 적용하려면 별도 합의한다. 요청/단계 timeout은 생성 예산과 구분한다.
+[r1c 기록](#s04-basic-r1c): 생성물 8개 실행 시험 통과,
+생성 중 수집기/서버 환경 오류로 정식 무보조 합격에는 미집계.
 
 1. 평가 시작 전에 자료 버전, 요구사항별 합격 항목, 입력 조건, 예상 API 동작/상태, timeout,
    생성 시간·도구 호출 등 예산과 환경 오류 재시험 규칙을 고정한다. 모델별 임의 연장은 하지 않는다.
@@ -599,6 +606,407 @@ GUI 미관, 가독성, 생성 시간·비용은 별도 품질 지표이며 필�
 
 위 자료를 참고해 Motion Server에 맞춰 정한 내부 시험 정책이다. 2개 모델·4개 시나리오·3회와
 회차 합격 규칙은 외부 표준의 의무 수치가 아니다.
+
+## 검증 기록
+
+### 2026-09-17 GUI Pick & Place 독립 생성 r1
+
+- 회차: `s04-gui-r1-20260917`. 새 독립 CLI 세션에 제공 문서/Schema/공식 client와
+  Pick & Place 및 GUI 선택 프롬프트를 전달한다. 기존 대화, 이전 생성 코드, 평가 도구는 전달하지 않는다.
+- 사용자 기본 CLI 수동 테스트 완료 보고를 기록한다. 구체적인 수동 시험 항목별 증거는 별도 수집하지 않았다.
+- 후속 Pick & Place는 수동 시험 `manual-sequence-test/generated/settings.json` 기준으로
+  Pick 위치 `[50,60,70]` mm / 속도 `[50,50,40]` mm/s,
+  Place 위치 `[100,110,120]` mm / 속도 `[50,50,20]` mm/s,
+  공통 가감속 각 축 `100` mm/s²를 사용한다. 이전 소거리 평가 원본/결과는 변경하지 않는다.
+- 이번 범위: GUI 연결/제어권, Run/Stop/상태/실패 표시, 중복 Run 방지, 실행 중 종료,
+  공통 시퀀스 정상/장애 처리. Teaching·Node-RED·실장비·다른 모델/추가 회차는 제외한다.
+- 사용자 서버와 별도의 Mock 서버에서 진행한다. 무기한 사용자 조작 대기 GUI를 남기지 않는다.
+- 산출물: `.codex_output/s04-gui-r1-20260917/`에 프롬프트, 자료 hash, 초기/중간/최종 코드,
+  생성 이벤트, 사용량과 실행 결과를 보존한다. 생성 예산을 임의로 추가하지 않는다.
+- 상태: **독립 생성 완료, 실제 Tk 이벤트 루프 + Mock TCP 기능 시험 9/9 통과**.
+  GUI 수동 시각/마우스 확인은 남아 있어 GUI 회차 최종 승인 보류. 기존 확정 유효 평가 1/24에
+  이번 GUI 자동 검증 완료 1회를 별도 표시하며 아직 2/24 최종 합격으로 합산하지 않는다.
+
+#### 생성 및 환경 기록
+
+- 모델 `gpt-6-astra`, CLI `0.153.4`, 독립 thread `01a0ad6a-2fda-7273-9135-4c054a9af0d0`.
+  reasoning effort는 별도로 확정하지 않았다. 생성/자체 검증 시간 817.427초.
+- 제공 파일 41개 hash 변경 없음, 중간 snapshot 19개와 최종 제출 코드 보존.
+  공식 reference example은 제공 자료에 포함되어 있으므로 예제 없는 생성 시험으로 해석하지 않는다.
+- 자체 시험: sequence 10개, GUI 실패 처리 2개 통과. CLI 실제 Mock 1회 정상 완료.
+  위젯 대역 + 실제 Mock으로 GUI 정상/Stop/닫기 callback 시험 통과.
+- 독립 생성 sandbox에서는 Tcl/Tk `init.tcl`을 로드하지 못해 실제 창 시험 실패.
+  이 환경 실패는 생성물 실패와 구분하며, 평가 환경에서 제출 Python 수정 없이 실제 Tk 검증을 수행했다.
+- 최초 평가기의 즉시 API Fail 시험은 관측 tick 수 부족으로 false negative였다.
+  별도 관측 구간을 추가해 재확인했다. 평가기 자체 heartbeat가 창 종료 뒤 남아 발생한 Tcl 경고도
+  평가기 소유 timer만 취소하도록 보완했다. 제출 코드는 변경하지 않았다.
+- `evaluation/`에 최초 결과/재확인, `evaluation-recheck/`에 평가기 보완 후 전체 9개 결과를
+  보존한다. 최종 판정 근거는 `evaluation-recheck-results.json`이다.
+
+#### 독립 실행 결과 및 케이스별 토큰
+
+| 케이스 | 결과 | 확인 내용 | 추가 모델 토큰 |
+| --- | --- | --- | ---: |
+| normal | 통과 | 확대 위치/속도, 입력 AND 대기, 출력 순서, 완료/Stop, Run 후 제어권 유지 | 0 |
+| stop | 통과 | 입력 대기 중 Stop 버튼, cancelled, 후속 이동/출력 해제 없음 | 0 |
+| close | 통과 | 실행 중 WM_DELETE_WINDOW callback, Stop 후 제어권 해제/창 종료 | 0 |
+| input_timeout | 통과 | 10초 입력 timeout, failed, Stop 확인 및 후속 단계 금지 | 0 |
+| api_fail | 통과 | Disable된 축의 실제 이동 Fail, Stop Fail도 정지 미확인으로 표시 | 0 |
+| fault | 통과 | 시험 launcher WKC Fault 주입 후 failed, 후속 이동 금지 | 0 |
+| connection_loss | 통과 | TCP proxy 단절 후 failed, cleanup 불가 명시, 자동 재개 없음 | 0 |
+| authority_loss | 통과 | 같은 client의 실제 제어권 해제 후 failed, 재획득/후속 이동 없음 | 0 |
+| response_timeout | 통과 | 응답 6초 지연으로 timeout, 늦은 Success 실제 전달 후에도 재개 없음 | 0 |
+
+- 각 시험에서 중복 Run 거부, 공통 가감속 1회, 요청 Schema/JSON 숫자, 이동 완료 후 출력,
+  자동 Enable/Homing/Disable/recovery 부재와 제출 Python hash 불변을 확인했다.
+- 실제 Tk root는 숨긴 상태에서 버튼 invoke/등록된 창 닫기 callback과 event loop로 검사했다.
+  OS 마우스/키보드 입력, 화면 레이아웃, 실제 창 포커스 전환은 검증하지 않았다.
+- GUI event-loop 관측 최대 간격은 최종 9개 시험에서 약 0.211초 이내였다.
+  하드 실시간 또는 즉시 비상정지 보장이 아니다.
+- Fault 주입은 실제 케이블/실장비 고장이 아니다. API Fail/연결·제어권 상실의 Stop 미확인은
+  성공으로 숨기지 않고 실패로 표시하는 것이 해당 시험의 기대 결과다.
+
+| 사용량 범위 | 입력 | 캐시 입력(입력에 포함) | 출력 | 입력+출력 |
+| --- | ---: | ---: | ---: | ---: |
+| 독립 생성 전체(자체 검토/시험 포함) | 1,446,773 | 1,373,056 | 21,976 | 1,468,749 |
+| 평가 환경 실행/재시험 | 0 | 0 | 0 | 0 |
+
+- reasoning output 원본 값 4,813은 출력에 별도 가산하지 않는다. 평가 담당 대화 사용량은 제외한다.
+- 원본 이벤트, `token-usage.json`, 실행 케이스별 `result.json`에 기록. 재시험도 모델 호출은 0이다.
+- 생성용 및 평가용 Mock 서버는 정리했다. 사용자 수동 테스트 서버는 변경/종료하지 않았다.
+- 다음 단계는 GUI 수동 확인. Teaching/다른 모델/추가 독립 생성은 이번에 수행하지 않았다.
+
+### 2026-09-17 기본 Pick & Place 정식 회차 r2
+
+- 회차: `s04-basic-r2-20260917`. 기본 CLI 1회 생성 후 정상/입력 timeout/API Fail/Stop/
+  Fault/연결 상실/제어권 상실/응답 timeout을 검증한다. GUI·Teaching·다른 모델/반복 회차는 제외한다.
+- 결과: **기본 CLI 정상/실패 처리 독립 실행 시험 8/8 통과, 첫 정식 회차 완료**.
+  평가 환경 기준 Python TCP 시험 6개 통과(18.855초). 정식 유효 평가 1/24, 기본 시나리오 해당 모델 1회 통과.
+- 새 세션 `01a0ad43-c45c-7d50-8662-552ed4c2386b`, 별도 Mock port 62554.
+  기존 대화와 평가 코드는 제공하지 않았다. 최초/중간 산출물은 snapshots, 최종 제출은 submitted에 보관한다.
+- 산출물/정확한 프롬프트/자료 manifest/이벤트 위치: `.codex_output/s04-basic-r2-20260917/`.
+- 토큰 집계: 생성 회차의 CLI 원본 input/cached input/output usage를 기록하며 cached input을
+  input에 다시 더하지 않는다. 생성 종료 전 사용량은 미확정으로 둔다.
+- 실행 시험 8개는 별도 모델 호출이 없는 자동 시험이다. 케이스별 추가 모델 토큰은 0이며
+  공유 생성 비용을 케이스마다 중복 집계하지 않는다. 평가 담당 대화 토큰과 생성 AI 토큰도 구분한다.
+- 추가 AI 수정·재생성을 수행하면 별도 호출 사용량과 보조 여부를 기록한다.
+
+#### 생성 및 독립 검증 결과
+
+- 모델 `gpt-6-astra`, codex-cli 0.153.4, Python 3.14.3. effort는 로그에서 null이며 특정 수준으로 단정하지 않는다.
+- 생성 CLI exit 0, 약 588.4초. 생성 시간 제한은 부과하지 않았다.
+- 자체 테스트 11개 통과, Agent의 실제 Mock 정상 실행 1회 완료. 자체 수정은 같은 독립 세션 안에서 수행했다.
+- 최종 제출 코드를 수정하지 않고 새로운 Mock 서버에서 실행했다. 사람의 코드 수정·추가 설명 없음.
+- 제공 파일 42개 hash 변경 없음. 중간 snapshot 12개 및 submitted 원본 보존, 수집 오류 없음.
+- 정상은 completed, Stop은 cancelled, 나머지는 failed. API Fail 시험의 Stop도 거부될 때와
+  연결/제어권 상실 시에는 Stop 확인을 성공으로 표시하지 않았다. 가능할 때 제어권을 반환했다.
+- JSON 숫자/요청 Schema, 공통 가감속 1회, 지정 축/목표/속도, 출력 이전 위치/Reached/Standstill,
+  DI/AI 대기, 자동 Disable/복구/제어권 재획득 부재를 요청·Feedback trace로 확인했다.
+- 생성 프로그램은 공식 client.request를 직접 사용한다. 생성 코드/입력 설정은 수정하지 않았고
+  시험 도구는 제출 CLI 인수 형식에 맞춰 호출했다. 평가 기준은 생성 전에 보존했다.
+
+| 케이스 | 결과 | 관측 | 추가 모델 토큰 |
+| --- | --- | --- | ---: |
+| 정상 | 통과 | Pick → 파지 → 입력 충족 → Place → 해제 → Stop/제어권 반환 | 0 |
+| 입력 timeout | 통과 | 실패, Place 없음, 출력 유지·Stop | 0 |
+| API Fail | 통과 | 이동 거부 후 출력/Place 없음, Stop 거부 시 미완료 표시 | 0 |
+| Stop | 통과 | SIGINT handler로 cancelled, 출력 유지·Stop | 0 |
+| Fault | 통과 | WKC 0 주입으로 서버 Fault, 실패·후속 단계 중단 | 0 |
+| 연결 상실 | 통과 | 실패·정리 미완료, 재개/재전송 없음 | 0 |
+| 제어권 상실 | 통과 | 실패·정리 미완료, 재획득 없음 | 0 |
+| 응답 timeout | 통과 | 요청 결과 불명으로 실패·Stop, 파지/Place 없음 | 0 |
+
+#### 토큰 사용량
+
+| 집계 대상 | 입력 | 입력 중 캐시 | 출력 | 입력+출력 |
+| --- | ---: | ---: | ---: | ---: |
+| 독립 생성 세션 전체(자체 검토·시험 포함) | 586,552 | 522,624 | 14,855 | 601,407 |
+| 독립 실행 시험 8개 합계 | 0 | 0 | 0 | 0 |
+
+- CLI 원본은 reasoning_output_tokens 785도 별도 보고한다. 위 총합에 다시 가산하지 않았다.
+- 캐시는 입력에 포함된다. 생성 비용은 8개 케이스에 중복 배분하지 않는다.
+- 평가 담당 대화의 토큰은 위 독립 생성 세션 사용량에 포함되지 않는다. 금액/계정 사용률로 환산하지 않는다.
+- 원본 `generation-events.jsonl`, 정리한 `token-usage.json`, 케이스별 `evaluation/*/result.json`에 기록했다.
+
+#### 범위와 다음 단계
+
+- 생성 코드: `.codex_output/s04-basic-r2-20260917/submitted/`의 run.py, sequence.py, settings.json,
+  README.md, RESULTS.md, test_sequence.py 및 실행 기록. 시험 로그는 `evaluation/`에 보존한다.
+- 이 결과는 해당 기본 시나리오 1회 관측이다. 모델 전반의 신뢰성 보장 또는 S04 완료가 아니다.
+- 정식 평가 전 임의 수정 없는 최초 실행 가능 산출물 자체의 독립 합격 여부는 미평가다.
+  중간 snapshot은 보존했으며 위 결과는 최종 제출물에 대한 판정이다.
+- CLI에 시험용 endpoint 제한이 있어 일반 사용자 endpoint 재배포 가능성을 검증한 것은 아니다.
+- Stop은 실제 키보드가 아닌 Python interrupt 주입, Fault는 실제 케이블 단절 아닌 WKC 주입이다.
+- 지연 응답 시험은 timeout 후 프로그램이 종료했다. 실행 중 늦은 Success 수신 이후 경로는 별도 미검증이다.
+- GUI·Teaching·실장비·Node-RED·다른 모델 및 추가 반복 회차는 수행하지 않았다.
+- 사용자와 이번 결과를 확인한 뒤 다음 반복/시나리오를 결정한다. 이번 요청으로 다음 회차를 자동 시작하지 않는다.
+
+### 2026-09-17 생성물 회수 권한 보완 및 재점검
+
+- 회차: `s04-preflight-20260917-114100`. 새 시험 workspace 한 곳에만 현재 사용자 SID의
+  `(OI)(CI)(RX)` 읽기·실행 권한을 추가했다. 기존 파일·시스템 전체 ACL·Sandbox 정책은 변경하지 않았다.
+- 독립 AI의 파일 읽기·새 파일/하위 폴더 생성·Python 실행·Mock 상태 조회 성공.
+  생성 파일 3개를 부모가 읽고 복사했으며 원본/복사본 byte 일치 및 AI 보고 SHA256 일치를 확인했다.
+- 복사본 실행의 첫 시도는 평가 도구가 input.txt를 함께 복사하지 않아 FileNotFoundError.
+  입력 파일을 보존·복사한 뒤 새 Mock에서 생성 코드 수정 없이 재실행해 exit 0/PREFLIGHT_OK 확인.
+  최초 실패는 result.json, 후속 성공은 parent-recheck.json으로 각각 보존했다.
+- 회수 이후에도 Mock status 정상 응답을 확인했고 각 점검 완료 후 해당 시험 서버만 종료했다.
+- 결과: **평가 환경 사전 점검 통과**. 정식 시퀀스 생성 평가는 아직 시작하지 않았다.
+- 코드·문서·hash·ACL·이벤트·실행 결과: `.codex_output/s04-preflight-20260917-114100/`.
+  회수한 AI 코드는 해당 폴더의 `submitted/`에 보존한다.
+- `.codex_output/s04_preflight.py`와 다음 평가 준비 도구 `s04_basic_prepare.py`에 동일한
+  신규 workspace 권한 준비를 반영했다. 실장비·사용자 서버·Node-RED는 시험하지 않았다.
+
+### 2026-09-17 평가 환경 사전 점검
+
+- 회차: `s04-preflight-20260917-113641`, codex-cli 0.153.4의 새 elevated workspace-write 세션.
+- 독립 세션의 입력 파일 읽기, apply_patch로 Python/Markdown/하위 폴더 파일 생성,
+  Python 실행 및 별도 Mock `system/server/status` 조회 성공. 시퀀스 생성·이동 요청은 하지 않았다.
+- 부모 평가 프로세스의 생성 파일 읽기/복사는 3개 모두 PermissionError로 실패했다.
+  따라서 **사전 점검 미통과: 생성물 회수 경계 해결 필요**다. 정식 생성 평가는 시작하지 않았다.
+- 파일 회수 실패 후에도 Mock 프로세스와 status 응답이 정상임을 확인했다.
+  독립 세션 종료 및 회수 점검을 마친 뒤 시험용 Mock만 명시적으로 정리했다.
+- 원본 코드와 문서는 `C:/Users/Festo/AppData/Local/Temp/s04-preflight-vdan70hk/generated/`에 보존한다.
+  부모 프로세스에서 복사하지 못했으므로 정상 회수된 것으로 표시하지 않는다.
+- 프롬프트·이벤트·독립 세션 결과·파일 hash·부모 측 판정·서버 로그는
+  `.codex_output/s04-preflight-20260917-113641/`에 보존했다. 시험 도구는 `.codex_output/s04_preflight.py`다.
+- ACL 변경, sandbox 완화, 설치, 실장비/사용자 서버 접근 및 Node-RED 시험은 수행하지 않았다.
+- 권한 설정은 [공식 Windows sandbox 문서](https://learn.chatgpt.com/docs/windows/windows-sandbox)를
+  확인했으며 이번 판정은 설명상의 추정이 아닌 실제 독립 세션·부모 프로세스 시험 결과다.
+
+평가 시점별 기준 commit, 결과와 제약을 보존한다. 현재 정식 유효 평가 집계는 1/24(r2)이며,
+r1c 생성물의 별도 실행 시험 8/8 통과와 구분한다. 아래 0/24 표기는 당시 이력이다.
+과거 Node-RED 결과는 이력이며 신규 시험을 허용하지 않는다.
+
+<a id="s04-validation"></a>
+
+### 통합·패키지 및 GUI 검증
+
+상태: **in_progress**. 공식 레퍼런스 통합/패키지 시험과 독립 AI 생성 평가는 별개다.
+독립 AI 평가는 아직 0/24회이며 S04 전체 완료가 아니다.
+
+최신 상태: [r1c 생성물 별도 실행 시험](#s04-basic-r1c) 8/8 통과.
+생성 중 평가 도구 오류가 있어 정식 무보조 합격 집계와 구분한다. 아래 기존 시험 결과는 당시 이력이다.
+
+#### 환경과 범위
+
+- Windows 11 10.0.26100, Python 3.14.3, PyInstaller 6.21.0, jsonschema 4.26.0.
+- 기준 HEAD: `6084863c4a7619e00dcf401c1e3f9388c91d33d4` + 미커밋 S01~S04 변경.
+- `tests/test_ai_pick_place_tcp.py`는 매 시험 임시 폴더/미사용 TCP port/새 서버 프로세스를 생성한다.
+  backend는 명시적으로 mock이며, 사용자 `.env`와 프로세스의 Motion Server 환경변수는 사용하지 않는다.
+- 3개 linear CMMT + CPX DO/AIO/DI/AI 구성. Enable/Homing은 평가 환경 준비에서 수행하며
+  레퍼런스 시퀀스가 사용자 대신 commissioning하는 기능을 추가하지 않았다.
+- 패키지 시험은 EXE와 리소스를 새 임시 폴더로 복사하고 `PYTHONPATH` 없이 실행한다.
+  실제 장비, 기존 15000 포트 서버, 사용자 설정에는 명령/변경을 가하지 않았다.
+
+#### 발견 사항과 처리 이력
+
+1. 첫 시험 환경의 `ao:4`는 기본 ESI 모듈 대응이 없어 device_layout_invalid로 실패했다.
+   평가 환경을 실제 카탈로그에 있는 `aio:4:4`로 수정했다. 서버 동작을 우회하지 않았다.
+2. 최초 패키지의 제어권 해제 시험에서 실제 응답의 `granted`, `message`가 응답 Schema에 없어 실패했다.
+   request/release용 `authority_action` 정의로 실제 계약을 표현하고 handler 기반 회귀 시험을 추가했다.
+   Feedback/authority status의 기존 구조나 서버 응답을 변경하지 않았다.
+3. 패키징에 AI 문서·Schema·Python 레퍼런스 소스가 빠져 있었다. `AI Reference` 묶음을 추가했다.
+   사용자 `.env`는 제외하고 상대 링크를 유지한다. 기존 Node-RED 패키지도 그대로 포함한다.
+4. 기존 배포 폴더를 보존하기 위해 새 경로에만 생성 가능한 `-PackageDirectory` 검증 옵션을 추가했다.
+   기본 배포 경로는 계속 `dist/Motion Server` 하나다.
+
+#### 시험 결과
+
+| 검사 | 결과 | 한계 |
+| --- | --- | --- |
+| 소스 전체 Python 회귀 | 467개 통과 | 가짜 transport/단위 시험과 실제 Mock TCP 시험 포함 |
+| Node-RED 회귀 | 8개 통과 | 새 AI 생성 평가 아님 |
+| 소스 실제 Mock TCP | 6개 통과 | 정상, 입력 timeout, Stop, API Fail/숫자 거부, 연결 상실, 제어권 상실 |
+| Windows 서버/Axis Panel/IO Panel 빌드 | 통과 | Npcap 다운로드와 사용자 설정 복사는 생략 |
+| AI bundle 링크/자료/설정 제외 | 통과 | 생성물은 Python 소스이며 별도 Python 필요 |
+| 최종 EXE 독립 폴더 TCP | 6개 통과 (36.596초) | 동일 6개 시나리오, 소스 PYTHONPATH 없이 실행 |
+| Tk GUI 기본 자동 시험 | 전체 회귀에 포함, 통과 | 생성, Run 취소, Jog release; 전체 수동 GUI 조작 평가 아님 |
+| 독립 AI 생성 (통합 시험 당시) | 0/24, 미실행 | 이후 r1~r1c 이력은 아래 별도 회차 기록 참조 |
+
+#### 패키지 위치와 식별
+
+- 최초 빌드: `.codex_output/rf019-s04-20260911/Motion Server` (Schema 수정 전, 최종 배포용 아님).
+- 수정 후 빌드: `.codex_output/rf019-s04-20260911-final/Motion Server`.
+- 최종 서버 EXE SHA256: `F9623035BE8A6FEF390DB7612648DAD0A92AF553973F2B7EFF89836B1D6F94E7`.
+- common.json SHA256: `62EC65DE9C010BDCB43E7613C3049DCDB7DE6A61E4CEF1CBF495AE3CD286C2AB`.
+- system.json SHA256: `005994D14412982024BACAD7F1F17C3691559EBF90B5A59E7404DB9620398B31`.
+
+위 hash는 이번 검사 파일 식별이며 독립 평가용 전체 자료 manifest를 대신하지 않는다.
+검사 중 임시 서버 폴더/프로세스는 시험 종료 시 정리하고, 빌드 결과 폴더는 남겼다.
+
+#### 남은 작업
+
+- [기본 시퀀스 첫 생성 시도](#s04-basic-r1)는 독립 CLI 파일 읽기 정책 거부로
+  생성 전에 종료했다. 환경 오류 1회, 유효 AI 생성 평가 0/24. 재시도 전 도구 권한 사전 점검 필요.
+- GUI 화면 배치/실제 마우스·키보드 조작의 수동 확인은 미실행이다. 아래 자동 확장 시험과 구분한다.
+- 독립 평가 실행 환경/모델/예산/자료 manifest 확정 및 평가 대상과 서버·시험 도구 격리.
+- 신규 세션 2모델 × 4시나리오 × 3회 생성 및 독립 실행 판정. 최초/최종/보조/환경 실패 구분.
+- 결과에 따른 자료 보완과 새 세션 재검증, 검증된 모델 목록 작성 후 S04 완료 판단.
+
+#### 2026-09-11 GUI·장애 처리 자동 확장 시험
+
+- 별도 임시 설정·TCP 포트의 소스 Mock 서버에서 실행했다. 사용자 설정/실장비/사용자 서버는 변경하지 않았다.
+- Tk 창을 생성하고 숨긴 상태에서 실제 이벤트 루프와 Panel 조작 handler를 실행했다.
+  화면 배치/OS 포커스 전달의 수동 검증이나 실제 마우스 클릭 시험을 대신하지 않는다.
+- `tests/test_ai_pick_place_extended.py`: 새 7개 시험 통과.
+  - Teaching Capture → Apply(메모리만 변경) → 명시적 Save → 파일 재읽기.
+    실행 이후 원본 포인트 변경과 중복 Run에도 시작 시 고정한 좌표로 1회만 완료.
+  - Jog release/포커스 이탈 handler 후 jog_stop 요청과 실제 Mock Standstill 확인.
+  - 입력 대기 중 창 종료: UI 이벤트 응답, axes Stop → authority release → 연결 종료/창 파괴,
+    후속 Place 없음, 자동 Disable 없음.
+  - Teaching Move to point 완료 후 Run에서 시퀀스 공통 가감속을 다시 적용.
+  - 시험 launcher에서 WKC 관측값을 0으로 주입: 기존 서버 진단 경로가 실제 Fault를 생성하고,
+    시퀀스는 실패·후속 이동 중단, 서버는 살아 있고 status 요청에도 응답.
+    실제 케이블 단절/드라이브 자체 Fault 시험은 아니다.
+  - 시험 TCP proxy가 이동 응답만 1.5초 지연하고 Feedback은 계속 전달. 요청 timeout 0.5초 이후
+    실패·Stop·Standstill 확인, 늦은 Success 이후 자동 재전송/Place/출력/재개 없음.
+  - 같은 지연 중 GUI Stop 클릭 handler 및 예약 UI 이벤트 처리 확인. 실패 표시와 후속 동작 중단.
+- `tests/sequence_tcp_proxy.py`와 기존 TCP 시험 launcher만 확장했다. 제품 서버/API/레퍼런스 실행
+  코드는 이번 시험에서 수정하지 않았다. 패키지도 이번에는 다시 빌드하지 않았다.
+- 최종 관련 회귀: `tests.test_ai_pick_place_extended`, `tests.test_ai_pick_place`,
+  `tests.test_ai_pick_place_tcp`, `tests.test_api_schema`, `tests.test_ai_documentation`,
+  `tests.test_ai_reference_bundle` **47개 통과, 48.347초**. Node-RED 관련 시험은 실행하지 않았다.
+
+##### 시험 중 발견 및 해석
+
+- 초기 지연 4초는 Sequence가 지정하는 요청 timeout 5초보다 짧아 정상 완료됐다.
+  timeout 초과 시험의 설정 오류이므로 1.5초/0.5초로 수정하고 재검증했다. 제품 결함으로 집계하지 않는다.
+- 초기 Tk 시험 종료가 예약 callback보다 빨라 Tcl 경고가 발생했다. 시험이 실제 창 파괴까지 기다리고
+  잔여 예약을 정리하도록 수정했다. 최종 회귀에서는 해당 경고 없음.
+- GUI는 API 응답을 기다리는 동안에도 반응하지만, Stop 전송은 진행 중 요청의 응답/timeout 이후다.
+  GUI Stop은 즉시 실행되는 하드웨어 비상정지 기능이 아니다. 이를 숨기거나 응답 전 중단했다고 표시하지 않는다.
+- 독립 AI 생성 평가는 여전히 **0/24**이며 S04 전체 완료로 처리하지 않는다.
+
+<a id="s04-basic-r1"></a>
+
+### 기본 Pick & Place r1·r1b
+
+- 기준 commit: `dd0b3706a5e51bf44ecaefcefa9fff6742c8b1e6` (`origin/main` push 확인).
+- 범위: 기본 CLI Pick & Place 1회, GUI/Teaching/Node-RED 제외.
+- 결과: **환경 오류, 유효 생성 평가 0회**. 모델의 구현 실패 또는 통과로 집계하지 않는다.
+- 실행 도구: codex-cli 0.153.4, 새 비대화형 세션, 사용자 config 제외, workspace-write 요청.
+- 정확한 실행 모델/추론 설정은 수집한 JSON 이벤트에 없어 미확인. 검증 모델 목록에 추가하지 않는다.
+- 자료는 별도 임시 작업 폴더에 복사: AI 안내/가이드/프롬프트, 공식 Python client·레퍼런스,
+  API Schema, configuration 정의, API 설명, statusword 정의와 별도 Mock 서버의 config.txt.
+  기존 대화와 평가 코드·제품 서버 구현은 제공하지 않았다. RF 평가계획 링크는 제공 제외로 명시했다.
+- 정정: 첫 시도에 적용한 생성 시간 제한 15분은 사용자와 합의한 값이 아니라 평가자가 임의로
+  설정한 값이었다. 합의된 예산으로 취급하지 않는다. 후속 r1c에서는 이 제한을 제거했다.
+  CLI가 보고한 사용량은 input 89,696, cached input 73,856,
+  output 435 tokens다. 실제 과금 또는 계정 사용량 환산값은 아니다.
+- 별도 Mock 서버는 초기화/Enable/Homing 및 DI/AI 입력 준비를 완료하고 제어권을 반환했다.
+  사용자 서버·실장비·실제 설정은 변경하지 않았다.
+
+#### 발생 경위
+
+새 세션이 자료 확인을 시도했으나 파일 목록 조회 및 `docs/ai/README.md` 읽기 명령이
+`blocked by policy`로 거부됐다. 생성 AI는 정책 제한을 보고하고 종료했다.
+코드 생성/자체 시험/독립 실행 판정은 수행되지 않았다.
+명령에 요청한 workspace-write와 세션이 보고한 읽기 전용/실행 거부 상태가 불일치한다.
+정확한 정책 적용 원인은 이 기록만으로 확정하지 않는다. 제한 우회나 sandbox 비활성화는 하지 않았다.
+
+#### 보존 자료와 후속 조건
+
+- 로컬 `.codex_output/s04-basic-r1/`: 정확한 prompt, 입력 파일 SHA256 manifest,
+  environment.json, generation-events.jsonl, generation-stderr.txt, generation-final.txt,
+  generation-server.log. 대용량 실행 로그는 Git에 포함하지 않았다.
+- 시험용 Mock 프로세스는 종료하고 생성 AI용 입력 폴더와 실행 기록은 원인 확인을 위해 보존한다.
+- 재시도 전에 별도 세션에서 자료 읽기·generated 폴더 쓰기·Python 실행·지정 Mock TCP 접속의
+  사전 점검이 필요하다. 제품 서버/평가 도구 수정 금지 경계와 모델 ID·추론 설정도 확인한다.
+- 재시험은 이번 환경 실패와 연결된 새 회차로 기록한다. 이번 실패를 삭제하거나 생성 성공으로 대체하지 않는다.
+- S04는 계속 진행 중이며 24회 독립 평가 중 유효 평가 완료는 0회다.
+
+#### 후속 시도
+
+- r1b: 임의 시간 제한에 대한 사용자 이의 제기로 중단. 정식 평가에서 제외하고 기록은 보존했다.
+- r1c: 제한 없이 생성 완료. 시험 도구의 파일 수집 오류로 자체 Mock 실행 환경이 중단됐다.
+  생성 코드를 수정하지 않은 별도 실행 시험 8개는 통과했다. 환경 오류와 생성물 검증을 구분한
+  [r1c 상세 기록](#s04-basic-r1c)을 따른다. 정식 무보조 합격으로 집계하지 않는다.
+
+<a id="s04-basic-r1c"></a>
+
+### 기본 Pick & Place r1c
+
+#### 결과와 집계
+
+- 기준 commit: `da0b0a3ae727ca9586bc27b6942c95fd88e670a7`.
+- 기본 CLI Pick & Place 생성 완료. 생성 코드 수정 없이 별도 Mock TCP 실행 시험 **8/8 통과**.
+- 생성 중 평가 도구 오류로 Mock 서버가 종료되어 Agent의 실제 서버 자체 시험이 실패했다.
+  따라서 **환경 오류가 포함된 시도 / 생성물 실행 검증 완료**로 기록한다.
+  정식 무보조 합격 또는 24회 평가 완료 수에는 더하지 않는다. S04는 계속 in_progress다.
+- r1의 권한 실패, r1b의 임의 예산 적용·중단 기록을 삭제하거나 이번 성공으로 대체하지 않는다.
+
+#### 생성 환경
+
+- codex-cli 0.153.4, 신규 세션 `01a08f6b-1ef2-78d1-a5f1-efcadc65418b`.
+- 모델: rollout의 `gpt-6-astra`. 추론 설정은 명시하지 않았고 기록의 effort는 null이므로 특정 수준으로 단정하지 않는다.
+- Windows, Python 3.14.3. elevated workspace-write 및 지정 Python 읽기 권한 확인 후 실행.
+- 기존 대화 없이 AI 문서/프롬프트, 공식 Python client와 레퍼런스, API Schema,
+  설정 정의 및 시험 config.txt를 제공했다. 서버 구현과 독립 평가 코드는 제공하지 않았다.
+- 별도 Mock의 3개 linear 축과 CPX DO/AIO/DI/AI. 초기 Enable/Homing은 평가자가 준비했다.
+- 생성 시간/토큰 제한을 별도로 부과하지 않았다. 기존 900초 제한과 15분 지시를 제거했다.
+  실행 중 요청·단계 timeout은 프로그램 동작 요구사항이며 생성 시간 제한과 다르다.
+- 생성 CLI exit 0, 관측 시간 약 510.5초. CLI 사용량은 input 564,052,
+  cached input 512,896, output 13,608 tokens. 과금액이나 계정 잔여 사용량으로 환산하지 않는다.
+
+#### 환경 오류와 산출물 보존
+
+1. Agent는 실제 axis metadata 조회에 성공했다. 자체 테스트 중 오류를 스스로 수정하고 8개 통과를 기록했다.
+2. elevated sandbox가 생성한 파일을 부모 평가 프로세스가 읽지 못해 PermissionError가 발생했다.
+   중간 산출물 수집기가 이 예외로 종료하면서 finally에서 Mock 서버까지 종료했다.
+   Motion Server 자체 오류로 다운된 것이 아니라 평가 도구의 정리 절차가 종료한 것이다.
+   사용자는 이를 서버 결함으로 보지 않기로 확인했다. 자체 실행 시험보다 먼저 종료되어 생긴
+   연결 timeout은 평가 환경 이력으로 남긴다.
+3. Agent의 이후 CLI 실행은 연결 timeout으로 종료했다. 자동 복구·재실행하지 않고 실패를 보고했다.
+4. 최종 파일 복사도 같은 권한 문제로 실패했다. 생성 CLI 성공과 수집기 실패를 구분한다.
+5. 이미 수집된 Agent의 apply_patch 기록을 순서대로 재적용하여 별도 폴더에 산출물을 복원했다.
+   출력 경로만 변경했고 코드 수정은 하지 않았다. 원본 파일을 직접 hash 대조하지 못했으므로
+   byte 단위 원본 동일성까지 확인했다고 표현하지 않는다. ACL 변경/권한 우회는 하지 않았다.
+
+로컬 증거: `.codex_output/s04-basic-r1c/`의 prompt, manifest, environment,
+generation-events, generation-final, invocation, `replayed/generated/`와 `evaluation/<case>/`.
+각 시험에는 요청/Feedback trace, stdout/stderr, 최종 상태, 서버 로그와 판정 결과를 보존했다.
+대용량 로그와 생성물은 Git에 포함하지 않는다.
+
+#### 독립 실행 시험
+
+시험마다 새 Mock 서버를 준비하고 원본 생성 Python 코드는 수정하지 않았다.
+생성 코드가 시험 endpoint를 고정 검증하므로 proxy가 해당 port를 받아 새 Mock로 전달했다.
+실장비/사용자 서버/설정/Node-RED는 사용하거나 변경하지 않았다.
+
+| 시험 | 결과 | 관측 |
+| --- | --- | --- |
+| 정상 | 통과 | Pick → DO/AO 파지 → DI/AI 충족 대기 → Place → 해제 → Stop/제어권 반환 |
+| 입력 timeout | 통과 | 실패 종료, Place 없음, 출력 유지, Stop/제어권 반환 |
+| 이동 API Fail | 통과 | 비활성 축으로 Fail 유발, 후속 출력/Place 없음. Stop도 Fail일 때 정리 미완료 기록 |
+| Stop | 통과 | 입력 대기 중 SIGINT handler 실행, cancelled, 출력 유지, Stop/제어권 반환 |
+| Fault | 통과 | 시험용 WKC 0 주입으로 기존 서버 진단 경로의 Fault 발생, 실패·후속 단계 중단 |
+| 연결 상실 | 통과 | TCP proxy 연결 종료, 실패 및 정리 미완료 표시, 재전송/재개/제어권 재요청 없음 |
+| 제어권 상실 | 통과 | 시험 wrapper가 동일 client로 제어권 반환, 상실 감지·실패, 재획득 없음 |
+| 응답 timeout | 통과 | 이동 응답을 요청 timeout보다 늦게 지연, 실패·Stop·제어권 반환, 파지/Place 없음 |
+
+공통 검사: JSON 요청 Schema, 축/좌표/속도, 공통 가감속 1회 적용,
+출력 전 actual position/target reached/standstill, 자동 Enable/Homing/Disable/복구 부재.
+정지가 확인되지 않은 경우 성공으로 표시하지 않는지 생성 실행 기록도 확인했다.
+
+#### 한계와 후속
+
+- 위 8개는 1개 생성물의 시험 케이스이지 8회 독립 생성 성공이 아니다.
+- GUI/Teaching/실제 키보드 조작·물리 Fault는 미시험. Stop은 Python interrupt 주입이다.
+- 응답 timeout 시험에서는 프로그램이 지연 응답 전달 전에 종료했다.
+  늦은 Success를 살아 있는 프로그램이 수신한 이후의 처리는 이 시험만으로 검증하지 않았다.
+- 코드 검토상 시험 endpoint가 하드코딩되어 다른 endpoint 재사용에는 제약이 있다.
+  허용 endpoint만 사용하라는 시험 지시의 영향이며, 일반 배포 구성 가능성 통과로 확대하지 않는다.
+- 다음 정식 재시험 전에 새 세션의 생성 파일 회수와 자체 시험 종료·서버 정리 순서를 확인한다.
+  서버 수명 분리 설계 변경은 이번 문서 통합의 범위에 포함하지 않는다.
+- 이번에는 제품 코드/AI 제공 문서/생성 코드 보완이나 다음 독립 회차를 추가 수행하지 않았다.
+
+### 평가 산출물 보관
+
+- 평가 중 AI가 작성한 코드는 회차별로 저장한다. 최초 산출물·최종 제출물·설정·실행 안내·자체 테스트를 보존한다.
+- 프롬프트, 모델 정보, 입력 자료 manifest, 평가 결과와 로그를 함께 보관한다.
+- 실패·중단 회차도 덮어쓰거나 삭제하지 않는다. 문서 통합은 생성 코드와 원본 로그를 삭제하지 않는다.
+- 현재 r1c 복원 코드 위치: `.codex_output/s04-basic-r1c/replayed/generated/`.
 
 ## 완료 조건
 

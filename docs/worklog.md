@@ -4,7 +4,178 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-09-22
+
+### TD-039 EtherCAT Slave 탐색 실패 traceback 노출 등록
+
+- `Expected 3 EtherCAT slaves, found -1`의 일반 RuntimeError 생성 및 initialization logger의 traceback 출력 경로를 확인했다.
+- 음수 탐색 결과/장치 수 부족 분류, 상세 원인 보존과 degraded/recovery 유지 조건을 TD-039로 등록했다.
+- 서버 다운 여부나 실제 통신 실패 원인은 해당 로그만으로 단정하지 않았다.
+- 제품 코드/설정 변경, 장치 접근, 테스트 및 커밋/푸시는 수행하지 않았다.
+
+## 2026-09-21
+
+### TD-036/037/038 완료 및 RF-018 1차 구현
+
+- Stop을 Enabled 상태와 분리해 Disabled PV Axis의 target velocity와 내부 command도 0으로 만들고,
+  Disabled controlword는 유지하도록 구현했다. PP/CSP/Jog와 혼합 Axis `PartialFailure`를 함께 검증했다.
+- explicit authority release를 비동기 pending 상태로 바꾸고 전체 Axis Standstill 뒤에만 correlated response와
+  authority 해제를 완료한다. 2초 timeout/Stop 실패 fallback과 owner disconnect 전체 Axis Quick Stop을
+  공통 경로로 구현하고 Diagnostic을 추가했다.
+- 모든 TCP 연결에 50 ms challenge/200 ms timeout의 `uint32` 왕복 Heartbeat를 적용했다. Python reference
+  client, Axis/IO Panel, ROS bridge와 Node-RED client를 함께 전환했다. Node-RED 테스트는 사용자 지침에 따라
+  실행하지 않았다.
+- `control_panel/gamepad_control_panel`에 pygame-ce joystick adapter, name/GUID mapping, strict 설정, Multi/Single
+  velocity 상태기계와 Tkinter GUI를 구현했다. Python wheel과 SDL 포함 Windows PyInstaller artifact 빌드는
+  성공했다.
+- Windows 기본 Python에 pygame-ce 2.5.8을 설치한 뒤 SDL에서 연결된 DualSense의 name/GUID와
+  6 axes, 17 buttons, 0 hats를 확인했다. 실제 joystick을 열어 stick/button/D-pad 중립 입력까지 읽었고,
+  전체 물리 입력 mapping과 실장비 운전 검증은 남겼다. RF-018은 이 수동 검증 때문에 진행 중이다.
+- Node-RED 항목을 제외한 전체 Python 회귀 테스트 496개를 실행해 모두 통과했고, `git diff --check`로
+  whitespace 오류가 없음을 확인했다. Node-RED 테스트는 저장소 지침에 따라 실행하지 않았다.
+- Axis/IO Panel과 같은 Windows 진입점인 `scripts/windows/gamepad.ps1`을 추가했다. 공통 Windows 패키지
+  빌드에도 Gamepad Pendant와 검토용 `config.example.json`을 `Tools/gamepad_control_panel`로 포함하도록 통합했다.
+- `gamepad.ps1`의 기본 `config.json`이 없는 첫 실행에서는 example을 자동 복사하고 검토 경고를 표시하도록
+  보완했다. 명시적으로 지정한 잘못된 `-Config` 경로는 계속 오류로 처리한다.
+- Windows SDL의 실제 DualSense mapping을 확인해 L1/Options/Create/Touchpad와 D-pad button 번호를
+  example 및 로컬 설정에 반영했다. hat이 없는 controller는 네 D-pad button으로 방향값을 합성한다.
+- input thread 초기화 직후의 빈 snapshot이 남긴 `Gamepad is not connected` 문구가 실제 연결 뒤에도
+  유지되는 UI 문제를 수정했다. 초기화 중에는 오류를 만들지 않고 실제 input 오류는 복구 시 해제한다.
+- 로컬 Mock bus에 누락된 rotary Axis 3을 추가하고 CPX I/O를 slave 4로 이동해 Gamepad의 X/Y/Z/R 구성과
+  맞췄다. server 재접속 또는 axis contract 재검증 성공 후 과거 topology 오류가 남지 않도록 수정했다.
+- Single-axis mode는 PV `move_vel`이 아니라 선택 Axis의 slow `jog_start`/`jog_stop`을 사용하도록 수정했다.
+  Multi-axis arming에서만 mapped axes를 PV로 전환한 뒤 동시 `move_vel`을 보내도록 두 경로를 분리했다.
+- 로컬 Axis 1의 `profile_position_basic` PDO에는 `target_velocity`가 없어 Multi PV 전환이 실패함을 확인하고
+  `motion_server_default`로 맞췄다. Mock 서버에서 Single Jog 전체 순서와 Multi 4축 PV/zero-velocity 순서를
+  각각 실제 TCP 명령으로 검증했다.
+- Single Jog의 positive/negative 방향을 기존 구현과 반대로 바꿨다. Gamepad 구현 전체를
+  `reference_clients`에서 `control_panel/gamepad_control_panel`로 이동하고 실행, 패키징과 문서 경로를 갱신했다.
+- 실제 SDL mapping에서 남아 있던 DualSense Cross(button 0)를 Single-axis 전용 Homing으로 매핑했다.
+  Armed·stick 중립·모든 Axis Standstill에서 선택 축 Homing을 시작하고, 상태 조회로 완료될 때까지 Jog를
+  억제한다. Multi mode에서는 거부하며 Homing 중 L1 release는 즉시 Disable/Quick Stop한다.
+- Single Jog에서 Multi mode의 role별 `invert`를 다시 적용해 Y/Z 방향만 뒤집히던 문제를 수정했다.
+  모든 선택 축은 Left Stick Y 원시 입력에 대해 같은 Jog direction을 사용하며 Multi velocity 방향 설정은
+  변경하지 않았다.
+- Enable/Deadman 입력을 고정 L1 button에서 `config.json`의 명명된 control 참조로 분리했다. DualSense
+  profile은 L1/R1/L3/R3 button 9/10/7/8과 L2/R2 trigger axis 4/5를 모두 명시했다. 기능 할당인
+  `enable_input`은 물리 입력 정의와 분리해 루트의 axis/invert 영역으로 옮기고, 기본 Enable control은
+  L2, threshold 0.5 이상으로 설정했다.
+- SDL axis/button 번호는 운전 설정값이 아니므로 `config.json`에서 제거하고 별도
+  `device_profiles.json`의 `dualsense_windows` profile로 이동했다. 운전 설정은 device name/GUID와 profile
+  이름만 선택하며 Windows package에는 profile catalog를 EXE 내부와 외부 도구 폴더에 함께 포함한다.
+- Single Homing의 Cross 고정을 제거하고 루트 `homing_input.control` 기능 할당을 추가했다. 기본값은
+  Cross이며 L3 같은 profile 내 미사용 digital button으로 변경할 수 있고 Enable/기존 동작과의 충돌은
+  설정 로드 단계에서 거부한다.
+- 기존 `axes: role -> integer`의 의미가 불분명했던 구성을 `server.axes: role -> server Axis index`와
+  루트 `axes: role -> logical stick name`으로 분리했다. Multi velocity 입력의 기존 하드코딩을 제거하고 설정된
+  logical stick 할당을 사용하며 중복 입력은 설정 로드에서 거부한다.
+- Gamepad `max_velocity`는 server `motion_limits`와 중복되므로 설정에서 제거했다. Multi velocity는
+  server가 제공한 axis별 최대 속도에 Gamepad `speed_scale`과 stick 값을 적용하며, limit 누락이나 잘못된
+  값은 arming 단계에서 거부한다.
+- Enable, authority request/release, Fault Reset, Stop, all-Axis Stop, mode 전환, Homing, speed
+  up/down과 previous/next Axis를 루트 `actions`의 logical control 할당으로 통합했다. Enable 항목은 analog
+  threshold를 함께 가지며, D-pad도 virtual digital control로 정규화해 다른 button으로 교체할 수 있다.
+- 별도 Disable action은 Enable/Deadman release의 즉시 Disable/Quick Stop과 중복되므로 제거했다. 기본
+  Circle은 기능이 할당되지 않은 사용 가능 button으로 남겼다.
+
+### 모든 TCP Client 왕복 Heartbeat 계약 확정
+
+- Motion Server가 client 종류를 구분하지 않는 점에 맞춰 gamepad 전용이 아닌 모든 TCP client 공통
+  Heartbeat로 결정했다.
+- server의 증가 sequence `N`에 client가 `N + 1`로 응답하며, 기본 50 ms 주기와 200 ms timeout에서
+  stale/duplicate 응답을 생존 증거로 인정하지 않는 계약을 DEC-049와 TD-037에 기록했다.
+- 모든 client의 Heartbeat와 연결 종료를 확인하되 motion 안전 대응은 command authority owner 연결이
+  종료될 때만 수행하도록 범위를 정했다. owner는 Heartbeat timeout, EOF, reset과 송수신 오류 모두에서
+  모든 Axis motion target 제거, 즉시 Disable/Quick Stop, authority 회수와 TCP session 종료를 수행한다.
+  non-owner 연결 종료는 Axis와 다른 client의 authority에 영향을 주지 않는다.
+- 현재 `close_client()`는 owner 연결 종료 시 authority만 해제하고 velocity target이나 Axis 상태를
+  변경하지 않으므로 동작 중 PV 명령이 유지될 수 있음을 TD-037의 구현 대상 결함으로 기록했다.
+- explicit `system/authority/release`도 현재 authority만 해제하는 문제를 확인했다. explicit release와
+  owner 연결 종료 모두에서 PV/PP/CSP, trajectory, Jog와 Homing을 포함한 모든 Axis motion을 종료하도록
+  DEC-050과 TD-038을 등록했다. 정상 explicit release는 전체 Axis Stop 후 Enabled 상태를 유지하고,
+  Feedback에서 모든 Axis Standstill을 확인한 뒤 authority를 해제한다. 비정상 owner 연결 종료와 정상
+  release의 Stop 실패 fallback에서 전체 Axis Disable/Quick Stop을 적용하도록 구분했다.
+- 정상 release의 Standstill 대기 timeout은 2초로 확정했다. Stop 일부 실패나 timeout에서는 전체 Axis
+  Disable/Quick Stop으로 fallback하고, fallback 성공 시 authority를 해제하며 원인을 response/Diagnostic에
+  남긴다. fallback도 일부 실패하면 authority를 유지하여 새 client의 authority 획득을 막는다.
+- 공통 client library, Axis/IO Control Panel과 모든 공식 adapter를 server와 같은 변경 단위에서 전환하도록
+  TD-037 완료 조건에 포함했다.
+- DualSense와 gamepad client 사이의 USB/Bluetooth 단절 및 input-loop freshness 감시는 RF-018 1차
+  범위에서 제외했다. 구현과 테스트는 수행하지 않았다.
+- RF-018의 mode 전환을 Touchpad click으로 확정하고 Disarmed·stick 중립·모든 Axis Standstill에서만
+  mode/selected Axis 변경을 허용했다. Single-axis는 Left Stick Y와 선택 Axis Enable만 사용한다.
+- scaled deadzone, role별 invert, 50 ms 최신 command coalescing, 명령 실패 시 Disarmed/Disable 정책,
+  strict 설정 검증과 Windows 상태 GUI를 1차 client 계약에 포함했다.
+- Heartbeat wire contract는 uint32 sequence, 최대값 다음 `0` 순환, `type` 기반 control frame으로 확정했다.
+  ACK에는 `cmd`/`request_id`와 일반 Success response를 사용하지 않는다.
+- Windows DualSense 입력은 활발히 유지되는 SDL 기반 `pygame-ce`의 stable `pygame.joystick` API를 사용하고,
+  Tkinter GUI와 adapter를 분리하며 name/GUID별 mapping profile로 raw axis/button을 검증하기로 결정했다.
+  experimental controller API, XInput/DS4Windows 의존과 직접 HID report 구현은 1차 범위에서 제외했다.
+
+## 2026-09-17
+
+### RF-019 GUI Pick & Place 독립 생성 및 자동 평가 완료
+
+- 사용자 기본 CLI 수동 테스트 완료 보고 및 확대된 위치/속도 조건을 RF-019에 기록했다.
+- GUI 선택, Teaching 제외 1회차를 기존 대화 없는 독립 세션과 별도 Mock 서버에서 시작했다.
+- Astra 새 세션 생성 완료. sequence 자체 시험 10개, GUI 실패 처리 2개 및 실제 Mock CLI 완료.
+- 생성 sandbox의 Tcl/Tk 로드 실패와 별개로 평가 환경에서 제출 코드 수정 없이 실제 Tk/Mock 기능 시험 9/9 통과.
+- 평가기 관측 시간/소유 timer 정리를 보완해 전체 재시험했다. 최초 실패·경고와 재시험 자료 모두 보존.
+- 입력 1,446,773(캐시 1,373,056 포함), 출력 21,976, 합계 1,468,749 토큰. 독립 실행 시험 추가 모델 토큰 0.
+- 제공 파일 41개 hash 불변, 중간 snapshot 19개/최종 코드/결과 보존. 시험용 Mock만 종료.
+- GUI 수동 시각/마우스 확인은 남아 있으며 RF-019는 계속 진행 중. 제품 코드 변경·커밋/푸시 없음.
+
+### TD-035 TCP Listener 기동 실패 예외 처리 등록
+
+- TCP bind의 WinError 10013이 처리되지 않은 traceback으로 전파되는 문제를 등록했다.
+- 확인 당시 설정 포트 62254가 Windows TCP 제외 범위 62217~62316에 포함되어 있었다.
+- 정상/degraded/configuration-error listener의 오류 분류, 원인 로그, 자원 정리와 통제된 실패 종료를 범위로 정의했다.
+- 제품 코드/설정 변경, 테스트, 커밋/푸시는 수행하지 않았다.
+
+### RF-019 기본 Pick & Place 독립 생성 r2 평가 완료
+
+- 새 Astra 세션의 기본 CLI 생성 1회 수행. 자체 테스트 11개와 Mock 정상 실행 완료.
+- 제출 코드를 수정하지 않은 독립 정상/장애 시험 8/8 통과. 제공 자료 hash 변경 없음.
+- 생성 토큰: 입력 586,552(캐시 522,624 포함), 출력 14,855, 합계 601,407.
+  실행 시험별 추가 모델 토큰은 0. RF-019에 케이스별 결과와 토큰 표 기록.
+- 최초/중간 snapshot 12개, 최종 코드, 프롬프트/manifest/usage/시험 trace를 회차 폴더에 보존.
+- 시험용 서버 정리 완료. GUI·Teaching·Node-RED·실장비·다른 모델/회차는 진행하지 않았다.
+- 정식 유효 평가 1/24. S04는 계속 진행 중이며 다음 회차는 사용자 결과 확인 후 진행한다.
+
+### RF-019 평가 생성물 회수 문제 해결
+
+- 신규 시험 workspace에 현재 사용자 읽기·실행 권한만 상속하도록 설정하고 독립 세션 재점검.
+- AI 파일 생성/실행/Mock 접속, 부모 파일 읽기/복사 및 hash 일치 확인.
+- 복사본 시험의 input.txt 누락을 보완해 생성 코드 수정 없이 재실행 성공. 실패/재검증 로그 모두 보존.
+- RF-019에 사전 점검 통과와 산출물 위치 기록. 다음 생성 준비 도구에도 동일 권한 설정 반영.
+- 정식 생성 평가·실장비·Node-RED 시험 및 커밋/푸시는 진행하지 않았다.
+
+### RF-019 독립 평가 환경 사전 점검
+
+- 새 독립 CLI의 파일 읽기·생성·Python 실행·Mock 상태 조회 성공.
+- 부모 평가 프로세스의 생성 파일 회수에서 PermissionError 재현. 정식 생성 평가로 진행하지 않았다.
+- 회수 실패 이후 서버 생존/응답을 확인하고 점검 종료 후 시험용 Mock만 정리했다.
+- RF-019 단일 문서에 결과 및 코드/로그 보관 위치 기록. 권한 변경·제품 코드 변경·Node-RED 시험 없음.
+
+### RF-019 문서 통합
+
+- RF-019 상세와 S04 평가 기록 3개를 단일 RF 문서의 검증 기록으로 통합했다.
+- 배경·제외 범위 등 제목을 다른 RF 형식에 맞추고 기존 결정·수치·제약·회차 이력은 보존했다.
+- remaining_tasks/worklog 링크를 통합 문서로 변경했다. 생성 코드와 평가 원본 로그는 유지했다.
+- Mock 종료에 대한 사용자 확인과 평가 코드 보관 원칙을 반영했다. 제품 코드 변경·Node-RED 시험 없음.
+
 ## 2026-09-11
+
+### RF-019 S04 기본 생성 r1c 및 독립 실행 시험
+
+- 임의로 기재한 생성 예산 15분을 정정하고 제한 없이 신규 세션을 실행했다.
+- 독립 Codex의 Python 실행 권한을 확인했다. Astra가 CLI를 생성하고 자체 테스트 8개 통과를 기록했다.
+- 평가 수집기의 PermissionError로 Mock 서버가 종료되어 Agent의 실제 실행은 연결 timeout.
+  평가 도구 환경 오류로 기록하고 정식 무보조 합격 수에는 더하지 않았다.
+- 생성 패치 기록으로 코드를 수정 없이 복원해 별도 Mock에서 정상/입력 timeout/API Fail/Stop/
+  Fault/연결 상실/제어권 상실/응답 timeout 8개 시험 통과. 상세 한계와 근거는
+  [r1c 기록](tasks/rf/RF-019-ai-motion-io-sequence-platform.md#s04-basic-r1c)에 정리했다.
+- 제품 코드/실장비/Node-RED 변경·시험 없음. 추가 생성 회차와 커밋/푸시는 수행하지 않았다.
 
 ### RF-019 커밋/푸시 및 독립 생성 첫 케이스 환경 오류
 
@@ -12,7 +183,7 @@
   빌드 산출물과 별도 EMCT 자료는 제외했다.
 - 기본 Pick & Place 신규 CLI 세션을 실행했으나 자료 읽기가 정책에 거부되어 생성 전 종료했다.
   모델 실패가 아닌 환경 오류로 분류하고 prompt/manifest/로그를 보존했다. 유효 평가 0회.
-- [첫 회차 기록](tasks/rf/RF-019-S04-basic-r1-2026-09-11.md)에 후속 환경 점검 조건을 기록했다.
+- [첫 회차 기록](tasks/rf/RF-019-ai-motion-io-sequence-platform.md#s04-basic-r1)에 후속 환경 점검 조건을 기록했다.
 
 ### RF-019 S04 GUI·Fault·지연 응답 확장 검증
 
@@ -241,7 +412,7 @@
 
 ### TD-034 Linear/Rotary Velocity Command 구현
 
-- RF-018 gamepad reference client 선행 조건으로 `system/axis/move_vel`과 `system/axes/move_vel`을
+- RF-018 Gamepad Control Panel 선행 조건으로 `system/axis/move_vel`과 `system/axes/move_vel`을
   linear/rotary axis 모두에서 사용할 수 있도록 정리했다.
 - `pv_allowed`를 rotary 전용 조건이 아니라 known linear/rotary axis의 velocity mode 사용 가능
   조건으로 변경했다.
@@ -302,7 +473,7 @@
 
 ### RF-018 Gamepad Manual Multi-Axis Velocity Control 등록
 
-- DualSense 같은 gamepad를 `reference_clients/gamepad`의 외부 reference client로 구현하기로 했다.
+- DualSense 같은 gamepad를 Motion Server core와 분리된 Control Panel로 구현하기로 했다.
 - 목적은 단축 jog가 아니라 Left Stick X/Y와 Right Stick Y/X로 X/Y/Z/Rotation을 동시에 움직이는
   manual velocity control이다.
 - 장비 setup과 축별 방향 확인을 위해 selected axis 하나만 velocity 제어하는 single-axis mode도

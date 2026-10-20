@@ -492,7 +492,9 @@ Device Profile + ESI
   - exception-to-cause 변환은 전역 exception type이 아니라 명시적인 initialization stage
     boundary를 우선한다. 구체 원인은 검출 지점의 typed `InitializationException(cause)`로
     전달하고 문자열 분석은 사용하지 않는다. Registry message만 API에 노출하며 원본 exception과
-    traceback은 최상위 initialization boundary에서 한 번만 기록한다.
+    traceback은 최상위 initialization boundary에서 한 번만 기록한다. 예상 가능한 typed
+    initialization/communication/device/configuration 실패는 TD-018/TD-026에 따라 traceback
+    대신 상세 로그로 기록하며, 예상하지 못한 programming error는 traceback을 유지한다.
 - 이유: 전체 runtime 설정이 잘못되어도 사용자가 동일한 API로 실패 원인을 확인하고 복구를
   요청할 수 있어야 하지만, 진단을 위해 불완전한 runtime을 꾸며내거나 설정 snapshot을
   중복 파싱해서는 안 된다.
@@ -951,28 +953,71 @@ Device Profile + ESI
   Persistent Store, 변경 이력, virtual restart restore와 실장비 commissioning transfer는
   [RF-017](tasks/rf/RF-017-persistent-parameter-store.md)에서 구현한다.
 
-## DEC-040 Gamepad는 외부 Multi-Axis Velocity Reference Client로 구현
+## DEC-040 Gamepad는 독립 Control Panel로 구현
 
 - 상태: `accepted`
 - 결정일: 2026-09-04
+- 수정일: 2026-09-22 (Control Panel 위치, Single Jog/Homing, Enable trigger/Stop/Heartbeat 및 입력 목록 표시 구체화)
 - 결정:
-  - DualSense 같은 gamepad 제어는 Motion Server core가 아니라 `reference_clients/gamepad`의 외부
-    reference client로 구현한다.
-  - 주 목적은 X/Y/Z/Rotation 4개 role을 동시에 움직이는 multi-axis manual velocity control이며,
+  - DualSense 같은 gamepad 제어는 Motion Server core가 아니라 Axis/IO Panel과 같은
+    `control_panel/gamepad_control_panel`의 독립 Control Panel로 구현한다.
+  - Windows gamepad 입력은 `pygame-ce`의 stable `pygame.joystick` API를 사용하고 Tkinter GUI와 입력
+    adapter를 분리한다. 장치는 name + GUID로 선택하고 axis/button mapping은 운전용 `config.json`이 아닌
+    별도 `device_profiles.json`의 GUID별 profile로 관리한다.
+    experimental `pygame._sdl2.controller`, XInput/DS4Windows 의존과 직접 HID 구현은 1차 범위에서 사용하지
+    않는다.
+  - 주 목적은 X/Y/Z/Rotation role을 동시에 움직이는 multi-axis manual velocity control이며,
     장비 setup과 축별 확인을 위한 single-axis mode도 함께 제공한다.
-  - 1차 구현은 신규 gamepad 전용 API를 만들지 않고 기존 `system/axes/move_vel`을 사용한다.
+    `server.axes`의 네 role 중 미사용 축은 JSON `null`로 지정하여 1~4축을 활성화한다. 루트 `axes`와
+    `invert`는 네 role을 유지한다. 축 계약 검증과 일반 운전 명령은 활성 축만 대상으로 하며 전체 서버 축
+    Standstill 확인과 `all_axes_stop`은 유지한다.
+  - 1차 구현은 신규 gamepad 전용 API를 만들지 않는다. Multi mode는 기존 `system/axes/move_vel`,
+    Single mode는 `system/axis/jog_start`와 `system/axis/jog_stop`을 사용한다.
   - Left Stick X/Y는 X/Y, Right Stick Y/X는 Z/Rotation velocity로 매핑한다.
-  - Single-axis mode에서는 D-pad left/right로 선택 축을 바꾸고 stick Y축으로 선택 축 velocity를
-    제어한다.
-  - L1은 deadman/armed 입력이며, deadman이 눌린 상태에서만 velocity command를 보낸다.
-  - axis role-to-index, axis별 max velocity, deadzone, update period와 speed scale은 client 설정으로
-    관리한다.
-  - gamepad disconnect, server disconnect, input timeout 또는 deadman release 시 mapped axes stop을
-    우선 수행한다.
+  - Single-axis mode에서는 D-pad left/right로 선택 축을 바꾸고 Left Stick Y로 선택 축을 Jog한다.
+    모든 선택 축에서 Left Stick Y 원시 입력과 전송 Jog direction을 반대로 매핑하며, Multi mode의
+    role별 `invert`를 Single Jog에 다시 적용하지 않는다. 스틱 위쪽은 `positive`, 아래쪽은 `negative`다.
+  - DualSense Cross는 Single-axis mode 전용 Homing으로 매핑한다. Armed, stick 중립, 진행 중 Jog 없음과
+    모든 Axis Standstill에서만 선택 축 `system/axis/home`을 시작하며 완료까지 Jog 입력을 억제한다.
+    Homing 중 Enable trigger release 또는 기존 Armed 안전 조건 상실은 선택 축 Disable/Quick Stop으로 처리한다.
+    물리 button 할당은 루트 `actions.homing`에서 변경할 수 있다.
+  - 루트 `actions`는 Enable, authority toggle, Fault Reset, Stop, all-Axis Stop, mode toggle,
+    Homing, speed up/down과 previous/next Axis의 logical control을 모두 관리하며 중복은 설정 검증에서 거부한다.
+    설정은 기능 이름에서 logical control 이름을 참조하는 형식을 유지한다. Gamepad 화면에는 선택한 profile의
+    모든 button, trigger, D-pad 입력과 SDL 번호, 할당 기능 또는 미할당 상태를 표시한다. 장치 선택 시 profile의
+    모든 입력 번호가 장치가 보고한 범위에 있는지 확인하고, 미할당 입력을 포함해 불일치하면 arm을 막는다.
+  - 기본 Touchpad click으로 Multi/Single mode를 전환하고 기본 D-pad left/right로 Single-axis 선택 축을 바꾼다.
+    두 전환은 Disarmed, stick 중립과 모든 Axis Standstill에서만 허용한다. Single-axis mode에서는
+    Left Stick Y만 사용하고 선택된 Axis만 Enable한다.
+  - DualSense profile은 L1/R1/L3/R3 button과 L2/R2 analog trigger를 구분해 물리 입력 영역에 매핑한다.
+    Enable/Deadman 기능 할당은 루트의 `actions.enable.control`이 이 이름을 참조하며, 기본값은 L2 axis 4,
+    threshold 0.5 이상이다.
+  - Enable trigger가 눌린 상태에서만 velocity command를 보낸다.
+  - Enable trigger 상승 edge에서는 최신 Feedback 기준 모든 Axis Standstill과 모든 stick 중립을 확인한 뒤 mapped
+    axes enable을 요청한다. API Success와 Feedback의 Operation Enabled를 확인한 뒤 Armed로 진입한다.
+  - stick 중립에서는 mapped axes를 Stop하고 Enable trigger가 유지되는 동안 Enabled/Armed 상태를 유지한다.
+  - Enable trigger release에서는 Stop 명령이나 Standstill 대기를 선행하지 않고 mapped axes를 즉시 Disable하여
+    Quick Stop으로 전환하며 client는 즉시 Disarmed 상태로 전환한다.
+  - 시작 또는 재연결 시 Enable trigger가 이미 눌려 있으면 release와 stick 중립 이후의 새 상승 edge까지
+    Armed로 진입하지 않는다.
+  - `server.axes`는 axis role-to-server-index를, 루트 `axes`는 axis role-to-logical-stick을 관리한다.
+    max velocity는 중복 설정하지 않고 server `motion_limits`를 사용하며 deadzone, update period와
+    speed scale은 client 설정으로 관리한다.
+  - deadzone 밖 입력은 남은 구간으로 재정규화하고 linear curve와 role별 invert를 적용한다. 50 ms마다
+    최신 command만 유지하며 밀린 중간 command는 queue에 쌓지 않는다.
+  - 1차 client는 Windows GUI로 server/Heartbeat, authority, Armed 상태, mode/selected axis, speed scale과
+    Axis 오류를 표시한다.
+  - 운전 중 command reject, authority/Enabled 상실, Axis Fault 또는 runtime/bus 이상에서는 즉시
+    Disarmed로 전환하고 authority가 남아 있으면 대상 Axis Disable을 best effort로 시도한다.
+  - server와 gamepad client 사이의 단절은 모든 TCP client에 공통 적용되는 DEC-049의 왕복 Heartbeat로
+    감지한다. gamepad client가 timeout을 감지하면 즉시 Disarmed로 전환하고 Disable을 한 번 시도한 뒤
+    연결을 종료한다. server의 authority owner 연결 종료 안전 동작은 공통 Heartbeat 계약을 따른다.
+  - DualSense와 gamepad client 사이의 USB/Bluetooth 단절 및 input-loop freshness 감시는 1차 범위에서
+    제외한다.
   - command authority, enabled/fault 상태, motion limit, software limit와 timeout safety는 기존
     Motion Server API 계약을 따른다.
 - 이유: Motion Server core에 OS별 HID/gamepad dependency를 넣으면 core 배포와 실시간 제어 경계가
-  불필요하게 오염된다. 반면 외부 reference client로 두면 기존 TCP API와 safety 계약을 재사용하면서
+  불필요하게 오염된다. 별도 Control Panel로 두면 기존 TCP API와 safety 계약을 재사용하면서
   게임패드 입력 장치만 독립적으로 교체할 수 있다.
 - 검토한 대안:
   - Motion Server 내부에 gamepad driver를 넣는 방식은 OS별 의존성과 입력 장치 lifecycle을 서버 core에
@@ -980,8 +1025,10 @@ Device Profile + ESI
   - 단축 jog만 제공하는 방식은 주 사용 목적이 3축 + rotation 동시 수동 조작이므로 채택하지 않는다.
   - 신규 `system/axes/jog` API를 바로 추가하는 방식은 현재 `system/axes/move_vel`로 충분히 표현 가능하므로
     1차 범위에서는 채택하지 않는다.
-- 영향: RF-018에서 gamepad reference client를 구현한다. 기존 velocity command가 linear axis에서 막히는
-  부분은 [TD-034](tasks/td/TD-034-linear-rotary-velocity-command.md)에서 먼저 정리한다.
+- 영향: RF-018에서 Gamepad Control Panel을 구현한다. 기존 velocity command가 linear axis에서 막히는
+  부분은 [TD-034](tasks/td/TD-034-linear-rotary-velocity-command.md)에서 먼저 정리한다. Enable 상태와
+  무관한 Stop 계약은 [TD-036](tasks/td/TD-036-stop-command-enabled-state-independence.md), 공통 TCP
+  Heartbeat는 [TD-037](tasks/td/TD-037-tcp-client-heartbeat.md)에서 정리한다.
 
 ## DEC-041 I/O reset/restart는 capability 기반, CPX parameter storage는 0x27F1 기반으로 처리
 
@@ -1147,6 +1194,112 @@ Device Profile + ESI
 - 이유: 장치/서버 준비와 애플리케이션 생성의 책임을 명확히 한다.
 - 영향: RF-019 프롬프트와 S04 환경은 정상 구동 서버가 준비된 전제다. 개발 Agent의 S01 서버 코드
   구현과 사용자용 시퀀스 생성 Agent의 역할을 혼동하지 않는다.
+
+## DEC-048 Stop 명령은 Axis Enabled 상태와 독립적으로 motion target을 제거
+
+- 상태: `accepted`
+- 결정일: 2026-09-21
+- 결정:
+  - `system/axis/stop`과 `system/axes/stop`은 대상 Axis의 Operation Enabled 여부와 관계없이 허용한다.
+  - Stop은 선택된 모든 Axis의 pending motion target을 안전한 정지 상태로 초기화한다.
+  - PV Axis는 Enabled 여부와 관계없이 target velocity와 서버 내부 velocity command 상태를 0으로 만든다.
+  - Enabled Axis에는 mode별 controlled stop을 적용하고 Disabled Axis는 자동 enable하지 않은 채 Disabled
+    상태를 유지한다.
+  - 혼합 Enabled/Disabled 대상 때문에 Stop 전체를 거부하지 않는다. 실제 장치 접근 실패가 일부 Axis에
+    발생한 경우에만 기존 PartialFailure 계약을 적용한다.
+  - Stop API Success 이후 물리적인 정지는 Feedback의 Standstill로 확인한다.
+- 이유: Stop은 운전 전제조건을 검사하는 이동 명령이 아니라 현재 motion target을 제거하는 안전 경로다.
+  Disabled Axis의 이전 velocity target도 제거해야 재Enable 시 의도하지 않은 속도 재개를 방지할 수 있다.
+- 검토한 대안:
+  - Disabled Axis가 하나라도 있으면 다축 Stop 전체를 거부하는 현재 방식은 함께 선택된 이동 중 Axis까지
+    정지하지 못할 수 있어 채택하지 않는다.
+  - Stop에서 모든 Axis를 자동 enable하는 방식은 Disabled 상태를 변경하므로 채택하지 않는다.
+- 영향: [TD-036](tasks/td/TD-036-stop-command-enabled-state-independence.md)에서 handler, mode별 target
+  초기화, PartialFailure, API 문서와 테스트를 정리한다. TCP/network 단절 감지는 DEC-049와
+  [TD-037](tasks/td/TD-037-tcp-client-heartbeat.md)이 담당한다.
+
+## DEC-049 모든 TCP client의 연결 생존은 왕복 Heartbeat로 감시
+
+- 상태: `accepted`
+- 결정일: 2026-09-21
+- 결정:
+  - Motion Server는 client 종류를 구분하지 않고 연결된 모든 TCP client에 같은 Heartbeat 계약을
+    적용한다.
+  - server는 기본 50 ms 주기로 client별 단조 증가 sequence `N`을 challenge로 보내고, client는 새
+    challenge를 처리한 뒤 `N + 1`을 응답한다. client별로 한 번에 하나의 challenge만 유효하다.
+  - server는 현재 기다리는 값과 일치하는 응답만 유효하게 인정한다. 오래되었거나 중복되거나 예상
+    sequence와 다른 응답은 Heartbeat deadline을 갱신하지 않는다.
+  - server와 client는 단조 시계를 사용하며 기본 200 ms 안에 유효한 Heartbeat 진행이 없으면 해당
+    연결을 timeout으로 판단한다. 주기와 timeout은 양수 설정값으로 제공한다.
+  - Heartbeat timeout은 해당 TCP 연결을 종료시키는 조건이다. 모든 client 연결은 같은 Heartbeat와 종료
+    처리를 사용하지만 motion 안전 대응 여부는 연결 종료 직전의 command authority 소유 여부로 결정한다.
+  - 종료되는 연결이 command authority owner가 아니면 해당 연결과 pending request만 정리하며 Axis의
+    target, Enabled 상태와 현재 command authority owner에는 영향을 주지 않는다.
+  - 종료되는 연결이 command authority owner이면 종료 원인이 Heartbeat timeout, 정상 EOF, TCP reset 또는
+    송수신 오류인지와 관계없이 DEC-050의 공통 authority relinquishment 안전 종료를 수행한 뒤 TCP 연결을
+    종료한다.
+  - timeout으로 종료된 연결의 늦은 Heartbeat와 command는 새 연결에 승계하지 않는다. 재연결 client는
+    command authority를 자동으로 다시 획득하지 않는다.
+  - Heartbeat는 TCP session과 client 통신 처리의 생존을 확인한다. client와 그 client가 사용하는 외부
+    입력 장치 사이의 연결 및 application input freshness는 확인하지 않는다.
+- 이유: TCP FIN/RST는 정상 종료를 빠르게 알릴 수 있지만 cable 단선, 방향별 packet 유실과 network
+  blackhole의 감지 시간을 보장하지 않는다. server 송신과 client 응답이 모두 필요한 순차 challenge로
+  양방향 경로를 확인한다. 모든 연결의 생존은 동일하게 확인하되 motion 상태를 변경하는 안전 대응은
+  authority owner 연결 종료에만 적용하여 관찰용 client의 장애가 운전에 영향을 주지 않게 한다.
+- 검토한 대안:
+  - feedback 수신 여부만 client가 확인하는 방식은 client-to-server 방향 단절과 client process 정지를
+    server가 판별할 수 없어 채택하지 않는다.
+  - 고정 sequence를 반복하는 방식은 이전 응답의 반복과 새 처리 결과를 구분할 수 없어 채택하지 않는다.
+  - gamepad client에만 Heartbeat를 적용하는 방식은 server가 client 종류를 알지 못하고 transport 안전
+    계약이 client별로 달라지므로 채택하지 않는다.
+  - TCP keepalive만 사용하는 방식은 기본 감지 시간이 길고 application 수준 timeout을 보장하지 않아
+    주 감시 수단으로 채택하지 않는다.
+- 영향: [TD-037](tasks/td/TD-037-tcp-client-heartbeat.md)에서 server transport와 모든 공식 client를
+  일괄 전환한다. 공통 client library, Axis Control Panel, IO Control Panel, reference client와 ROS/기타
+  공식 adapter가 Heartbeat에 응답하지 않으면 새 server와 연결을 유지할 수 없다. 현재 `close_client()`가
+  owner 연결 종료 시 authority만 해제하는 동작은 TD-038의 공통 authority relinquishment 경로를 호출하도록
+  교체한다.
+
+## DEC-050 Command Authority 해제 원인에 따라 Stop과 Quick Stop을 구분
+
+- 상태: `accepted`
+- 결정일: 2026-09-21
+- 결정:
+  - command authority owner가 `system/authority/release`를 명시적으로 호출하는 정상 해제에서는 모든
+    구성 Axis에 mode별 Stop을 적용하고 Enabled 상태는 유지한다. PV target velocity와 내부 velocity
+    command를 0으로 만들고 PP/CSP target, trajectory, Jog와 Homing을 안전한 정지 상태로 정리한다.
+  - owner TCP 연결이 Heartbeat timeout, EOF, TCP reset 또는 송수신 오류로 종료되는 비정상 해제에서는
+    모든 구성 Axis의 motion target을 정리하고 즉시 Disable하여 Quick Stop으로 전환한다.
+  - 정상 release의 Stop과 비정상 연결 종료의 Disable 모두 Axis Enabled/Disabled 혼합 상태 때문에 전체
+    처리를 건너뛰지 않고 모든 구성 Axis에 적용을 시도한다.
+  - 명시적 release는 Stop 적용 후 authority를 `releasing` 상태로 유지하며, Feedback에서 모든 구성 Axis의
+    Standstill을 확인한 뒤에만 authority를 해제하고 release를 완료한다. 대기 중에는 새 motion command를
+    거부한다.
+  - Standstill 대기 timeout은 2초다. 일부 Axis의 Stop 적용 실패 또는 2초 안에 모든 Axis Standstill을
+    확인하지 못하면 전체 구성 Axis를 Disable하여 Quick Stop으로 전환한다.
+  - fallback Disable/Quick Stop이 모든 Axis에 적용되면 authority를 해제하되 정상 controlled Stop으로
+    완료되지 않았음을 release response와 Diagnostic에 보고한다. fallback도 일부 실패하면 authority를
+    유지하고 실패 대상과 단계를 보고하여 새 client의 authority 획득을 막는다.
+  - Standstill 대기는 server cyclic/feedback 처리를 막지 않는 비동기 상태 전이로 구현한다. 대기 중 owner
+    연결이 종료되면 정상 release를 중단하고 비정상 연결 종료의 전체 Axis Disable/Quick Stop으로 전환한다.
+  - owner 연결 종료에서는 client가 더 이상 복구 조치를 수행할 수 없으므로 Axis별 target 정리 또는
+    Disable 일부가 실패해도 나머지 Axis 처리를 계속하고 authority와 connection을 반드시 정리하며 실패를
+    Diagnostic에 남긴다.
+  - command authority가 없는 client의 연결 종료와 실패한 release 요청은 Axis motion에 영향을 주지 않는다.
+- 이유: motion command를 발행할 수 있는 주체가 사라진 뒤 이전 target이 계속 실행되면 새 owner가 없는
+  상태에서 장비가 움직이고, 다음 client가 움직이는 장비의 authority를 획득할 수 있다. authority 수명과
+  motion target 수명을 같은 경계에서 종료해야 한다. 정상적인 명시적 release는 controlled Stop과 실제
+  Standstill을 확인하면서 Enabled 상태를 보존하고, 통신이 사라진 비정상 종료는 즉시 Quick Stop을 사용한다.
+- 검토한 대안:
+  - authority만 해제하고 기존 motion을 유지하는 현재 방식은 owner 없는 motion을 허용하므로 채택하지
+    않는다.
+  - active velocity axes만 정리하는 방식은 PP/CSP, trajectory, Jog 또는 Homing motion을 남길 수 있어
+    채택하지 않는다.
+  - 정상 release에서도 모든 Axis를 Disable하는 방식은 정상적인 제어권 인계에서 Enabled 상태를 불필요하게
+    변경하므로 채택하지 않는다.
+- 영향: [TD-038](tasks/td/TD-038-authority-release-motion-shutdown.md)에서 모든 motion mode의 target 정리와
+  명시적 release의 전체 Axis Stop, owner disconnect의 전체 Axis Disable/Quick Stop, PartialFailure와
+  Diagnostic을 구현한다. TD-037은 owner connection 종료를 감지한 뒤 비정상 종료 경로를 호출한다.
 
 ## 새 결정 작성 양식
 

@@ -38,7 +38,7 @@ Windows 입력 계층은 `pygame-ce`의 stable `pygame.joystick` API를 사용�
 
 ### Multi-axis mode
 
-기본 모드다. X/Y/Z/Rotation role을 동시에 velocity 제어한다.
+기본 모드다. 설정에서 활성화한 X/Y/Z/Rotation role 1~4개를 동시에 velocity 제어한다.
 
 ```text
 Left Stick X/Y  → X/Y velocity
@@ -100,6 +100,10 @@ Homing button    : selected axis homing (기본 Cross)
 ```
 
 Motion Server 축 번호와 gamepad logical stick 할당은 각각 client 설정으로 매핑한다.
+`server.axes`에는 X/Y/Z/Rotation 네 role을 모두 적고, 사용하지 않는 role의 축 번호는 JSON `null`로 둔다.
+한 개 이상 네 개 이하의 role을 활성화할 수 있으며 활성 축 번호는 중복할 수 없다. 루트 `axes`와 `invert`는
+네 role의 입력·방향 설정을 계속 유지하되, 비활성 role은 명령과 motion limit 검증에서 제외한다.
+모든 서버 축 Standstill 확인과 `all_axes_stop`은 기존대로 전체 서버 축을 대상으로 한다.
 
 ```yaml
 server:
@@ -219,6 +223,7 @@ Single-axis mode에서는 모든 선택 Axis에 Left Stick Y 원시 입력의 �
 - speed scale
 - Axis별 Enabled, Standstill과 Fault
 - 마지막 command 실패 및 mode/axis 전환 거부 이유
+- 선택한 device profile의 전체 logical button, trigger, D-pad 입력과 물리 SDL 번호, 할당된 기능 또는 미할당 상태
 
 DualSense lightbar, haptic feedback과 controller 자체 출력 기능은 1차 GUI 범위에 포함하지 않는다.
 
@@ -238,6 +243,8 @@ DualSense lightbar, haptic feedback과 controller 자체 출력 기능은 1차 G
 - server의 axis별 max velocity가 누락되거나 유효하지 않으면 arm을 허용하지 않는다.
 - 여러 gamepad가 있으면 설정된 device name/GUID와 정확히 일치하는 하나만 선택한다. 일치하지 않거나
   여러 장치가 동시에 일치하면 arm을 허용하지 않는다.
+- 일치하는 장치를 찾은 뒤 profile의 모든 axis, trigger, button, D-pad index가 장치가 보고한 입력 수의
+  범위 안에 있는지 검사한다. 미할당 입력도 검사하며 범위를 벗어나면 장치를 열지 않고 오류를 표시한다.
 
 ## 추가 결정 필요
 

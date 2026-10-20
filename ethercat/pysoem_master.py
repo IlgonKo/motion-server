@@ -4,12 +4,14 @@ import sys
 import time
 
 from ethercat.distributed_clock import DistributedClock
+from ethercat.exceptions import EtherCATDiscoveryException, EtherCATStateTransitionException
 from ethercat.master_pdo_runtime import MasterPdoRuntime
 from ethercat.sdo_access import SdoAccess
 from ethercat.working_counter import WorkingCounter
 from motion_server.failure import (
     CommunicationException,
     CommunicationTimeoutException,
+    ConfigurationException,
     DeviceRejectedException,
     MotionServerException,
     SdoObjectNotFoundException,
@@ -79,28 +81,38 @@ class PySOEMMaster:
         for _ in self.slaves:
             self.working_counter.add_slave()
 
-    def connect(self, target_state=None, timeout_us=50000, timeout_s=None):
+    def connect(self, target_state=None, timeout_us=1_000_000, timeout_s=None):
         pysoem = self._load_pysoem()
         self._reset_processdata_state()
         if timeout_s is not None:
             timeout_s = float(timeout_s)
             if timeout_s <= 0.0:
-                raise TimeoutError("EtherCAT connect deadline expired")
-            timeout_us = max(1000, min(int(timeout_s * 1_000_000), timeout_us))
+                raise CommunicationTimeoutException("ethercat_connect", timeout_s)
+            timeout_us = max(1, int(timeout_s * 1_000_000))
+        deadline = time.monotonic() + timeout_us / 1_000_000 if timeout_s is not None else None
 
         try:
             self._master = pysoem.Master()
+            # SOEM otherwise requests SAFE_OP inside config_map(), before DC setup.
+            self._master.manual_state_change = True
             self._master.open(self.interface_name)
 
             discovered_slaves = self._master.config_init()
+            if discovered_slaves < 0:
+                raise EtherCATDiscoveryException(
+                    self.interface_name, self.slave_count, discovered_slaves
+                )
             if discovered_slaves < self.slave_count:
-                raise RuntimeError(
+                raise ConfigurationException(
+                    "MOTION_SERVER_BUS",
                     f"Expected {self.slave_count} EtherCAT slaves, "
-                    f"found {discovered_slaves}."
+                    f"found {discovered_slaves}. Interface={self.interface_name}",
                 )
             self._register_emergency_callbacks()
 
-            self._request_pre_operational(pysoem, timeout_us)
+            self._request_pre_operational(
+                pysoem, self._remaining_transition_us(timeout_us, deadline)
+            )
             self._prepare_device_profiles()
             self._master.config_map()
             self._configure_distributed_clocks()
@@ -111,23 +123,25 @@ class PySOEMMaster:
                 self._configure_sync_parameters()
                 self._configure_dc_sync0()
 
-            if target_state == pysoem.OP_STATE:
-                self._request_safe_operational(pysoem, timeout_us)
-                self._prime_outputs()
-                self._request_operational(pysoem, timeout_us)
+            if target_state in (pysoem.SAFEOP_STATE, pysoem.OP_STATE):
+                deadline = deadline if deadline is not None else time.monotonic() + timeout_us / 1_000_000
+                self._request_safe_operational(pysoem, timeout_us, deadline=deadline)
+                if target_state == pysoem.OP_STATE:
+                    self._request_operational(pysoem, timeout_us, deadline=deadline)
                 return
 
             self._master.state = target_state
+            remaining_us = self._remaining_transition_us(timeout_us, deadline)
             self._master.write_state()
             reached_state = self._master.state_check(
                 target_state,
-                timeout_us,
+                remaining_us,
             )
 
             if reached_state != target_state:
-                raise RuntimeError(
-                    "EtherCAT network did not reach requested state. "
-                    f"Requested={target_state}, reached={reached_state}."
+                raise EtherCATStateTransitionException(
+                    self._state_description(target_state), reached_state,
+                    slaves=self.describe_slaves(),
                 )
         except Exception:
             try:
@@ -136,19 +150,29 @@ class PySOEMMaster:
                 pass
             raise
 
-    def enter_operational(self, timeout_us=50000, timeout_s=None):
+    def enter_operational(self, timeout_us=1_000_000, timeout_s=None):
         self._require_connected()
         if timeout_s is not None:
             timeout_s = float(timeout_s)
             if timeout_s <= 0.0:
-                raise TimeoutError("EtherCAT operational deadline expired")
-            timeout_us = max(1000, min(int(timeout_s * 1_000_000), timeout_us))
+                raise CommunicationTimeoutException("ethercat_enter_operational", timeout_s)
+            timeout_us = max(1, int(timeout_s * 1_000_000))
+        deadline = time.monotonic() + timeout_us / 1_000_000 if timeout_s is not None else None
         pysoem = self._load_pysoem()
         self._configure_sync_parameters()
         self._configure_dc_sync0()
-        self._request_safe_operational(pysoem, timeout_us)
-        self._prime_outputs()
-        self._request_operational(pysoem, timeout_us)
+        deadline = deadline if deadline is not None else time.monotonic() + timeout_us / 1_000_000
+        self._request_safe_operational(pysoem, timeout_us, deadline=deadline)
+        self._request_operational(pysoem, timeout_us, deadline=deadline)
+
+    @staticmethod
+    def _remaining_transition_us(timeout_us, deadline):
+        if deadline is None:
+            return timeout_us
+        remaining_us = int((deadline - time.monotonic()) * 1_000_000)
+        if remaining_us <= 0:
+            raise CommunicationTimeoutException("ethercat_state_transition")
+        return remaining_us
 
     def _resolve_target_state(self, pysoem, target_state):
         if target_state is None:
@@ -494,9 +518,8 @@ class PySOEMMaster:
         )
 
         if reached_state != pysoem.PREOP_STATE:
-            raise RuntimeError(
-                "EtherCAT network did not reach PRE_OP before process image preparation. "
-                f"Reached={reached_state}. Slaves={self.describe_slaves()}"
+            raise EtherCATStateTransitionException(
+                "PRE_OP", reached_state, slaves=self.describe_slaves(),
             )
 
         print(
@@ -504,19 +527,82 @@ class PySOEMMaster:
             flush=True,
         )
 
-    def _request_safe_operational(self, pysoem, timeout_us):
-        self._master.state = pysoem.SAFEOP_STATE
-        self._master.write_state()
-        reached_state = self._master.state_check(
-            pysoem.SAFEOP_STATE,
-            timeout_us,
+    def _request_safe_operational(self, pysoem, timeout_us, *, deadline=None):
+        # SOEM schedules the first Sync0 at least 100 ms into the future.
+        # Exchange DC datagrams in PRE_OP, then keep exchanging while waiting.
+        warmup_s = (
+            0.100 + 2 * self.cycle_time + max(0, self.dc_sync0_shift_time) / 1_000_000_000
+            if self.dc_enabled else 0.0
+        )
+        self._transition_with_processdata(
+            pysoem.SAFEOP_STATE, "SAFE_OP", timeout_us,
+            warmup_s=warmup_s, deadline=deadline,
         )
 
-        if reached_state != pysoem.SAFEOP_STATE:
-            raise RuntimeError(
-                "EtherCAT network did not reach SAFE_OP. "
-                f"Reached={reached_state}. Slaves={self.describe_slaves()}"
-            )
+    def _transition_with_processdata(self, target, label, timeout_us, *, warmup_s=0.0, deadline=None):
+        started = time.monotonic()
+        deadline = deadline if deadline is not None else started + timeout_us / 1_000_000
+        ready_at = started + warmup_s
+        requested = False
+        reached = self._master.state
+        snapshots = self._encode_output_candidates()
+        self._assign_output_snapshots(snapshots)
+        while time.monotonic() < deadline:
+            cycle_started = time.monotonic()
+            if not requested and cycle_started >= ready_at:
+                self._master.state = target
+                self._master.write_state()
+                requested = True
+            try:
+                self._master.send_processdata()
+                for slave, payload in zip(self.slaves, snapshots):
+                    slave.commit_transmitted_output(payload)
+                remaining_us = max(1, int((deadline - time.monotonic()) * 1_000_000))
+                self.wkc = self._master.receive_processdata(min(2000, remaining_us))
+            except Exception as exception:
+                self._raise_processdata_exception(exception, "ethercat_state_transition")
+            if requested and time.monotonic() < deadline:
+                # A long state_check blocks the very cyclic traffic needed for DC.
+                reached = self._master.state_check(target, 0)
+                if reached == target:
+                    print(f"EtherCAT network reached {label}: elapsed_s={time.monotonic() - started:.3f}", flush=True)
+                    return
+            pause = min(cycle_started + self.cycle_time, deadline) - time.monotonic()
+            if pause > 0:
+                time.sleep(pause)
+        elapsed_s = time.monotonic() - started
+        descriptions = self.describe_slaves()
+        raise EtherCATStateTransitionException(
+            label, reached, slaves=descriptions,
+            wkc=self.wkc, expected_wkc=self.expected_wkc(),
+            elapsed_s=elapsed_s,
+            sync_parameters=self._read_sync_diagnostics() if self.dc_enabled else None,
+        )
+
+    def _read_sync_diagnostics(self):
+        # Failure-only, best effort: never replace the original transition failure.
+        # Use raw reads without normal SDO retries and restore the native timeout.
+        readings = []
+        deadline = time.monotonic() + 0.100
+        original_timeout = self._master.sdo_read_timeout
+        try:
+            for slave_index, slave in enumerate(self._master.slaves):
+                for index in (0x1C32, 0x1C33):
+                    for subindex, size in ((1, 2), (2, 4), (10, 4)):
+                        remaining_us = int((deadline - time.monotonic()) * 1_000_000)
+                        if remaining_us <= 0:
+                            return readings
+                        self._master.sdo_read_timeout = min(10_000, remaining_us)
+                        item = {"slave": slave_index, "object": f"0x{index:04X}:{subindex:02X}"}
+                        try:
+                            payload = slave.sdo_read(index, subindex, size)
+                            item["value"] = int.from_bytes(payload, "little") if len(payload) == size else "invalid_size"
+                        except Exception:
+                            item["value"] = "unavailable"
+                        readings.append(item)
+        finally:
+            self._master.sdo_read_timeout = original_timeout
+        return readings
 
     def _configure_distributed_clocks(self):
         if not self.dc_enabled:
@@ -525,7 +611,7 @@ class PySOEMMaster:
         found_dc_slaves = self._master.config_dc()
         print(
             "Configured EtherCAT distributed clocks: "
-            f"dc_slaves_found={found_dc_slaves}",
+            f"dc_available={bool(found_dc_slaves)}",
             flush=True,
         )
 
@@ -673,42 +759,8 @@ class PySOEMMaster:
             flush=True,
         )
 
-    def _prime_outputs(self):
-        snapshots = self._encode_output_candidates()
-        self._assign_output_snapshots(snapshots)
-
-        for _ in range(10):
-            self._master.send_processdata()
-            self._master.receive_processdata(2000)
-        for slave, payload in zip(self.slaves, snapshots):
-            slave.commit_transmitted_output(payload)
-
-    def _request_operational(self, pysoem, timeout_us):
-        self._master.state = pysoem.OP_STATE
-        self._master.write_state()
-
-        reached_state = pysoem.NONE_STATE
-        for _ in range(100):
-            snapshots = self._encode_output_candidates()
-            self._assign_output_snapshots(snapshots)
-            self._master.send_processdata()
-            for slave, payload in zip(self.slaves, snapshots):
-                slave.commit_transmitted_output(payload)
-            self.wkc = self._master.receive_processdata(2000)
-            reached_state = self._master.state_check(
-                pysoem.OP_STATE,
-                timeout_us,
-            )
-
-            if reached_state == pysoem.OP_STATE:
-                return
-
-        raise RuntimeError(
-            "EtherCAT network did not reach OP. "
-            f"Requested={pysoem.OP_STATE}, reached={reached_state}, "
-            f"WKC={self.wkc}/{self.expected_wkc()}, "
-            f"Slaves={self.describe_slaves()}"
-        )
+    def _request_operational(self, pysoem, timeout_us, *, deadline=None):
+        self._transition_with_processdata(pysoem.OP_STATE, "OP", timeout_us, deadline=deadline)
 
     def _require_connected(self):
         if self._master is None:
@@ -750,9 +802,10 @@ class PySOEMMaster:
         try:
             import pysoem
         except ImportError as exc:
-            raise RuntimeError(
-                "pysoem is not installed. Install pysoem in the ROS2 "
-                "environment before using PySOEMMaster."
+            raise ConfigurationException(
+                "MOTION_SERVER_BACKEND",
+                "Unable to import pysoem. Check pysoem and its dependencies "
+                "in the Python environment running Motion Server.",
             ) from exc
 
         self._pysoem = pysoem

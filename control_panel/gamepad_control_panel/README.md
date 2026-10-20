@@ -3,6 +3,9 @@
 This Windows control panel reads DualSense and other SDL-compatible controllers through the stable
 `pygame-ce` `pygame.joystick` API. It sends only existing Motion Server TCP commands and shows connection,
 Heartbeat, authority, operating mode, speed scale, and Axis state in a small Tkinter window.
+The window also lists every logical button, trigger, and D-pad direction in the selected profile, its
+physical SDL input, and its assigned function. Unused controls appear as `Unassigned`; they do not need
+empty entries in `config.json`.
 
 ## Install and configure
 
@@ -21,10 +24,19 @@ direction inversion and speed scales. Multi-mode velocity uses each Axis maximum
 duplicate logical inputs, and malformed values; arming additionally checks server topology, linear/rotary
 role, and server motion limits.
 
+`server.axes` always lists `x`, `y`, `z`, and `rotation`. Set an unused role to JSON `null` to control
+any 1–4 axes; at least one role must have a unique server Axis index. For example,
+`"axes": {"x": 2, "y": 1, "z": 0, "rotation": null}` controls three axes. Root `axes` and `invert`
+still list all four roles, but unused roles never produce motion commands or require valid motion limits.
+The all-Axis Stop action and all-Axis Standstill check still cover every server Axis. The bundled
+example retains all four active roles.
+
 The bundled `dualsense_windows` profile maps L1/R1 as buttons 9/10, L3/R3 as buttons 7/8, and the analog
 L2/R2 triggers as axes 4/5. It also uses Cross button 0, Options 6, Create 4, Touchpad 15, and D-pad buttons
 11–14. SDL reports this device with zero hats, so the profile sets `hat` to `null` and uses `dpad_buttons`.
 Controllers that expose a real hat can set its index in `hat` and omit `dpad_buttons`.
+After finding the configured device, the client checks every profile index against its reported axis,
+button, and hat counts before accepting input. A mismatch is shown as a Gamepad error and blocks arming.
 
 The root-level `actions` object assigns every operational function to a logical control exposed by the
 selected device profile. `enable` accepts an analog trigger definition with `threshold` and `pressed_when`,

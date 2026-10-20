@@ -15,6 +15,8 @@ class MotionMixin:
         self.stop_selected_pv_axis()
 
     def stop_selected_pv_axis(self):
+        if not self.client.owns_command_authority():
+            return
         axis_index = self.selected_axis()
         if axis_index < 0 or axis_index >= self.axis_count:
             return

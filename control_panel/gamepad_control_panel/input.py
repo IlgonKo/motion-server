@@ -20,6 +20,7 @@ class PygameJoystickAdapter:
         self.poll_period = float(poll_period)
         self._lock = threading.Lock()
         self._snapshot = InputSnapshot()
+        self._selection_error = ""
         self._stop = threading.Event()
         self._thread = None
 
@@ -55,7 +56,7 @@ class PygameJoystickAdapter:
                 if joystick is None or not joystick.get_init():
                     joystick = self._select_device(pygame)
                 if joystick is None:
-                    self._store(InputSnapshot(error="Configured gamepad was not found"))
+                    self._store(InputSnapshot(error=self._selection_error or "Configured gamepad was not found"))
                 else:
                     self._store(self._read_snapshot(joystick))
                 self._stop.wait(self.poll_period)
@@ -66,6 +67,7 @@ class PygameJoystickAdapter:
             pygame.quit()
 
     def _select_device(self, pygame):
+        self._selection_error = ""
         matches = []
         for index in range(pygame.joystick.get_count()):
             device = pygame.joystick.Joystick(index)
@@ -80,7 +82,12 @@ class PygameJoystickAdapter:
             for device in matches:
                 device.quit()
             if len(matches) > 1:
-                self._store(InputSnapshot(error="More than one configured gamepad matched"))
+                self._selection_error = "More than one configured gamepad matched"
+            return None
+        error = device_profile_error(self.config, matches[0])
+        if error:
+            matches[0].quit()
+            self._selection_error = error
             return None
         return matches[0]
 
@@ -137,6 +144,24 @@ class PygameJoystickAdapter:
     def _store(self, snapshot):
         with self._lock:
             self._snapshot = snapshot
+
+
+def device_profile_error(config, joystick):
+    """Return the first profile index that the selected device cannot provide."""
+    inputs = (
+        ("stick axis", config.stick_axes, joystick.get_numaxes()),
+        ("trigger axis", config.trigger_axes, joystick.get_numaxes()),
+        ("button", config.buttons, joystick.get_numbuttons()),
+    )
+    if config.dpad_buttons is not None:
+        inputs += (("D-pad button", config.dpad_buttons, joystick.get_numbuttons()),)
+    for source, mapping, count in inputs:
+        for name, index in mapping.items():
+            if index >= count:
+                return f"Device profile {source} {name} index {index} exceeds device count {count}"
+    if config.hat is not None and config.hat >= joystick.get_numhats():
+        return f"Device profile hat index {config.hat} exceeds device count {joystick.get_numhats()}"
+    return ""
 
 
 def list_pygame_devices():

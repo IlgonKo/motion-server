@@ -2,6 +2,26 @@ import tkinter as tk
 from tkinter import ttk
 
 
+def control_assignments(config):
+    """Rows for every logical control in the selected device profile."""
+    assigned = {control: action for action, control in config.actions.items()}
+    assigned[config.enable_input.control] = "enable"
+    rows = []
+    for name, index in config.buttons.items():
+        rows.append((name, f"button {index}", assigned.get(name, "Unassigned")))
+    for name, index in config.trigger_axes.items():
+        rows.append((name, f"axis {index}", assigned.get(name, "Unassigned")))
+    for direction in ("up", "down", "left", "right"):
+        physical = (
+            f"hat {config.hat}"
+            if config.hat is not None
+            else f"button {config.dpad_buttons[direction]}"
+        )
+        name = f"dpad_{direction}"
+        rows.append((name, physical, assigned.get(name, "Unassigned")))
+    return rows
+
+
 class PendantWindow:
     def __init__(self, root, controller):
         self.root = root
@@ -17,7 +37,7 @@ class PendantWindow:
         self.error = tk.StringVar(value="")
 
         root.title("Motion Server Gamepad Control Panel")
-        root.geometry("700x360")
+        root.geometry("700x590")
         frame = ttk.Frame(root, padding=12)
         frame.pack(fill="both", expand=True)
         for variable in (
@@ -35,6 +55,26 @@ class PendantWindow:
         ttk.Label(frame, textvariable=self.error, foreground="#b00020", wraplength=650).pack(
             anchor="w", pady=3
         )
+        ttk.Label(frame, text="Available controls and assigned functions").pack(
+            anchor="w", pady=(10, 3)
+        )
+        table_frame = ttk.Frame(frame)
+        table_frame.pack(fill="both", expand=True)
+        controls = ttk.Treeview(
+            table_frame, columns=("physical", "action"), show="tree headings", height=12
+        )
+        controls.heading("#0", text="Control")
+        controls.heading("physical", text="Device input")
+        controls.heading("action", text="Function")
+        controls.column("#0", width=150, stretch=False)
+        controls.column("physical", width=150, stretch=False)
+        controls.column("action", width=280)
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=controls.yview)
+        controls.configure(yscrollcommand=scrollbar.set)
+        controls.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        for name, physical, action in control_assignments(controller.config):
+            controls.insert("", "end", text=name, values=(physical, action))
         root.protocol("WM_DELETE_WINDOW", self.close)
         controller.start()
         root.after(50, self.refresh)

@@ -82,9 +82,16 @@ def load_config(path, profiles_path=None):
     device = required_object(value, "device")
     device_profile = required_text(device, "profile")
     mapping = load_device_mapping(source, device_profile, profiles_path)
-    server_axes = integer_map(
-        required_object(server, "axes"), ROLES, "server.axes"
-    )
+    server_axis_values = required_object(server, "axes")
+    if set(server_axis_values) != set(ROLES):
+        raise ValueError(f"server.axes must contain exactly {list(ROLES)}")
+    server_axes = {
+        role: strict_int(server_axis_values[role], f"server.axes.{role}", minimum=0)
+        for role in ROLES
+        if server_axis_values[role] is not None
+    }
+    if not server_axes:
+        raise ValueError("server.axes must configure at least one Axis")
     if len(set(server_axes.values())) != len(server_axes):
         raise ValueError("server.axes role indices must be unique")
     axis_inputs = text_map(required_object(value, "axes"), ROLES, "axes")

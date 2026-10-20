@@ -158,7 +158,15 @@ INITIALIZATION_CAUSE_DEFINITIONS = {
 - API message는 Cause Definition Registry에서만 가져오고 Python exception type, 문자열,
   traceback과 로컬 경로는 API에 노출하지 않는다.
 - 원본 오류는 최상위 initialization boundary에서 stage, cause, 안전한 message와 함께 한 번만
-  traceback으로 기록한다. 하위 함수의 중복 error 출력은 제거하고, 초기화를 계속하는 fallback
+  기록한다. 예상 가능한 `MotionServerException`은 traceback 및 Python 예외 이름 없이
+  상세와 중앙 mapper가 허용하는 구조화 속성을 출력한다. EtherCAT 상태 미도달은
+  `CommunicationTimeoutException` 하위 `EtherCATStateTransitionException`으로 전달하며,
+  요청/도달 상태, slave 상태와 WKC는 내부 로그에만 남긴다. 음수 탐색 결과는
+  `CommunicationException` 하위 `EtherCATDiscoveryException`, 정상 탐색 후 장치 수 부족과
+  PySOEM import 실패는 `ConfigurationException`으로 전달한다. 저수준 예외는 chaining으로
+  보존한다. 초기화 단계별 cause/message와 `SERVER_INITIALIZATION_FAILED` Fault, degraded
+  lifecycle은 유지하며 API Failure code와 혼합하지 않는다. 그 밖의 예상하지 못한 오류는
+  traceback을 유지한다. 하위 함수의 중복 error 출력은 제거하고, 초기화를 계속하는 fallback
   warning만 해당 처리 지점에서 기록한다.
 - 공통 변환 함수는 Registry definition의 stage와 현재 stage가 일치하는지 검증하며 모든 cause의
   Definition 등록과 stage 일치를 자동 테스트한다.
@@ -480,6 +488,24 @@ INITIALIZATION_RECOVERY_SCOPE = {
 `S01 → S02 → S03 → S04 → S05` 순서로 진행한다. 각 단계 완료 시 이 문서에 변경 파일,
 검증 명령과 결과를 기록하고 다음 단계로 이동한다. 단계 내부의 사소한 helper 작업은 별도
 하위 번호로 추가하지 않는다.
+
+## 2026-10-20 CMMT-AS DC 초기화 순서 보정
+
+- DEC-012 staged lifecycle에 맞춰 PySOEM `manual_state_change=True`를 설정한다.
+  `config_map()` 중 SOEM의 자동 SAFE_OP 요청을 막고 PRE_OP에서 PDO/DC 준비를 완료한다.
+- sync SDO와 Sync0 설정 뒤 PRE_OP에서 PDO/DC 데이터를 교환한다. SOEM의 첫 Sync0 예약
+  지연 100 ms, 두 cycle 및 양의 shift를 포함한 준비 시간이 지난 뒤 SAFE_OP를 요청한다.
+  준비 시간은 최소 대기이며 실제 DC lock 확인을 대신하지 않는다.
+- SAFE_OP/OP 대기 중에도 데이터를 교환하고 state_check의 긴 blocking wait를 제거한다.
+  기본 전이 예산은 두 상태 합계 1초이며 `timeout_s`는 50 ms로 잘리지 않는다.
+  명시적 recovery timeout은 설정 단계부터 같은 deadline을 사용한다.
+- 실패 로그에 AL 상태, WKC, 전이 경과 시간 및 1C32/1C33의 01/02/0A readback을 남긴다.
+  readback은 실패 후 별도 100 ms 예산/개별 10 ms timeout으로 수행하며, 읽지 못한 값은
+  unavailable로 기록한다. native 호출 중단을 보장하는 hard deadline은 아니다.
+- `.env`, 공개 backend 계약과 degraded 서버 동작은 유지한다. 내부 helper만 변경한다.
+- 가상 시계 기반 DC startup, 기존 initialization/Diagnostic/recovery 및 PDO/backend 회귀를
+  포함한 자동 테스트 125개가 통과했다. 실장비 시험과 Node-RED 시험은 수행하지 않았다.
+  실장비 SAFE_OP 진입 여부는 재기동 로그로 확인해야 한다.
 
 ## 완료 증거
 
