@@ -1,0 +1,19 @@
+1363423.808877 X=axis 0: mm, mm/s, mm/s^2
+1363423.808991 Y=axis 1: mm, mm/s, mm/s^2
+1363423.809020 Z=axis 2: mm, mm/s, mm/s^2
+1363423.836697 common profile: axis 0
+1363423.844075 common profile: axis 1
+1363423.851319 common profile: axis 2
+1363423.860547 move pick
+1363424.258978 pick: all axes position/target/reached/standstill confirmed
+1363424.259204 grasp_outputs:digital
+1363424.263588 grasp_outputs:analog
+1363424.271597 grasp_conditions
+1363425.054494 move place
+1363425.348626 place: all axes position/target/reached/standstill confirmed
+1363425.348752 release_outputs:digital
+1363425.358060 release_outputs:analog
+1363425.410103 Stop confirmed; I/O outputs retained
+1363425.410235 completed
+1363425.422404 Authority released
+1363425.442767 CLI result: completed

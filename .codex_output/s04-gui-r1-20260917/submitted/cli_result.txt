@@ -1,0 +1,11 @@
+Metadata: [{'axis': 0, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 1, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 2, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}]
+Common acceleration/deceleration
+Move pick
+grasp_outputs
+grasp_conditions
+Move place
+release_outputs
+Cleanup
+Stop / Standstill confirmed; I/O unchanged by cleanup
+completed
+Authority released

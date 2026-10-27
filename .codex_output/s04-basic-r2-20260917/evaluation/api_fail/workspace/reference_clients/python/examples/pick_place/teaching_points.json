@@ -1,0 +1,4 @@
+{
+  "Pick": {"X": {"position": 10.0, "unit": "mm"}, "Y": {"position": 20.0, "unit": "mm"}, "Z": {"position": 5.0, "unit": "mm"}},
+  "Place": {"X": {"position": 30.0, "unit": "mm"}, "Y": {"position": 40.0, "unit": "mm"}, "Z": {"position": 5.0, "unit": "mm"}}
+}

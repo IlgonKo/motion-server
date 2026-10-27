@@ -1,0 +1,21 @@
+Exact `input.txt` content: `"motion-server-preflight-42\r\n"` (26 bytes, including CRLF).
+
+Probe executed successfully with Python 3.14.3:
+- `6*7 = 42`
+- Status response: `result="success"`, `initialized=true`
+- Printed `PREFLIGHT_OK`; exit code 0.
+
+Created all three files using `apply_patch`. SHA256 from `Get-FileHash`:
+
+```text
+generated/probe.py
+D093AFFFE0B602A586C17DA6E56087D712C3C9B954FF890DB8691ECD8089A5C2
+
+generated/summary.md
+BAE52EB20B61031CC1534EC9E31DBC0211197F9617028ADA7E36974BFD40D5DA
+
+generated/nested/note.txt
+0C68D059DF6F52F945C1ECBBC5126CECB71689C3F02E7DC94F3600DDD052B8C8
+```
+
+Stopped after the checks. No permissions changed, packages installed, or motion commands sent.

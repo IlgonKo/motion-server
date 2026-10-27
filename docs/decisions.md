@@ -413,6 +413,10 @@ Device Profile + ESI
   - CSP interpolation mode와 velocity offset은 현재 모든 축에 공통 적용하며 축별 설정
     계획이 없으므로 메인 `.env`와 `MotionConfig`가 소유한다. interpolation mode의 CMMT OD
     write는 장치 profile이 수행하고 velocity offset command 생성은 MotionController가 수행한다.
+  - 2026-10-27 적용 범위 명확화: 공통 interpolation 설정값은 Advanced mode의 CSP 사용 가능
+    축에만 적용한다. Basic 시작/복구에서는 쓰지 않으며, Advanced는 초기 PP/PV mode에서도
+    설정한다. 축별 대상 판정은 기존 profile `MOTION_MODES`와 CSP 필수 RxPDO 필드를 사용한다.
+    새로운 capability, SDO 지원 조회 계약이나 축별 설정 옵션은 추가하지 않는다.
 - 이유: OD 존재 계약, 실제 commissioning 상태와 runtime command/status 초기값을 분리하고,
   가상축이 실축과 동일한 access 및 readback 경계를 사용하면서도 반복 가능한 공통 초기
   상태를 갖게 하기 위함이다.
@@ -708,6 +712,10 @@ Device Profile + ESI
   상태를 오인하고 핵심 startup 결과를 찾기 어렵다.
 - 영향: 상세 축 상태는 feedback/status API, startup validation 실패는 기존 warning/error,
   실행 중 상세 진단은 명시적인 diagnostics/debug log가 계속 담당한다.
+
+- 2026-10-26 보완: 상태 이벤트(`MOTION_SERVER_STATUS_LOGS`)와 주기 축 진단
+  (`MOTION_SERVER_AXIS_STATUS_LOGS`, 기본 `0`)을 독립 제어한다.
+  `MOTION_SERVER_AXIS_STATUS_LOG_PERIOD`는 주기 축 진단에만 적용한다.
 
 ## DEC-033 Control Panel topology와 Server health는 주기 feedback에서 확정
 

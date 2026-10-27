@@ -1,0 +1,24 @@
+{
+  "host": "127.0.0.1", "port": 62554,
+  "roles": {"X": 0, "Y": 1, "Z": 2},
+  "expected_units": {"position_unit": "mm", "velocity_unit": "mm/s", "acceleration_unit": "mm/s^2", "deceleration_unit": "mm/s^2"},
+  "pick": {"positions": [0.5, 0.6, 0.7], "profile_velocities": [5.0, 5.0, 2.0]},
+  "place": {"positions": [1.0, 1.1, 1.2], "profile_velocities": [5.0, 5.0, 2.0]},
+  "acceleration": [100.0, 100.0, 100.0], "deceleration": [100.0, 100.0, 100.0],
+  "grasp_outputs": [
+    {"io": "io0", "slot": 1, "kind": "digital", "channel": 0, "value": true},
+    {"io": "io0", "slot": 2, "kind": "analog", "channel": 0, "value": 100}
+  ],
+  "grasp_conditions": [
+    {"io": "io0", "slot": 3, "kind": "digital", "channel": 0, "op": "eq", "value": true},
+    {"io": "io0", "slot": 4, "kind": "analog", "channel": 0, "op": "ge", "value": 50}
+  ],
+  "release_outputs": [
+    {"io": "io0", "slot": 1, "kind": "digital", "channel": 0, "value": false},
+    {"io": "io0", "slot": 2, "kind": "analog", "channel": 0, "value": 0}
+  ],
+  "release_conditions": [],
+  "position_tolerance": 0.5, "velocity_tolerance": 1.0,
+  "request_timeout": 5.0, "move_timeout": 30.0,
+  "input_timeout": 10.0, "feedback_timeout": 2.0
+}

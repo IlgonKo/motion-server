@@ -1,0 +1,50 @@
+{
+  "workspace": "C:\\Users\\Festo\\AppData\\Local\\Temp\\s04-preflight-vdan70hk",
+  "report": "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-113641",
+  "port": 60070,
+  "mock_pid": 4916,
+  "checks": {
+    "server_alive_after_agent": true,
+    "server_status_after_agent": true,
+    "parent_read_and_copy": false,
+    "server_alive_after_collection": true,
+    "server_status_after_collection": true,
+    "parent_execution": false,
+    "owned_mock_stopped": true
+  },
+  "collection_errors": [
+    {
+      "file": "probe.py",
+      "error": "PermissionError(13, 'Permission denied')"
+    },
+    {
+      "file": "summary.md",
+      "error": "PermissionError(13, 'Permission denied')"
+    },
+    {
+      "file": "nested/note.txt",
+      "error": "PermissionError(13, 'Permission denied')"
+    }
+  ],
+  "command": [
+    "C:\\Users\\Festo\\AppData\\Local\\OpenAI\\Codex\\bin\\fd4c151a749f3ab4\\codex.EXE",
+    "exec",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "windows.sandbox=\"elevated\"",
+    "-c",
+    "sandbox_workspace_write.network_access=true",
+    "--json",
+    "-o",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-113641\\final.txt",
+    "-"
+  ],
+  "cli_version": "codex-cli 0.153.4",
+  "cli_pid": 34776,
+  "cli_exit": 0,
+  "sha256": {},
+  "cleanup_reason": "Preflight ended; stop only its owned Mock fixture"
+}

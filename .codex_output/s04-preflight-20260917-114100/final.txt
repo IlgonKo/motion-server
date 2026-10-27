@@ -1,0 +1,20 @@
+Exact `input.txt` content: `"motion-server-preflight-42\r\n"`.
+
+Probe executed successfully: Python **3.14.3**, `6*7 = 42`, server result `success`, `initialized: true`, and `PREFLIGHT_OK`.
+
+All three files were created using `apply_patch`. Note: it normalized `note.txt` to LF. An auxiliary PowerShell serialization attempt failed; this is recorded in the summary.
+
+SHA256 from `Get-FileHash`:
+
+```text
+generated/probe.py
+5C48CDBF6DE15054D377FDBF70A8A344ADAA3EFF7922F1CC911DD1C6CE3B0C19
+
+generated/summary.md
+2E3BFF985B5AB39907222FFC06BCBF7956582D288D811961B890C6DB64BC5961
+
+generated/nested/note.txt
+0C68D059DF6F52F945C1ECBBC5126CECB71689C3F02E7DC94F3600DDD052B8C8
+```
+
+Stopped after the checks. No permission changes, installations, or motion commands.

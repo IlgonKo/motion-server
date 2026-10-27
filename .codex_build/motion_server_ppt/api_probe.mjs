@@ -1,0 +1,11 @@
+import { FileBlob, PresentationFile } from "@oai/artifact-tool";
+const sourcePath = "C:/Users/Festo/Downloads/motion_server_overview (1).pptx";
+const p = await PresentationFile.importPptx(await FileBlob.load(sourcePath));
+console.log('slides length', p.slides.length);
+console.log('slides proto keys', Object.getOwnPropertyNames(Object.getPrototypeOf(p.slides)));
+console.log('presentation keys', Object.getOwnPropertyNames(Object.getPrototypeOf(p)));
+const s=p.slides.getItem(1);
+console.log('slide keys', Object.getOwnPropertyNames(Object.getPrototypeOf(s)));
+console.log('shapes keys', Object.getOwnPropertyNames(Object.getPrototypeOf(s.shapes)));
+console.log('images keys', Object.getOwnPropertyNames(Object.getPrototypeOf(s.images)));
+console.log('placeholders keys', s.placeholders ? Object.getOwnPropertyNames(Object.getPrototypeOf(s.placeholders)) : null);

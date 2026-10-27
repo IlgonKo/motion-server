@@ -1,0 +1,16 @@
+1363428.376920 X=axis 0: mm, mm/s, mm/s^2
+1363428.377042 Y=axis 1: mm, mm/s, mm/s^2
+1363428.377073 Z=axis 2: mm, mm/s, mm/s^2
+1363428.404079 common profile: axis 0
+1363428.411660 common profile: axis 1
+1363428.420346 common profile: axis 2
+1363428.427885 move pick
+1363428.828413 pick: all axes position/target/reached/standstill confirmed
+1363428.828518 grasp_outputs:digital
+1363428.832107 grasp_outputs:analog
+1363428.839867 grasp_conditions
+1363438.857763 grasp_conditions: TimeoutError: Condition timeout: grasp_conditions
+1363438.892550 Stop confirmed; I/O outputs retained
+1363438.892664 failed
+1363438.903616 Authority released
+1363438.922104 CLI result: failed

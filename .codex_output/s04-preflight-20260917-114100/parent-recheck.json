@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "stdout": "Python version: 3.14.3\n6*7 = 42\ninput.txt: 'motion-server-preflight-42\\r\\n'\nResponse: {\"type\": \"system/server/status\", \"result\": \"success\", \"data\": {\"server_mode\": \"basic\", \"initialized\": true, \"runtime_state\": \"normal\", \"initialization_failure\": null, \"cycle_time\": 0.008, \"feedback_type\": \"system/feedback\", \"diagnostic_status\": {\"level\": \"normal\", \"statuses\": []}}, \"request_id\": \"preflight-42\"}\nPREFLIGHT_OK\n",
+  "stderr": "",
+  "passed": true,
+  "change": "Copied original input.txt; generated code unchanged; fresh Mock via same-port proxy"
+}

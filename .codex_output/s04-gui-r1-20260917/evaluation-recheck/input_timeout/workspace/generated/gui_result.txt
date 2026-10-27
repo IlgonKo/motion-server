@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Festo\AppData\Local\Temp\s04-gui-r1-20260917-7_glnunr\generated\test_gui_mock.py", line 107, in <module>
+    result=case(mode)
+  File "C:\Users\Festo\AppData\Local\Temp\s04-gui-r1-20260917-7_glnunr\generated\test_gui_mock.py", line 27, in case
+    root=tk.Tk()
+  File "C:\Users\Festo\AppData\Local\Python\pythoncore-3.14-64\Lib\tkinter\__init__.py", line 2484, in __init__
+    self.tk = _tkinter.create(screenName, baseName, className, interactive, wantobjects, useTk, sync, use)
+              ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: Can't find a usable init.tcl in the following directories: 
+    {C:\Users\Festo\AppData\Local\Python\pythoncore-3.14-64\tcl\tcl8.6}
+
+
+
+This probably means that Tcl wasn't installed properly.
+

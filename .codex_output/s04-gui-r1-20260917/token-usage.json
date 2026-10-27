@@ -1,0 +1,110 @@
+{
+  "scope": "Independent generation only; evaluator conversation excluded",
+  "thread_id": "01a0ad6a-2fda-7273-9135-4c054a9af0d0",
+  "totals": {
+    "output_tokens": 21976,
+    "input_tokens": 1446773,
+    "reasoning_output_tokens": 4813,
+    "cached_input_tokens": 1373056,
+    "cache_write_input_tokens": 0
+  },
+  "total_input_plus_output": 1468749,
+  "note": "Cached input included in input, not added twice; reasoning is not added again.",
+  "execution_cases": {
+    "evaluation\\api_fail\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\api_fail-recheck\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\authority_loss\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\close\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\connection_loss\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\fault\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\input_timeout\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\normal\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\response_timeout\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation\\stop\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\api_fail\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\authority_loss\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\close\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\connection_loss\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\fault\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\input_timeout\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\normal\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\response_timeout\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "evaluation-recheck\\stop\\result.json": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  }
+}

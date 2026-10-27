@@ -1,0 +1,16 @@
+1363449.124371 X=axis 0: mm, mm/s, mm/s^2
+1363449.124487 Y=axis 1: mm, mm/s, mm/s^2
+1363449.124516 Z=axis 2: mm, mm/s, mm/s^2
+1363449.150783 common profile: axis 0
+1363449.157606 common profile: axis 1
+1363449.165565 common profile: axis 2
+1363449.173557 move pick
+1363449.570923 pick: all axes position/target/reached/standstill confirmed
+1363449.571091 grasp_outputs:digital
+1363449.579783 grasp_outputs:analog
+1363449.588358 grasp_conditions
+1363450.367167 grasp_conditions: RuntimeError: Runtime Fault
+1363450.400869 Stop confirmed; I/O outputs retained
+1363450.400988 failed
+1363450.410573 Authority released
+1363450.429830 CLI result: failed

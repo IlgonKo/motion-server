@@ -1,0 +1,33 @@
+{
+  "case": "connection_loss",
+  "passed": true,
+  "model_tokens": {
+    "additional_model_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "note": "Generation usage recorded separately; evaluator conversation excluded"
+  },
+  "state": "failed",
+  "schema_errors": [],
+  "gui_errors": [],
+  "max_tick_gap": 0.11197600001469254,
+  "cleanup_confirmed": false,
+  "checks": {
+    "duplicate_run_ignored": true,
+    "reached_input_wait": true,
+    "state": true,
+    "gui_responsive": true,
+    "no_place_or_replay": true,
+    "no_release_outputs": true,
+    "pick_request": true,
+    "velocities": true,
+    "common_profile_once": true,
+    "no_auto_recovery": true,
+    "no_authority_reacquire": true,
+    "request_schema": true,
+    "completion_before_outputs": true,
+    "no_tk_callback_errors": true,
+    "generated_python_unchanged": true
+  },
+  "duration": 3.153236199868843
+}

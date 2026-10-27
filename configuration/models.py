@@ -103,6 +103,7 @@ class CommandLogConfig:
 class StatusLogConfig:
     enabled: bool
     period: float
+    axis_enabled: bool = False
 
 
 @dataclass(frozen=True)

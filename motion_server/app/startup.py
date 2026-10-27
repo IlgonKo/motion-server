@@ -440,7 +440,7 @@ def synchronize_startup_profile_velocity_commands(runtime, startup_sdo):
         )
 
 
-def initialize_drive(runtime, motion_mode, csp_interpolation_modes, startup_sdo_reader=None):
+def initialize_drive(runtime, motion_mode, csp_interpolation_modes, startup_sdo_reader=None, *, server_mode):
     startup_sdo = None
     require_txpdo_fields(runtime)
     clear_axis_restart_commands(runtime)
@@ -450,7 +450,8 @@ def initialize_drive(runtime, motion_mode, csp_interpolation_modes, startup_sdo_
         # before the first cyclic exchange so zero-filled buffers cannot
         # overwrite authoritative device OD values.
         synchronize_startup_profile_velocity_commands(runtime, startup_sdo)
-    write_csp_interpolation_modes(runtime, csp_interpolation_modes)
+    if server_mode == "advanced":
+        write_csp_interpolation_modes(runtime, csp_interpolation_modes)
     if motion_mode == "pv":
         user_position_units = (
             startup_sdo.get("user_position_units")
@@ -542,6 +543,13 @@ def write_csp_interpolation_modes(runtime, csp_interpolation_modes):
         if value <= 0:
             continue
         profile = axis_device_profile(runtime, axis_index)
+        if "csp" not in profile.MOTION_MODES:
+            continue
+        try:
+            require_pdo_fields_for_mode(runtime, "csp", axis_index)
+        except RuntimeError:
+            # This axis cannot execute CSP with its configured process image.
+            continue
         try:
             readback = profile.write_csp_interpolation_mode(
                 runtime,

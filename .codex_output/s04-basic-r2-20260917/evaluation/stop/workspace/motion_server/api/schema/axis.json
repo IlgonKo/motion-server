@@ -1,0 +1,2711 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/axis.json",
+  "$defs": {
+    "system_axis_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/status",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_status_response"
+        }
+      },
+      "description": "Request for system/axis/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_status": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/status"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/status",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_status_response"
+        }
+      },
+      "description": "Request for system/axes/status. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_param_read": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/param_read"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "index"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/param_read",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_param_read_response"
+        }
+      },
+      "description": "Request for system/axis/param_read. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_param_catalog": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/param_catalog"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/param_catalog",
+        "kind": "status",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_param_catalog_response"
+        }
+      },
+      "description": "Request for system/axis/param_catalog. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_enable": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/enable"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/enable",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_enable_response"
+        }
+      },
+      "description": "Request for system/axis/enable. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_disable": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/disable"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/disable",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_disable_response"
+        }
+      },
+      "description": "Request for system/axis/disable. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_fault_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/fault_reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/fault_reset",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_fault_reset_response"
+        }
+      },
+      "description": "Request for system/axis/fault_reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_restart": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/restart"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/restart",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_restart_response"
+        }
+      },
+      "description": "Request for system/axis/restart. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_home": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/home"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/home",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_home_response"
+        }
+      },
+      "description": "Request for system/axis/home. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_stop": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/stop"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/stop",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_stop_response"
+        }
+      },
+      "description": "Request for system/axis/stop. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_move_abs": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/move_abs"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "position": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API position units, as reported by axis metadata."
+        },
+        "profile_velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "profile_velocities": {
+          "$ref": "common.json#/$defs/numbers"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "position"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/move_abs",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_move_abs_response"
+        }
+      },
+      "description": "Request for system/axis/move_abs. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_move_rel": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/move_rel"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "distance": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API position units, as reported by axis metadata."
+        },
+        "profile_velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "profile_velocities": {
+          "$ref": "common.json#/$defs/numbers"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "distance"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/move_rel",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_move_rel_response"
+        }
+      },
+      "description": "Request for system/axis/move_rel. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_move_vel": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/move_vel"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "velocity"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/move_vel",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_move_vel_response"
+        }
+      },
+      "description": "Request for system/axis/move_vel. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_jog_start": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/jog_start"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "direction": {
+          "enum": [
+            "positive",
+            "negative"
+          ]
+        },
+        "speed": {
+          "enum": [
+            "slow",
+            "fast",
+            "two_phase"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "direction"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/jog_start",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_jog_start_response"
+        }
+      },
+      "description": "Request for system/axis/jog_start. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_jog_stop": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/jog_stop"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/jog_stop",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_jog_stop_response"
+        }
+      },
+      "description": "Request for system/axis/jog_stop. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_profile": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/profile"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "profile_velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "profile_acceleration": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second squared."
+        },
+        "profile_deceleration": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second squared."
+        },
+        "profile_jerk": {
+          "$ref": "common.json#/$defs/number"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/profile",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_profile_response"
+        }
+      },
+      "description": "Request for system/axis/profile. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_motion_limits": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/motion_limits"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "positive_velocity_limit": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "negative_velocity_limit": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "max_acceleration": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second squared."
+        },
+        "max_deceleration": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second squared."
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/motion_limits",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_motion_limits_response"
+        }
+      },
+      "description": "Request for system/axis/motion_limits. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_software_position_limits": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/software_position_limits"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "negative_limit": {
+          "$ref": "common.json#/$defs/number"
+        },
+        "positive_limit": {
+          "$ref": "common.json#/$defs/number"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/software_position_limits",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_software_position_limits_response"
+        }
+      },
+      "description": "Request for system/axis/software_position_limits. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_mode": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/mode"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "mode": {
+          "enum": [
+            "pp",
+            "pv",
+            "csp",
+            "jog"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "mode"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/mode",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_mode_response"
+        }
+      },
+      "description": "Request for system/axis/mode. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_manualCW": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/manualCW"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "controlword": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "controlword"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/manualCW",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": true,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_manualCW_response"
+        }
+      },
+      "description": "Request for system/axis/manualCW. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_param_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/param_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "index": {
+          "$ref": "common.json#/$defs/integer",
+          "description": "Object/parameter index as a JSON integer (convert UI hexadecimal text before sending)."
+        },
+        "subindex": {
+          "$ref": "common.json#/$defs/integer"
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "data_type": {
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "uint32",
+            "int32",
+            "udint",
+            "float32",
+            "char",
+            "string",
+            "ascii",
+            "visible_string"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "cmd",
+        "axis",
+        "index",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "uint8",
+                  "int8",
+                  "uint16",
+                  "int16",
+                  "uint32",
+                  "int32",
+                  "udint"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "float32"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "enum": [
+                  "char",
+                  "string",
+                  "ascii",
+                  "visible_string"
+                ]
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "data_type": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "data_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "data_type"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ],
+      "x-motion-server": {
+        "name": "system/axis/param_write",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": true,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_param_write_response"
+        }
+      },
+      "description": "Request for system/axis/param_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_param_save": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axis/param_save"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axis": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "axis"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axis/param_save",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axis_param_save_response"
+        }
+      },
+      "description": "Request for system/axis/param_save. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_enable": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/enable"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        }
+      },
+      "required": [
+        "cmd",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/enable",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_enable_response"
+        }
+      },
+      "description": "Request for system/axes/enable. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_disable": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/disable"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        }
+      },
+      "required": [
+        "cmd",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/disable",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_disable_response"
+        }
+      },
+      "description": "Request for system/axes/disable. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_fault_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/fault_reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        }
+      },
+      "required": [
+        "cmd",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/fault_reset",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_fault_reset_response"
+        }
+      },
+      "description": "Request for system/axes/fault_reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_stop": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/stop"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        }
+      },
+      "required": [
+        "cmd",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/stop",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_stop_response"
+        }
+      },
+      "description": "Request for system/axes/stop. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_move_abs": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/move_abs"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        },
+        "positions": {
+          "$ref": "common.json#/$defs/numbers",
+          "description": "Axis API position units, as reported by axis metadata."
+        },
+        "profile_velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "profile_velocities": {
+          "$ref": "common.json#/$defs/numbers"
+        }
+      },
+      "required": [
+        "cmd",
+        "positions",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/move_abs",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_move_abs_response"
+        }
+      },
+      "description": "Request for system/axes/move_abs. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_move_rel": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/move_rel"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        },
+        "distances": {
+          "$ref": "common.json#/$defs/numbers",
+          "description": "Axis API position units, as reported by axis metadata."
+        },
+        "profile_velocity": {
+          "$ref": "common.json#/$defs/number",
+          "description": "Axis API units per second."
+        },
+        "profile_velocities": {
+          "$ref": "common.json#/$defs/numbers"
+        }
+      },
+      "required": [
+        "cmd",
+        "distances",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/move_rel",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_move_rel_response"
+        }
+      },
+      "description": "Request for system/axes/move_rel. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_move_vel": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/move_vel"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        },
+        "velocities": {
+          "$ref": "common.json#/$defs/numbers"
+        }
+      },
+      "required": [
+        "cmd",
+        "velocities",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/move_vel",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_move_vel_response"
+        }
+      },
+      "description": "Request for system/axes/move_vel. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_trajectory": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/trajectory"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "positions"
+            ],
+            "properties": {
+              "positions": {
+                "$ref": "common.json#/$defs/numbers"
+              },
+              "velocities": {
+                "$ref": "common.json#/$defs/numbers"
+              },
+              "accelerations": {
+                "$ref": "common.json#/$defs/numbers"
+              },
+              "time_from_start": {
+                "$ref": "common.json#/$defs/number"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "cmd",
+        "points",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/trajectory",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": true,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_trajectory_response"
+        }
+      },
+      "description": "Request for system/axes/trajectory. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axes_trajectory_stop": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/axes/trajectory_stop"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "axes": {
+          "$ref": "common.json#/$defs/indices"
+        },
+        "mode": {
+          "enum": [
+            "controlled"
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "axes"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/axes/trajectory_stop",
+        "kind": "command",
+        "authority_required": true,
+        "advanced_only": true,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/axis.json#/$defs/system_axes_trajectory_stop_response"
+        }
+      },
+      "description": "Request for system/axes/trajectory_stop. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_axis_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axis_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_status_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/status"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axes_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_param_read_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/param_read"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "integer"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "hex": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "length": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "axis",
+                  "index",
+                  "subindex",
+                  "data_type",
+                  "value",
+                  "hex",
+                  "length"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_param_catalog_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/param_catalog"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "integer"
+                  },
+                  "profile": {
+                    "type": "string"
+                  },
+                  "slave_index": {
+                    "type": "integer"
+                  },
+                  "esi": {
+                    "type": "string"
+                  },
+                  "objects": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "common.json#/$defs/catalog_object"
+                    }
+                  }
+                },
+                "required": [
+                  "axis",
+                  "profile",
+                  "slave_index",
+                  "esi",
+                  "objects"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_enable_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/enable"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axes_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_disable_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/disable"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axes_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_fault_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/fault_reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axes": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "axes",
+                  "fault_count",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_restart_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/restart"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "integer"
+                  },
+                  "result": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "axis",
+                  "result",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_home_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/home"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "homing": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "homing"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_stop_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/stop"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_move_abs_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/move_abs"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_move_rel_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/move_rel"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_move_vel_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/move_vel"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_jog_start_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/jog_start"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_jog_stop_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/jog_stop"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_profile_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/profile"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_motion_limits_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/motion_limits"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_software_position_limits_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/software_position_limits"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_mode_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/mode"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_manualCW_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/manualCW"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_param_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/param_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "integer"
+                  },
+                  "index": {
+                    "type": "integer"
+                  },
+                  "subindex": {
+                    "type": "integer"
+                  },
+                  "data_type": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "hex": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "axis",
+                  "index",
+                  "subindex",
+                  "data_type",
+                  "value",
+                  "hex"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axis_param_save_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axis/param_save"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "integer"
+                  },
+                  "result": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "axis",
+                  "result"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_enable_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/enable"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axes_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_disable_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/disable"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "$ref": "axis.json#/$defs/axes_status_data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_fault_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/fault_reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "axes": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "fault_count": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "axes",
+                  "fault_count",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_stop_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/stop"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_move_abs_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/move_abs"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_move_rel_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/move_rel"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_move_vel_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/move_vel"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_trajectory_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/trajectory"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "trajectory": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "trajectory"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_axes_trajectory_stop_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/axes/trajectory_stop"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "axes_status_data": {
+      "type": "object",
+      "properties": {
+        "target_positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "actual_positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "actual_velocities": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "command_positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "command_velocities": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "statuswords": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "motion_limits": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "profile_settings": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "software_position_limits": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "axis_metadata": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "user_position_units": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "converting_unit_exponents": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "motion_mode": {
+          "type": "string"
+        },
+        "motion_modes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "server_mode": {
+          "type": "string"
+        },
+        "position_counts_per_unit": {
+          "type": "number"
+        },
+        "axis_position_counts_per_unit": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "trajectory": {
+          "type": "object"
+        },
+        "homing": {
+          "type": "object"
+        },
+        "device_diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "diagnostic_status": {
+          "$ref": "common.json#/$defs/diagnostic"
+        },
+        "command_authority": {
+          "$ref": "common.json#/$defs/authority"
+        }
+      },
+      "required": [
+        "target_positions",
+        "actual_positions",
+        "actual_velocities",
+        "command_positions",
+        "command_velocities",
+        "statuswords",
+        "motion_limits",
+        "profile_settings",
+        "software_position_limits",
+        "axis_metadata",
+        "user_position_units",
+        "converting_unit_exponents",
+        "motion_mode",
+        "motion_modes",
+        "server_mode",
+        "position_counts_per_unit",
+        "axis_position_counts_per_unit",
+        "capabilities",
+        "trajectory",
+        "homing",
+        "device_diagnostics",
+        "diagnostic_status",
+        "command_authority"
+      ],
+      "additionalProperties": false
+    },
+    "axis_status_data": {
+      "type": "object",
+      "properties": {
+        "axis": {
+          "type": "integer"
+        },
+        "target_position": {
+          "type": "number"
+        },
+        "actual_position": {
+          "type": "number"
+        },
+        "actual_velocity": {
+          "type": "number"
+        },
+        "command_position": {
+          "type": "number"
+        },
+        "command_velocity": {
+          "type": "number"
+        },
+        "statusword": {
+          "type": "integer"
+        },
+        "mode_display": {
+          "type": "integer"
+        },
+        "motion_mode": {
+          "type": "string"
+        },
+        "server_mode": {
+          "type": "string"
+        },
+        "position_counts_per_unit": {
+          "type": "number"
+        },
+        "axis_position_counts_per_unit": {
+          "type": "number"
+        },
+        "motion_limits": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "profile_settings": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "software_position_limits": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "axis_metadata": {
+          "type": "object"
+        },
+        "user_position_unit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "converting_unit_exponents": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trajectory": {
+          "type": "object"
+        },
+        "homing": {
+          "type": "object"
+        },
+        "device_diagnostics": {
+          "type": "object"
+        },
+        "diagnostic_status": {
+          "$ref": "common.json#/$defs/diagnostic"
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "command_authority": {
+          "$ref": "common.json#/$defs/authority"
+        }
+      },
+      "required": [
+        "axis",
+        "target_position",
+        "actual_position",
+        "actual_velocity",
+        "command_position",
+        "command_velocity",
+        "statusword",
+        "mode_display",
+        "motion_mode",
+        "server_mode",
+        "position_counts_per_unit",
+        "axis_position_counts_per_unit",
+        "motion_limits",
+        "profile_settings",
+        "software_position_limits",
+        "axis_metadata",
+        "user_position_unit",
+        "converting_unit_exponents",
+        "trajectory",
+        "homing",
+        "device_diagnostics",
+        "diagnostic_status",
+        "capabilities",
+        "command_authority"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

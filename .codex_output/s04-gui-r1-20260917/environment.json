@@ -1,0 +1,8 @@
+{
+  "workspace": "C:\\Users\\Festo\\AppData\\Local\\Temp\\s04-gui-r1-20260917-7_glnunr",
+  "port": 52728,
+  "source_commit": "da0b0a3ae727ca9586bc27b6942c95fd88e670a7",
+  "generation_time_limit": null,
+  "isolation": "fresh CLI session, workspace-write; supplied-file boundary audited, not a VM",
+  "scenario": "GUI pick/place, no Teaching, first generation"
+}

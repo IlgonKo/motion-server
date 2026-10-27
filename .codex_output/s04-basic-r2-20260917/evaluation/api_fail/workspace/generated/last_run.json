@@ -1,0 +1,197 @@
+{
+  "result": "failed",
+  "stop_confirmed": false,
+  "release_confirmed": true,
+  "settings": {
+    "host": "127.0.0.1",
+    "port": 62554,
+    "roles": {
+      "X": 0,
+      "Y": 1,
+      "Z": 2
+    },
+    "expected_units": {
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2"
+    },
+    "pick": {
+      "positions": [
+        0.5,
+        0.6,
+        0.7
+      ],
+      "profile_velocities": [
+        5.0,
+        5.0,
+        2.0
+      ]
+    },
+    "place": {
+      "positions": [
+        1.0,
+        1.1,
+        1.2
+      ],
+      "profile_velocities": [
+        5.0,
+        5.0,
+        2.0
+      ]
+    },
+    "acceleration": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "deceleration": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "grasp_outputs": [
+      {
+        "io": "io0",
+        "slot": 1,
+        "kind": "digital",
+        "channel": 0,
+        "value": true
+      },
+      {
+        "io": "io0",
+        "slot": 2,
+        "kind": "analog",
+        "channel": 0,
+        "value": 100
+      }
+    ],
+    "grasp_conditions": [
+      {
+        "io": "io0",
+        "slot": 3,
+        "kind": "digital",
+        "channel": 0,
+        "op": "eq",
+        "value": true
+      },
+      {
+        "io": "io0",
+        "slot": 4,
+        "kind": "analog",
+        "channel": 0,
+        "op": "ge",
+        "value": 50
+      }
+    ],
+    "release_outputs": [
+      {
+        "io": "io0",
+        "slot": 1,
+        "kind": "digital",
+        "channel": 0,
+        "value": false
+      },
+      {
+        "io": "io0",
+        "slot": 2,
+        "kind": "analog",
+        "channel": 0,
+        "value": 0
+      }
+    ],
+    "release_conditions": [],
+    "position_tolerance": 0.5,
+    "velocity_tolerance": 1.0,
+    "request_timeout": 5.0,
+    "move_timeout": 30.0,
+    "input_timeout": 10.0,
+    "feedback_timeout": 2.0
+  },
+  "axis_metadata": [
+    {
+      "axis": 0,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    },
+    {
+      "axis": 1,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    },
+    {
+      "axis": 2,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    }
+  ],
+  "messages": [
+    "1363441.926073 X=axis 0: mm, mm/s, mm/s^2",
+    "1363441.926190 Y=axis 1: mm, mm/s, mm/s^2",
+    "1363441.926216 Z=axis 2: mm, mm/s, mm/s^2",
+    "1363441.965045 common profile: axis 0",
+    "1363441.976100 common profile: axis 1",
+    "1363441.984668 common profile: axis 2",
+    "1363441.992663 move pick",
+    "1363441.999544 move pick: RuntimeError: API Fail: {\"type\": \"system/axes/move_abs\", \"result\": \"fail\", \"failure\": {\"code\": \"OPERATION_FAILED\", \"message\": \"The operation failed.\", \"details\": {\"operation\": \"system/axes/move_abs\"}}, \"request_id\": \"python-7f2a7e-6\"}",
+    "1363442.013815 INCOMPLETE: Stop NOT confirmed: RuntimeError: API Fail: {\"type\": \"system/axes/stop\", \"result\": \"fail\", \"failure\": {\"code\": \"OPERATION_FAILED\", \"message\": \"The operation failed.\", \"details\": {\"operation\": \"system/axes/stop\"}}, \"request_id\": \"python-7f2a7e-8\"}",
+    "1363442.015309 failed",
+    "1363442.030618 Authority released",
+    "1363442.041552 CLI result: failed"
+  ],
+  "evidence": {}
+}

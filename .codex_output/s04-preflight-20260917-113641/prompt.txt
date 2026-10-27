@@ -1,0 +1,7 @@
+This is a permission/environment preflight, NOT sequence generation.
+Work only in this workspace. Do not change permissions, install packages, use other servers, or request elevated/full-access execution.
+1. Read input.txt and report its exact content.
+2. Use apply_patch to create generated/probe.py. It must print Python version and 6*7, read input.txt, connect by socket ONLY to 127.0.0.1:60070, send one newline-delimited JSON request {"cmd":"system/server/status","request_id":"preflight-42"}, read newline-delimited messages until that response arrives, assert result success and data.initialized true, and print PREFLIGHT_OK. Use socket timeout 5 seconds. No control/motion/I/O write commands.
+3. Execute it using PowerShell &: C:\Users\Festo\AppData\Local\Python\pythoncore-3.14-64\python.exe -B generated/probe.py. Do not merely print the command.
+4. Create generated/summary.md with actual results and generated/nested/note.txt with the input text, using apply_patch. Report SHA256 of these three files using Get-FileHash. If a step fails, report failure without changing ACLs, installing tools, or bypassing the sandbox.
+Stop after these checks. No retries with relaxed permissions and no motion program generation.

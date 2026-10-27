@@ -1,0 +1,16 @@
+1363457.457629 X=axis 0: mm, mm/s, mm/s^2
+1363457.457760 Y=axis 1: mm, mm/s, mm/s^2
+1363457.457791 Z=axis 2: mm, mm/s, mm/s^2
+1363457.501841 common profile: axis 0
+1363457.509467 common profile: axis 1
+1363457.515608 common profile: axis 2
+1363457.524534 move pick
+1363457.909924 pick: all axes position/target/reached/standstill confirmed
+1363457.910041 grasp_outputs:digital
+1363457.912869 grasp_outputs:analog
+1363457.921034 grasp_conditions
+1363458.709077 grasp_conditions: RuntimeError: Authority lost
+1363458.709210 INCOMPLETE: Stop NOT confirmed: RuntimeError: Authority lost
+1363458.709263 failed
+1363458.709313 INCOMPLETE cleanup/release: Connection/authority lost; no commands on a new session
+1363458.724952 CLI result: failed

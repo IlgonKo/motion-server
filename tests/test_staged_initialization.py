@@ -212,6 +212,31 @@ class RuntimeFactoryCleanupTest(unittest.TestCase):
                 self.assertIs(raised.exception.cause, expected_cause)
                 self.assertIs(raised.exception.__cause__, source_error)
 
+    def test_csp_initialization_follows_server_mode_not_initial_motion_mode(self):
+        for server_mode in ("basic", "advanced"):
+            for motion_mode in ("pp", "pv", "csp"):
+                with self.subTest(server_mode=server_mode, motion_mode=motion_mode):
+                    runtime = Mock()
+                    runtime.slaves = []
+                    with (
+                        patch("motion_server.app.startup.require_txpdo_fields"),
+                        patch("motion_server.app.startup.clear_axis_restart_commands"),
+                        patch("motion_server.app.startup.write_csp_interpolation_modes") as write,
+                        patch("motion_server.app.startup.configure_motion_mode_without_exchange"),
+                        patch("motion_server.app.startup.exchange"),
+                        patch("motion_server.app.startup.faulted_axes", return_value=[]),
+                        patch("motion_server.app.startup.wait_status_all", return_value=True),
+                    ):
+                        initialize_drive(
+                            runtime, motion_mode, (),
+                            startup_sdo_reader=lambda _runtime: {"user_position_units": [], "profile_settings": []},
+                            server_mode=server_mode,
+                        )
+                    if server_mode == "advanced":
+                        write.assert_called_once_with(runtime, ())
+                    else:
+                        write.assert_not_called()
+
     def test_profile_velocity_readback_seeds_rxpdo_before_first_exchange(self):
         class RxPdo:
             profile_velocity = 0
@@ -246,6 +271,7 @@ class RuntimeFactoryCleanupTest(unittest.TestCase):
                 "pp",
                 (4,),
                 startup_sdo_reader=lambda _runtime: startup_sdo,
+                server_mode="basic",
             )
 
         self.assertIs(result, startup_sdo)

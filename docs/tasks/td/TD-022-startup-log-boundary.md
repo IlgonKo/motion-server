@@ -78,3 +78,12 @@ Motion Server listening on 0.0.0.0:15000
   formatter에 전달하지 않는다.
 - DC off/on, phase lock off/on, absolute shift, PP/PV/Jog/CSP 조합과 device field 부재를
   6개 자동 테스트로 검증했다.
+
+### 2026-10-26 상태 이벤트와 주기 축 로그 분리
+
+- `MOTION_SERVER_STATUS_LOGS`는 client 연결/해제, 권한 변경, 축 enable/stop/homing 등 기존 상태 이벤트를 제어한다.
+- 신규 선택 옵션 `MOTION_SERVER_AXIS_STATUS_LOGS`는 반복되는 `Axis status: WKC=...` 출력만 제어하며 기본값은 `0`이다. 기존 상태 이벤트 옵션을 따라가는 fallback은 없다.
+- `MOTION_SERVER_AXIS_STATUS_LOG_PERIOD`는 축 로그 주기에만 적용한다. 축 로그를 켰을 때만 양수여야 한다.
+- startup/listening 및 warning/error 출력 정책은 변경하지 않는다. EtherCAT cycle statistics도 기존 별도 옵션을 유지한다.
+- 구현은 typed logging 설정, 주기 출력 조건, Compose 전달 및 실행 안내에 한정한다. 새로운 runtime method나 장치 capability는 요구하지 않는다.
+- 검증: 두 스위치의 네 조합, 옵션 생략 기본값, 잘못된 옵션 거부, 주기 제한, 축 로그가 꺼졌을 때 장치 내부 데이터 접근 불필요를 확인했다. 관련 unittest 44개 통과.

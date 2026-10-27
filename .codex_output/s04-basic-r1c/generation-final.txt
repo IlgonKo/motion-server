@@ -1,0 +1,15 @@
+`generated/`에 CLI, 수정용 설정, 사용 안내, 자체 테스트를 작성했습니다.
+
+- [사용 안내](generated/README.md)
+- [사용자 설정](generated/settings.json)
+- [검증·실행 결과](generated/RESULTS.md)
+
+자체 테스트 **8개 통과**. 실제 metadata에서 세 축의 위치 단위는 **mm**로 확인했습니다.
+
+Mock CLI는 1회 시도했으나 **연결 timeout**으로 실패했습니다. 이동·I/O 명령은 전송되지 않았고, 자동 재실행·복구나 실장비 실행은 하지 않았습니다.
+
+서버 연결 가능 상태에서 새 1회 실행:
+
+```powershell
+& 'C:/Users/Festo/AppData/Local/Python/pythoncore-3.14-64/python.exe' -B generated/run_once.py --run-mock
+```

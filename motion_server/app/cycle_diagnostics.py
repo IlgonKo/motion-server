@@ -363,7 +363,7 @@ def log_csp_command_step_anomalies(runtime, state):
 
 def log_status_if_due(runtime, state, last_status_log_time):
     config = runtime.logger.config.status
-    if not config.enabled:
+    if not config.axis_enabled:
         return last_status_log_time
     if config.period <= 0.0:
         return last_status_log_time

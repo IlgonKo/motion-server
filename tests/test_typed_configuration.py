@@ -275,6 +275,23 @@ class TypedConfigurationTest(unittest.TestCase):
                     "MOTION_SERVER_PRE_LOGGING_LENGTH=0\n",
                 )
 
+    def test_event_logging_does_not_require_periodic_axis_logging(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config = self.load_typed(temp_dir,
+                "MOTION_SERVER_STATUS_LOGS=1\n"
+                "MOTION_SERVER_AXIS_STATUS_LOGS=0\n"
+                "MOTION_SERVER_AXIS_STATUS_LOG_PERIOD=0\n")
+        self.assertTrue(config.logging.status.enabled)
+        self.assertFalse(config.logging.status.axis_enabled)
+
+    def test_enabled_axis_logging_requires_positive_period(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(ValueError, "axis status log requires period"):
+                self.load_typed(temp_dir,
+                    "MOTION_SERVER_STATUS_LOGS=0\n"
+                    "MOTION_SERVER_AXIS_STATUS_LOGS=1\n"
+                    "MOTION_SERVER_AXIS_STATUS_LOG_PERIOD=0\n")
+
     def test_pysoem_requires_interface(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             with self.assertRaisesRegex(ValueError, "requires an interface"):

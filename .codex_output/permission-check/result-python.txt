@@ -1,0 +1,5 @@
+Stdout: empty.
+
+Exit status: `1` (PowerShell). Python failed to start: `액세스가 거부되었습니다.` (“Access denied.”)
+
+Executed once; no retries.

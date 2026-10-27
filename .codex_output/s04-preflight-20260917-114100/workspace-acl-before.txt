@@ -1,0 +1,5 @@
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh NT AUTHORITY\SYSTEM:(OI)(CI)(F)
+                                                         BUILTIN\Administrators:(OI)(CI)(F)
+                                                         OWNER RIGHTS:(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files

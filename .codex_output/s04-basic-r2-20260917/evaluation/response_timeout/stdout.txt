@@ -1,0 +1,12 @@
+1363461.652622 X=axis 0: mm, mm/s, mm/s^2
+1363461.652815 Y=axis 1: mm, mm/s, mm/s^2
+1363461.652881 Z=axis 2: mm, mm/s, mm/s^2
+1363461.691510 common profile: axis 0
+1363461.701771 common profile: axis 1
+1363461.709573 common profile: axis 2
+1363461.717697 move pick
+1363466.725430 move pick: RequestTimeoutError: Motion Server request timed out after 5s
+1363466.759736 Stop confirmed; I/O outputs retained
+1363466.759846 failed
+1363466.770419 Authority released
+1363466.789977 CLI result: failed

@@ -1,0 +1,5 @@
+12:45:26 Stop NOT confirmed: {"type": "system/axes/stop", "result": "fail", "failure": {"code": "OPERATION_FAILED", "message": "The operation failed.", "details": {"operation": "system/axes/stop"}}, "request_id": "python-c4bfb4-8"}
+invalid command name "2921016004544tick"
+    while executing
+"2921016004544tick"
+    ("after" script)

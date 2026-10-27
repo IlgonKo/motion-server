@@ -1,0 +1,72 @@
+{
+  "scope": "Independent generation session only; evaluator conversation excluded",
+  "thread_id": "01a0ad43-c45c-7d50-8662-552ed4c2386b",
+  "raw_completed_turn_usage": [
+    {
+      "input_tokens": 586552,
+      "cached_input_tokens": 522624,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 14855,
+      "reasoning_output_tokens": 785
+    }
+  ],
+  "totals": {
+    "reasoning_output_tokens": 785,
+    "input_tokens": 586552,
+    "cache_write_input_tokens": 0,
+    "cached_input_tokens": 522624,
+    "output_tokens": 14855
+  },
+  "total_input_plus_output": 601407,
+  "note": "Cached input is included in input; reasoning output may be included in output. No monetary cost conversion.",
+  "cases": {
+    "normal": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "input_timeout": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "api_fail": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "stop": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "fault": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "connection_loss": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "authority_loss": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    },
+    "response_timeout": {
+      "additional_model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "shared_generation_usage": "totals; not allocated or counted eight times"
+    }
+  }
+}

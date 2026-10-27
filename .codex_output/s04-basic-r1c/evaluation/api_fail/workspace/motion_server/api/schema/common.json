@@ -1,0 +1,453 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/common.json",
+  "$defs": {
+    "integer": {
+      "type": "integer"
+    },
+    "number": {
+      "type": "number"
+    },
+    "numbers": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1
+    },
+    "request_id": {
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "failure": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {}
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "required": [
+        "type",
+        "result"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "result": {
+          "enum": [
+            "success",
+            "fail"
+          ]
+        },
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "data": {},
+        "failure": {
+          "$ref": "#/$defs/failure"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "result": {
+              "const": "success"
+            }
+          },
+          "required": [
+            "data"
+          ],
+          "not": {
+            "required": [
+              "failure"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "result": {
+              "const": "fail"
+            }
+          },
+          "required": [
+            "failure"
+          ],
+          "not": {
+            "required": [
+              "data"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "authority_action": {
+      "type": "object",
+      "properties": {
+        "owner": {"type": ["integer", "null"]},
+        "owned_by_this_client": {"type": "boolean"},
+        "available": {"type": "boolean"},
+        "granted": {"type": "boolean"},
+        "message": {"type": "string"}
+      },
+      "required": ["owner", "owned_by_this_client", "available", "granted", "message"],
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owned_by_this_client": {
+          "type": "boolean"
+        },
+        "available": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "owner",
+        "owned_by_this_client",
+        "available"
+      ],
+      "additionalProperties": false
+    },
+    "initialization_failure": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "stage": {
+              "type": "string"
+            },
+            "cause": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "occurred_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "stage",
+            "cause",
+            "message",
+            "occurred_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "diagnostic_source": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "diagnostic": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "enum": [
+            "normal",
+            "alarm",
+            "fault"
+          ]
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "diagnostic_id": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "enum": [
+                      "alarm",
+                      "fault"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "latching": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "code",
+                  "level",
+                  "title",
+                  "description",
+                  "latching"
+                ],
+                "additionalProperties": false
+              },
+              "source": {
+                "$ref": "common.json#/$defs/diagnostic_source"
+              },
+              "history": {
+                "type": "object",
+                "properties": {
+                  "occurred_at": {
+                    "type": "string"
+                  },
+                  "acknowledged_at": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resolved_at": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "occurred_at",
+                  "acknowledged_at",
+                  "resolved_at"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "diagnostic_id",
+              "definition",
+              "source",
+              "history"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "level",
+        "statuses"
+      ],
+      "additionalProperties": false
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "initialized": {
+          "type": "boolean"
+        },
+        "runtime_state": {
+          "type": "string"
+        },
+        "diagnostic_level": {
+          "enum": [
+            "normal",
+            "alarm",
+            "fault"
+          ]
+        },
+        "fault_count": {
+          "type": "integer"
+        },
+        "alarm_count": {
+          "type": "integer"
+        },
+        "representative_diagnostic": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "source": {
+                  "$ref": "common.json#/$defs/diagnostic_source"
+                }
+              },
+              "required": [
+                "code",
+                "level",
+                "title",
+                "source"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "initialization_failure": {
+          "$ref": "common.json#/$defs/initialization_failure"
+        }
+      },
+      "required": [
+        "initialized",
+        "runtime_state",
+        "diagnostic_level",
+        "fault_count",
+        "alarm_count",
+        "representative_diagnostic",
+        "initialization_failure"
+      ],
+      "additionalProperties": false
+    },
+    "catalog_subitem": {
+      "type": "object",
+      "properties": {
+        "subindex": {
+          "type": "integer"
+        },
+        "subindex_hex": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data_type": {
+          "type": "string"
+        },
+        "bit_size": {
+          "type": "integer"
+        },
+        "bit_offset": {
+          "type": "integer"
+        },
+        "access": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "subindex",
+        "name",
+        "data_type",
+        "bit_size",
+        "bit_offset",
+        "access"
+      ],
+      "additionalProperties": true
+    },
+    "catalog_object": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer"
+        },
+        "index_hex": {
+          "type": "string"
+        },
+        "subindex": {
+          "type": "integer"
+        },
+        "subindex_hex": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data_type": {
+          "type": "string"
+        },
+        "bit_size": {
+          "type": "integer"
+        },
+        "access": {
+          "type": "string"
+        },
+        "subitems": {
+          "type": "array",
+          "items": {
+            "$ref": "common.json#/$defs/catalog_subitem"
+          }
+        },
+        "group": {
+          "type": "string"
+        },
+        "depend_on_slot": {
+          "type": [
+            "boolean",
+            "integer"
+          ]
+        }
+      },
+      "required": [
+        "index",
+        "index_hex",
+        "name",
+        "data_type",
+        "bit_size",
+        "access",
+        "subitems"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

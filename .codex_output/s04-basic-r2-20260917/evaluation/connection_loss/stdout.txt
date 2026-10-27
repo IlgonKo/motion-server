@@ -1,0 +1,16 @@
+1363453.323870 X=axis 0: mm, mm/s, mm/s^2
+1363453.324006 Y=axis 1: mm, mm/s, mm/s^2
+1363453.324034 Z=axis 2: mm, mm/s, mm/s^2
+1363453.349916 common profile: axis 0
+1363453.358441 common profile: axis 1
+1363453.366055 common profile: axis 2
+1363453.374250 move pick
+1363453.774409 pick: all axes position/target/reached/standstill confirmed
+1363453.774505 grasp_outputs:digital
+1363453.778637 grasp_outputs:analog
+1363453.786460 grasp_conditions
+1363454.554298 grasp_conditions: RuntimeError: Connection lost; no resume after reconnect
+1363454.554384 INCOMPLETE: Stop NOT confirmed: RuntimeError: Connection lost; no resume after reconnect
+1363454.554403 failed
+1363454.554425 INCOMPLETE cleanup/release: Connection/authority lost; no commands on a new session
+1363454.569508 CLI result: failed

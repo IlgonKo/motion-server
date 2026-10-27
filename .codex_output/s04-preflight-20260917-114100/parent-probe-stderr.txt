@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\Festo\Documents\motion-server\.codex_output\s04-preflight-20260917-114100\submitted\probe.py", line 10, in <module>
+    with input_path.open("r", encoding="utf-8", newline="") as source:
+         ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Festo\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-114100\\input.txt'

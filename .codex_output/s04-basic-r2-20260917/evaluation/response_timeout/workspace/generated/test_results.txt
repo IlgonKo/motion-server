@@ -1,0 +1,16 @@
+test_barrier_discards_backlog_and_requires_new_snapshot (test_sequence.FeedbackTests.test_barrier_discards_backlog_and_requires_new_snapshot) ... ok
+test_fault_and_authority_loss_are_latched (test_sequence.FeedbackTests.test_fault_and_authority_loss_are_latched) ... ok
+test_both_inputs_same_snapshot_and_missing_channel (test_sequence.SequenceTests.test_both_inputs_same_snapshot_and_missing_channel) ... ok
+test_cleanup_attempts_stop_when_feedback_stale (test_sequence.SequenceTests.test_cleanup_attempts_stop_when_feedback_stale) ... ok
+test_cleanup_failure_not_completed (test_sequence.SequenceTests.test_cleanup_failure_not_completed) ... ok
+test_failures_forbid_next_step_and_keep_outputs (test_sequence.SequenceTests.test_failures_forbid_next_step_and_keep_outputs) ... ok
+test_grasp_failure_does_not_release_or_place (test_sequence.SequenceTests.test_grasp_failure_does_not_release_or_place) ... ok
+test_input_wait_rejects_missing_axis_even_with_true_inputs (test_sequence.SequenceTests.test_input_wait_rejects_missing_axis_even_with_true_inputs) ... ok
+test_normal_order_and_schema_contract (test_sequence.SequenceTests.test_normal_order_and_schema_contract) ... ok
+test_old_target_not_accepted_with_large_tolerance (test_sequence.SequenceTests.test_old_target_not_accepted_with_large_tolerance) ... ok
+test_own_settings_types_and_run_snapshot (test_sequence.SequenceTests.test_own_settings_types_and_run_snapshot) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.297s
+
+OK

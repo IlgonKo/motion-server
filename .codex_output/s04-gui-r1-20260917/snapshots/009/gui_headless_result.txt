@@ -1,0 +1,10 @@
+HEADLESS callback/worker test; real Tk/OS interaction NOT tested.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Festo\AppData\Local\Temp\s04-gui-r1-20260917-7_glnunr\generated\test_gui_mock.py", line 113, in <module>
+    result=case(mode)
+  File "C:\Users\Festo\AppData\Local\Temp\s04-gui-r1-20260917-7_glnunr\generated\test_gui_mock.py", line 97, in case
+    assert actual['positions'][:3]==[100,110,120],actual
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'authority': {'type': 'system/authority/status', 'result': 'success', 'data': {'owner': None, 'owned_by_this_client': False, 'available': True}, 'request_id': 'python-0295dc-1'}, 'positions': [99.99999999999999, 109.99999999999999, 119.99999999999999], 'statuswords': [33831, 33831, 33831], 'DO': False, 'AO': 0}

@@ -1,0 +1,257 @@
+{
+  "type": "system/axes/status",
+  "result": "success",
+  "data": {
+    "target_positions": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "actual_positions": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "actual_velocities": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "command_positions": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "command_velocities": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "statuswords": [
+      33831,
+      33831,
+      33831
+    ],
+    "motion_limits": [
+      200.0,
+      -200.00000298023224,
+      2000.0,
+      2000.0,
+      200.0,
+      -200.00000298023224,
+      2000.0,
+      2000.0,
+      200.0,
+      -200.00000298023224,
+      2000.0,
+      2000.0
+    ],
+    "profile_settings": [
+      0.0,
+      1000.0,
+      1000.0,
+      100000.0,
+      0.0,
+      1000.0,
+      1000.0,
+      100000.0,
+      0.0,
+      1000.0,
+      1000.0,
+      100000.0
+    ],
+    "software_position_limits": [
+      -999.9999999999999,
+      999.9999999999999,
+      -999.9999999999999,
+      999.9999999999999,
+      -999.9999999999999,
+      999.9999999999999
+    ],
+    "axis_metadata": [
+      {
+        "axis": 0,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      },
+      {
+        "axis": 1,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      },
+      {
+        "axis": 2,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    ],
+    "user_position_units": [
+      256,
+      256,
+      256
+    ],
+    "converting_unit_exponents": [
+      [
+        6,
+        3,
+        3,
+        3
+      ],
+      [
+        6,
+        3,
+        3,
+        3
+      ],
+      [
+        6,
+        3,
+        3,
+        3
+      ]
+    ],
+    "motion_mode": "pp",
+    "motion_modes": [
+      "pp",
+      "pp",
+      "pp"
+    ],
+    "server_mode": "basic",
+    "position_counts_per_unit": 1000.0000000000001,
+    "axis_position_counts_per_unit": [
+      1000.0000000000001,
+      1000.0000000000001,
+      1000.0000000000001
+    ],
+    "capabilities": {
+      "position_loop_gain": true,
+      "profile_settings": true,
+      "motion_limits": true,
+      "software_position_limits": true,
+      "csp_trajectory_feedback": false,
+      "trajectory_commands": false
+    },
+    "trajectory": {
+      "active": false,
+      "state": "idle",
+      "axes": [],
+      "segment": 0,
+      "time_from_start": 0.0,
+      "points": [],
+      "start_time": null,
+      "message": ""
+    },
+    "homing": {
+      "active": false,
+      "state": "complete",
+      "axes": [
+        2
+      ],
+      "start_time": 1362796.5200077,
+      "message": "Axis referenced.",
+      "per_axis": [
+        {
+          "axis": 2,
+          "statusword": 33831,
+          "statusword_hex": "0x8427",
+          "operation_enabled": true,
+          "target_reached": true,
+          "referenced": true,
+          "homing_error": false,
+          "fault": false,
+          "error": false,
+          "warning": false,
+          "actual_position": 0.0,
+          "mode_display": 6
+        }
+      ]
+    },
+    "device_diagnostics": [
+      {
+        "statusword": 0,
+        "error_code": 0,
+        "mode_display": 0,
+        "manufacturer_status": 0,
+        "error_code_text": "Panel SDO read pending"
+      },
+      {
+        "statusword": 0,
+        "error_code": 0,
+        "mode_display": 0,
+        "manufacturer_status": 0,
+        "error_code_text": "Panel SDO read pending"
+      },
+      {
+        "statusword": 0,
+        "error_code": 0,
+        "mode_display": 0,
+        "manufacturer_status": 0,
+        "error_code_text": "Panel SDO read pending"
+      }
+    ],
+    "diagnostic_status": {
+      "level": "normal",
+      "statuses": []
+    },
+    "command_authority": {
+      "owner": null,
+      "owned_by_this_client": false,
+      "available": true
+    }
+  },
+  "request_id": "python-5e4b1a-1"
+}

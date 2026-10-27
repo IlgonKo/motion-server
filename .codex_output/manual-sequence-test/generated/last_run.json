@@ -1,0 +1,973 @@
+{
+  "result": "completed",
+  "stop_confirmed": true,
+  "release_confirmed": true,
+  "settings": {
+    "host": "127.0.0.1",
+    "port": 62554,
+    "roles": {
+      "X": 0,
+      "Y": 1,
+      "Z": 2
+    },
+    "expected_units": {
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2"
+    },
+    "pick": {
+      "positions": [
+        50,
+        60,
+        70
+      ],
+      "profile_velocities": [
+        50,
+        50,
+        40
+      ]
+    },
+    "place": {
+      "positions": [
+        100,
+        110,
+        120
+      ],
+      "profile_velocities": [
+        50,
+        50,
+        20
+      ]
+    },
+    "acceleration": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "deceleration": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "grasp_outputs": [
+      {
+        "io": "io0",
+        "slot": 1,
+        "kind": "digital",
+        "channel": 0,
+        "value": true
+      },
+      {
+        "io": "io0",
+        "slot": 2,
+        "kind": "analog",
+        "channel": 0,
+        "value": 100
+      }
+    ],
+    "grasp_conditions": [
+      {
+        "io": "io0",
+        "slot": 3,
+        "kind": "digital",
+        "channel": 0,
+        "op": "eq",
+        "value": true
+      },
+      {
+        "io": "io0",
+        "slot": 4,
+        "kind": "analog",
+        "channel": 0,
+        "op": "ge",
+        "value": 50
+      }
+    ],
+    "release_outputs": [
+      {
+        "io": "io0",
+        "slot": 1,
+        "kind": "digital",
+        "channel": 0,
+        "value": false
+      },
+      {
+        "io": "io0",
+        "slot": 2,
+        "kind": "analog",
+        "channel": 0,
+        "value": 0
+      }
+    ],
+    "release_conditions": [],
+    "position_tolerance": 0.5,
+    "velocity_tolerance": 1.0,
+    "request_timeout": 5.0,
+    "move_timeout": 30.0,
+    "input_timeout": 10.0,
+    "feedback_timeout": 2.0
+  },
+  "axis_metadata": [
+    {
+      "axis": 0,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    },
+    {
+      "axis": 1,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    },
+    {
+      "axis": 2,
+      "user_position_unit": 256,
+      "user_position_unit_name": "m",
+      "motion_kind": "linear",
+      "pv_allowed": true,
+      "converting_unit_exponents": [
+        6,
+        3,
+        3,
+        3
+      ],
+      "position_unit": "mm",
+      "velocity_unit": "mm/s",
+      "acceleration_unit": "mm/s^2",
+      "deceleration_unit": "mm/s^2",
+      "jerk_unit": "mm/s^3",
+      "position_scale": 1e-06,
+      "velocity_scale": 0.001,
+      "acceleration_scale": 0.001,
+      "deceleration_scale": 0.001,
+      "jerk_scale": 0.001
+    }
+  ],
+  "messages": [
+    "1365042.567180 X=axis 0: mm, mm/s, mm/s^2",
+    "1365042.567312 Y=axis 1: mm, mm/s, mm/s^2",
+    "1365042.567349 Z=axis 2: mm, mm/s, mm/s^2",
+    "1365042.616386 common profile: axis 0",
+    "1365042.626501 common profile: axis 1",
+    "1365042.634758 common profile: axis 2",
+    "1365042.642508 move pick",
+    "1365044.302185 pick: all axes position/target/reached/standstill confirmed",
+    "1365044.302369 grasp_outputs:digital",
+    "1365044.311133 grasp_outputs:analog",
+    "1365044.319168 grasp_conditions",
+    "1365044.364362 move place",
+    "1365047.050552 place: all axes position/target/reached/standstill confirmed",
+    "1365047.050859 release_outputs:digital",
+    "1365047.053444 release_outputs:analog",
+    "1365047.102663 Stop confirmed; I/O outputs retained",
+    "1365047.102831 completed",
+    "1365047.118453 Authority released",
+    "1365047.128151 CLI result: completed"
+  ],
+  "evidence": {
+    "pick": {
+      "type": "system/feedback",
+      "process_data_valid": true,
+      "server_health": {
+        "initialized": true,
+        "runtime_state": "normal",
+        "diagnostic_level": "normal",
+        "fault_count": 0,
+        "alarm_count": 0,
+        "representative_diagnostic": null,
+        "initialization_failure": null
+      },
+      "target_positions": [
+        49.99999999999999,
+        59.99999999999999,
+        69.99999999999999
+      ],
+      "actual_positions": [
+        49.99999999999999,
+        59.99999999999999,
+        69.99999999999999
+      ],
+      "actual_velocities": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "mode_displays": [
+        1,
+        1,
+        1
+      ],
+      "command_authority": {
+        "owner": 3,
+        "owned_by_this_client": true,
+        "available": false
+      },
+      "io": {
+        "devices": [
+          {
+            "id": "io0",
+            "slave_index": 3,
+            "profile": "cpx_ap_i_ec",
+            "input_bytes": 32,
+            "output_bytes": 16,
+            "digital_inputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "digital_outputs": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "analog_inputs": [
+              0,
+              0,
+              0,
+              0,
+              100,
+              0,
+              0,
+              0
+            ],
+            "analog_outputs": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "modules": [
+              {
+                "slot": 1,
+                "type": "do",
+                "raw": "DO:8",
+                "input_offset": null,
+                "output_offset": 0,
+                "input_bytes": 0,
+                "output_bytes": 1,
+                "digital_inputs": 0,
+                "digital_outputs": 8,
+                "name": "CPX-AP-I-8DO-M8-3P",
+                "outputs": {
+                  "digital": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 2,
+                "type": "aio",
+                "raw": "AIO:4:4",
+                "input_offset": 0,
+                "output_offset": 1,
+                "input_bytes": 8,
+                "output_bytes": 9,
+                "analog_inputs": 4,
+                "analog_outputs": 4,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI4AO-U-I-M12",
+                "inputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "outputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "slot": 3,
+                "type": "di",
+                "raw": "DI:8",
+                "input_offset": 8,
+                "output_offset": null,
+                "input_bytes": 1,
+                "output_bytes": 0,
+                "digital_inputs": 8,
+                "digital_outputs": 0,
+                "name": "CPX-AP-I-8DI-M8-3P",
+                "inputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 4,
+                "type": "ai",
+                "raw": "AI:4",
+                "input_offset": 9,
+                "output_offset": null,
+                "input_bytes": 8,
+                "output_bytes": 0,
+                "analog_inputs": 4,
+                "analog_outputs": 0,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+                "inputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "grasp_conditions": {
+      "type": "system/feedback",
+      "process_data_valid": true,
+      "server_health": {
+        "initialized": true,
+        "runtime_state": "normal",
+        "diagnostic_level": "normal",
+        "fault_count": 0,
+        "alarm_count": 0,
+        "representative_diagnostic": null,
+        "initialization_failure": null
+      },
+      "target_positions": [
+        49.99999999999999,
+        59.99999999999999,
+        69.99999999999999
+      ],
+      "actual_positions": [
+        49.99999999999999,
+        59.99999999999999,
+        69.99999999999999
+      ],
+      "actual_velocities": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "mode_displays": [
+        1,
+        1,
+        1
+      ],
+      "command_authority": {
+        "owner": 3,
+        "owned_by_this_client": true,
+        "available": false
+      },
+      "io": {
+        "devices": [
+          {
+            "id": "io0",
+            "slave_index": 3,
+            "profile": "cpx_ap_i_ec",
+            "input_bytes": 32,
+            "output_bytes": 16,
+            "digital_inputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "digital_outputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "analog_inputs": [
+              0,
+              0,
+              0,
+              0,
+              100,
+              0,
+              0,
+              0
+            ],
+            "analog_outputs": [
+              100,
+              0,
+              0,
+              0
+            ],
+            "modules": [
+              {
+                "slot": 1,
+                "type": "do",
+                "raw": "DO:8",
+                "input_offset": null,
+                "output_offset": 0,
+                "input_bytes": 0,
+                "output_bytes": 1,
+                "digital_inputs": 0,
+                "digital_outputs": 8,
+                "name": "CPX-AP-I-8DO-M8-3P",
+                "outputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 2,
+                "type": "aio",
+                "raw": "AIO:4:4",
+                "input_offset": 0,
+                "output_offset": 1,
+                "input_bytes": 8,
+                "output_bytes": 9,
+                "analog_inputs": 4,
+                "analog_outputs": 4,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI4AO-U-I-M12",
+                "inputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "outputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "slot": 3,
+                "type": "di",
+                "raw": "DI:8",
+                "input_offset": 8,
+                "output_offset": null,
+                "input_bytes": 1,
+                "output_bytes": 0,
+                "digital_inputs": 8,
+                "digital_outputs": 0,
+                "name": "CPX-AP-I-8DI-M8-3P",
+                "inputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 4,
+                "type": "ai",
+                "raw": "AI:4",
+                "input_offset": 9,
+                "output_offset": null,
+                "input_bytes": 8,
+                "output_bytes": 0,
+                "analog_inputs": 4,
+                "analog_outputs": 0,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+                "inputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "place": {
+      "type": "system/feedback",
+      "process_data_valid": true,
+      "server_health": {
+        "initialized": true,
+        "runtime_state": "normal",
+        "diagnostic_level": "normal",
+        "fault_count": 0,
+        "alarm_count": 0,
+        "representative_diagnostic": null,
+        "initialization_failure": null
+      },
+      "target_positions": [
+        99.99999999999999,
+        109.99999999999999,
+        119.99999999999999
+      ],
+      "actual_positions": [
+        99.99999999999999,
+        109.99999999999999,
+        119.99999999999999
+      ],
+      "actual_velocities": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "mode_displays": [
+        1,
+        1,
+        1
+      ],
+      "command_authority": {
+        "owner": 3,
+        "owned_by_this_client": true,
+        "available": false
+      },
+      "io": {
+        "devices": [
+          {
+            "id": "io0",
+            "slave_index": 3,
+            "profile": "cpx_ap_i_ec",
+            "input_bytes": 32,
+            "output_bytes": 16,
+            "digital_inputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "digital_outputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "analog_inputs": [
+              0,
+              0,
+              0,
+              0,
+              100,
+              0,
+              0,
+              0
+            ],
+            "analog_outputs": [
+              100,
+              0,
+              0,
+              0
+            ],
+            "modules": [
+              {
+                "slot": 1,
+                "type": "do",
+                "raw": "DO:8",
+                "input_offset": null,
+                "output_offset": 0,
+                "input_bytes": 0,
+                "output_bytes": 1,
+                "digital_inputs": 0,
+                "digital_outputs": 8,
+                "name": "CPX-AP-I-8DO-M8-3P",
+                "outputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 2,
+                "type": "aio",
+                "raw": "AIO:4:4",
+                "input_offset": 0,
+                "output_offset": 1,
+                "input_bytes": 8,
+                "output_bytes": 9,
+                "analog_inputs": 4,
+                "analog_outputs": 4,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI4AO-U-I-M12",
+                "inputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "outputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "slot": 3,
+                "type": "di",
+                "raw": "DI:8",
+                "input_offset": 8,
+                "output_offset": null,
+                "input_bytes": 1,
+                "output_bytes": 0,
+                "digital_inputs": 8,
+                "digital_outputs": 0,
+                "name": "CPX-AP-I-8DI-M8-3P",
+                "inputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 4,
+                "type": "ai",
+                "raw": "AI:4",
+                "input_offset": 9,
+                "output_offset": null,
+                "input_bytes": 8,
+                "output_bytes": 0,
+                "analog_inputs": 4,
+                "analog_outputs": 0,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+                "inputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "stopped": {
+      "type": "system/feedback",
+      "process_data_valid": true,
+      "server_health": {
+        "initialized": true,
+        "runtime_state": "normal",
+        "diagnostic_level": "normal",
+        "fault_count": 0,
+        "alarm_count": 0,
+        "representative_diagnostic": null,
+        "initialization_failure": null
+      },
+      "target_positions": [
+        99.99999999999999,
+        109.99999999999999,
+        119.99999999999999
+      ],
+      "actual_positions": [
+        99.99999999999999,
+        109.99999999999999,
+        119.99999999999999
+      ],
+      "actual_velocities": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "mode_displays": [
+        1,
+        1,
+        1
+      ],
+      "command_authority": {
+        "owner": 3,
+        "owned_by_this_client": true,
+        "available": false
+      },
+      "io": {
+        "devices": [
+          {
+            "id": "io0",
+            "slave_index": 3,
+            "profile": "cpx_ap_i_ec",
+            "input_bytes": 32,
+            "output_bytes": 16,
+            "digital_inputs": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "digital_outputs": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "analog_inputs": [
+              0,
+              0,
+              0,
+              0,
+              100,
+              0,
+              0,
+              0
+            ],
+            "analog_outputs": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "modules": [
+              {
+                "slot": 1,
+                "type": "do",
+                "raw": "DO:8",
+                "input_offset": null,
+                "output_offset": 0,
+                "input_bytes": 0,
+                "output_bytes": 1,
+                "digital_inputs": 0,
+                "digital_outputs": 8,
+                "name": "CPX-AP-I-8DO-M8-3P",
+                "outputs": {
+                  "digital": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 2,
+                "type": "aio",
+                "raw": "AIO:4:4",
+                "input_offset": 0,
+                "output_offset": 1,
+                "input_bytes": 8,
+                "output_bytes": 9,
+                "analog_inputs": 4,
+                "analog_outputs": 4,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI4AO-U-I-M12",
+                "inputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "outputs": {
+                  "analog": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "slot": 3,
+                "type": "di",
+                "raw": "DI:8",
+                "input_offset": 8,
+                "output_offset": null,
+                "input_bytes": 1,
+                "output_bytes": 0,
+                "digital_inputs": 8,
+                "digital_outputs": 0,
+                "name": "CPX-AP-I-8DI-M8-3P",
+                "inputs": {
+                  "digital": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              {
+                "slot": 4,
+                "type": "ai",
+                "raw": "AI:4",
+                "input_offset": 9,
+                "output_offset": null,
+                "input_bytes": 8,
+                "output_bytes": 0,
+                "analog_inputs": 4,
+                "analog_outputs": 0,
+                "analog_bits": 16,
+                "analog_signed": true,
+                "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+                "inputs": {
+                  "analog": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

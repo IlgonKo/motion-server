@@ -1,0 +1,12 @@
+1363441.926073 X=axis 0: mm, mm/s, mm/s^2
+1363441.926190 Y=axis 1: mm, mm/s, mm/s^2
+1363441.926216 Z=axis 2: mm, mm/s, mm/s^2
+1363441.965045 common profile: axis 0
+1363441.976100 common profile: axis 1
+1363441.984668 common profile: axis 2
+1363441.992663 move pick
+1363441.999544 move pick: RuntimeError: API Fail: {"type": "system/axes/move_abs", "result": "fail", "failure": {"code": "OPERATION_FAILED", "message": "The operation failed.", "details": {"operation": "system/axes/move_abs"}}, "request_id": "python-7f2a7e-6"}
+1363442.013815 INCOMPLETE: Stop NOT confirmed: RuntimeError: API Fail: {"type": "system/axes/stop", "result": "fail", "failure": {"code": "OPERATION_FAILED", "message": "The operation failed.", "details": {"operation": "system/axes/stop"}}, "request_id": "python-7f2a7e-8"}
+1363442.015309 failed
+1363442.030618 Authority released
+1363442.041552 CLI result: failed

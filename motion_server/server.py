@@ -511,6 +511,7 @@ def restart_current_process():
 def initialize_runtime_session(
     session,
     *,
+    server_mode,
     ethercat_config,
     motion_config,
     logging_config,
@@ -551,6 +552,7 @@ def initialize_runtime_session(
             motion_config.initial_motion_mode,
             csp_interpolation_modes,
             read_startup_axis_sdo,
+            server_mode=server_mode,
         )
     except Exception as exc:
         fail_runtime_initialization(session, runtime, stage, exc)
@@ -679,6 +681,7 @@ def run_main_once(
     axis_count_value = sum(device.role.value == "axis" for device in devices)
     runtime, startup_sdo = initialize_runtime_session(
         session,
+        server_mode=server_config.mode.value,
         ethercat_config=ethercat_config,
         motion_config=motion_config,
         logging_config=logging_config,
@@ -696,6 +699,7 @@ def run_main_once(
                 reconnect_started_at = time.monotonic()
                 recovered_runtime, recovered_sdo = initialize_runtime_session(
                     session,
+                    server_mode=server_config.mode.value,
                     ethercat_config=ethercat_config,
                     motion_config=motion_config,
                     logging_config=logging_config,

@@ -1,0 +1,26 @@
+{
+  "workspace": "C:\\Users\\Festo\\AppData\\Local\\Temp\\s04-preflight-vdan70hk",
+  "report": "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-113641",
+  "port": 60070,
+  "mock_pid": 4916,
+  "checks": {},
+  "collection_errors": [],
+  "command": [
+    "C:\\Users\\Festo\\AppData\\Local\\OpenAI\\Codex\\bin\\fd4c151a749f3ab4\\codex.EXE",
+    "exec",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "windows.sandbox=\"elevated\"",
+    "-c",
+    "sandbox_workspace_write.network_access=true",
+    "--json",
+    "-o",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-113641\\final.txt",
+    "-"
+  ],
+  "cli_version": "codex-cli 0.153.4",
+  "cli_pid": 34776
+}

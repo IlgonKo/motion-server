@@ -1,0 +1,22 @@
+{
+  "command": [
+    "C:\\Users\\Festo\\AppData\\Local\\OpenAI\\Codex\\bin\\fd4c151a749f3ab4\\codex.EXE",
+    "exec",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "windows.sandbox=\"elevated\"",
+    "-c",
+    "sandbox_workspace_write.network_access=true",
+    "--json",
+    "-o",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-basic-r2-20260917\\generation-final.txt",
+    "-"
+  ],
+  "exit_code": 0,
+  "outcome": "finished",
+  "duration_seconds": 588.3787508010864,
+  "started_unix": 1789613294.1368902
+}

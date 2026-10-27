@@ -1,0 +1,16 @@
+`generated/`에 공통 시퀀스, CLI, Tkinter/ttk GUI, 설정 파일과 시험 코드를 작성했습니다.
+
+- Mock CLI 1회 완료, Stop/정지 확인 및 제어권 해제.
+- 자체 시험 10개, GUI 대체 시험 통과.
+- **실제 GUI 창 시험은 `init.tcl` 누락으로 미수행**입니다. 창 없는 콜백 시험과 구분해 기록했습니다.
+- 마지막 중단 시험 후 축 정지·제어권 해제, DO=true / AO=100 유지. 실장비는 실행하지 않았습니다.
+
+작업 폴더에서:
+
+```powershell
+$python = 'C:/Users/Festo/AppData/Local/Python/pythoncore-3.14-64/python.exe'
+& $python -m generated --run
+& $python -m generated --gui
+```
+
+[사용 안내](generated/README.md) · [상세 시험 결과](generated/RESULTS.md) · [사용자 설정](generated/sequence.json)

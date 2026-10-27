@@ -177,7 +177,8 @@ def build_logging_config(values, cli=None):
         command=CommandLogConfig(boolean(values, "MOTION_SERVER_COMMAND_LOGS", False)),
         status=StatusLogConfig(
             boolean(values, "MOTION_SERVER_STATUS_LOGS", False),
-            number(values, "MOTION_SERVER_STATUS_LOG_PERIOD", 1.0),
+            number(values, "MOTION_SERVER_AXIS_STATUS_LOG_PERIOD", 1.0),
+            axis_enabled=boolean(values, "MOTION_SERVER_AXIS_STATUS_LOGS", False),
         ),
         cycle_stats=CycleStatsLogConfig(
             boolean(values, "MOTION_SERVER_CYCLE_STATS_LOGS", True),
@@ -373,8 +374,9 @@ def validate_motion_server_config(config):
         )
     if config.motion.csp_jerk <= 0:
         raise ValueError("CSP jerk must be > 0")
+    if config.logging.status.axis_enabled and config.logging.status.period <= 0.0:
+        raise ValueError("Enabled axis status log requires period > 0")
     for log_config in (
-        config.logging.status,
         config.logging.cycle_stats,
         config.logging.position_feedback_lag,
     ):

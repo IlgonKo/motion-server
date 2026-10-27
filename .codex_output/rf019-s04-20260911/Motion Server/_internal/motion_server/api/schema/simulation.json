@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://motion-server.local/schema/simulation.json",
+  "$defs": {
+    "system_simulation_io_input_write": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/simulation/io/input_write"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "integer"
+        },
+        "channel": {
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "digital",
+            "analog",
+            "io_link"
+          ]
+        },
+        "value": {
+          "type": [
+            "integer",
+            "boolean"
+          ]
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "cmd",
+        "io",
+        "slot",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/simulation/io/input_write",
+        "kind": "command",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/simulation.json#/$defs/system_simulation_io_input_write_response"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "digital"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "analog"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "digital",
+                  "analog"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "channel",
+              "value"
+            ]
+          },
+          "else": {
+            "required": [
+              "payload"
+            ]
+          }
+        }
+      ],
+      "description": "Request for system/simulation/io/input_write. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_simulation_io_input_reset": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "const": "system/simulation/io/input_reset"
+        },
+        "request_id": {
+          "$ref": "common.json#/$defs/request_id"
+        },
+        "io": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "$ref": "common.json#/$defs/integer"
+        }
+      },
+      "required": [
+        "cmd",
+        "io"
+      ],
+      "additionalProperties": false,
+      "x-motion-server": {
+        "name": "system/simulation/io/input_reset",
+        "kind": "command",
+        "authority_required": false,
+        "advanced_only": false,
+        "degraded_allowed": false,
+        "transport_required": false,
+        "response": {
+          "$ref": "https://motion-server.local/schema/simulation.json#/$defs/system_simulation_io_input_reset_response"
+        }
+      },
+      "description": "Request for system/simulation/io/input_reset. API success acknowledges handler execution, not physical motion completion."
+    },
+    "system_simulation_io_input_write_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/simulation/io/input_write"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "devices": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slave_index": {
+                          "type": "integer"
+                        },
+                        "modules": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "slot": {
+                                "type": "integer"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "inputs": {
+                                "$ref": "io.json#/$defs/process_values"
+                              }
+                            },
+                            "required": [
+                              "slot",
+                              "type",
+                              "inputs"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slave_index",
+                        "modules"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "devices"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "system_simulation_io_input_reset_response": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/response"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "system/simulation/io/input_reset"
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "devices": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slave_index": {
+                          "type": "integer"
+                        },
+                        "modules": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "slot": {
+                                "type": "integer"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "inputs": {
+                                "$ref": "io.json#/$defs/process_values"
+                              }
+                            },
+                            "required": [
+                              "slot",
+                              "type",
+                              "inputs"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slave_index",
+                        "modules"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "devices"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

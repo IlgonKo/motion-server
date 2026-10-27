@@ -1,0 +1,2 @@
+C:\Users\Festo\Documents\motion-server\.codex_build\motion-server-20260921-193654.out.log
+C:\Users\Festo\Documents\motion-server\.codex_build\motion-server-20260921-193654.err.log

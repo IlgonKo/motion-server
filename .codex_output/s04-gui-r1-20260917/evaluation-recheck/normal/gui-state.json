@@ -1,0 +1,19 @@
+{
+  "status": "Connected: True | Authority: True | Feedback fresh: True | Valid: True\nServer: {'initialized': True, 'runtime_state': 'normal', 'diagnostic_level': 'normal', 'fault_count': 0, 'alarm_count': 0, 'representative_diagnostic': None, 'initialization_failure': None}\nPositions: [99.99999999999999, 109.99999999999999, 119.99999999999999]",
+  "phase": "completed: Cleanup | Stop confirmed: True",
+  "error": "",
+  "history": [
+    "12:47:05 Metadata: [{'axis': 0, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 1, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 2, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}]",
+    "12:47:05 Connected. Request authority explicitly.",
+    "12:47:05 {'owner': 2, 'owned_by_this_client': True, 'available': False, 'granted': True, 'message': 'Command authority granted.'}",
+    "12:47:05 Common acceleration/deceleration",
+    "12:47:05 Move pick",
+    "12:47:08 grasp_outputs",
+    "12:47:08 grasp_conditions",
+    "12:47:08 Move place",
+    "12:47:10 release_outputs",
+    "12:47:10 Cleanup",
+    "12:47:10 Stop / Standstill confirmed; I/O unchanged by cleanup",
+    "12:47:11 completed"
+  ]
+}

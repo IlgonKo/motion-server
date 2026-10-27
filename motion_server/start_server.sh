@@ -25,6 +25,7 @@ CSP_VELOCITY_OFFSET="${MOTION_SERVER_CSP_VELOCITY_OFFSET:-0}"
 MOTION_MODE="${MOTION_SERVER_MOTION_MODE:-pp}"
 COMMAND_LOGS="${MOTION_SERVER_COMMAND_LOGS:-0}"
 STATUS_LOGS="${MOTION_SERVER_STATUS_LOGS:-0}"
+AXIS_STATUS_LOGS="${MOTION_SERVER_AXIS_STATUS_LOGS:-0}"
 
 echo "Starting Motion Server"
 echo "Backend=${BACKEND}"
@@ -50,6 +51,7 @@ echo "CspVelocityOffset=${CSP_VELOCITY_OFFSET}"
 echo "MotionMode=${MOTION_MODE}"
 echo "CommandLogs=${COMMAND_LOGS}"
 echo "StatusLogs=${STATUS_LOGS}"
+echo "AxisStatusLogs=${AXIS_STATUS_LOGS}"
 
 SERVER_CMD=(
   python3 -B -m motion_server

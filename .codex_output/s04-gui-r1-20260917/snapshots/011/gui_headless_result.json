@@ -1,0 +1,103 @@
+[
+  {
+    "case": "complete",
+    "state": "completed",
+    "stop_confirmed": true,
+    "focus_loss_no_jog": true,
+    "duplicate_run_blocked": true,
+    "ui_heartbeats": 286,
+    "elapsed_seconds": 4.733,
+    "after_disconnect": {
+      "authority": {
+        "type": "system/authority/status",
+        "result": "success",
+        "data": {
+          "owner": null,
+          "owned_by_this_client": false,
+          "available": true
+        },
+        "request_id": "python-92a513-1"
+      },
+      "positions": [
+        99.99999999999999,
+        109.99999999999999,
+        119.99999999999999
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "DO": false,
+      "AO": 0
+    },
+    "logs": [
+      "12:38:47 Metadata: [{'axis': 0, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 1, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 2, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}]",
+      "12:38:47 Connected. Request authority explicitly.",
+      "12:38:47 {'owner': 2, 'owned_by_this_client': True, 'available': False, 'granted': True, 'message': 'Command authority granted.'}",
+      "12:38:47 Common acceleration/deceleration",
+      "12:38:47 Move pick",
+      "12:38:49 grasp_outputs",
+      "12:38:49 grasp_conditions",
+      "12:38:49 Move place",
+      "12:38:52 release_outputs",
+      "12:38:52 Cleanup",
+      "12:38:52 Stop / Standstill confirmed; I/O unchanged by cleanup",
+      "12:38:52 completed",
+      "12:38:52 Close requested: await bounded cleanup, then release/disconnect",
+      "12:38:52 Authority released",
+      "12:38:52 Connection closed"
+    ]
+  },
+  {
+    "case": "stop",
+    "state": "cancelled",
+    "stop_confirmed": true,
+    "focus_loss_no_jog": true,
+    "duplicate_run_blocked": true,
+    "ui_heartbeats": 128,
+    "elapsed_seconds": 2.155,
+    "after_disconnect": {
+      "authority": {
+        "type": "system/authority/status",
+        "result": "success",
+        "data": {
+          "owner": null,
+          "owned_by_this_client": false,
+          "available": true
+        },
+        "request_id": "python-3c4782-1"
+      },
+      "positions": [
+        50.23,
+        60.22999999999999,
+        70.22999999999999
+      ],
+      "statuswords": [
+        33831,
+        33831,
+        33831
+      ],
+      "DO": true,
+      "AO": 100
+    },
+    "logs": [
+      "12:38:52 Metadata: [{'axis': 0, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 1, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}, {'axis': 2, 'user_position_unit': 256, 'user_position_unit_name': 'm', 'motion_kind': 'linear', 'pv_allowed': True, 'converting_unit_exponents': [6, 3, 3, 3], 'position_unit': 'mm', 'velocity_unit': 'mm/s', 'acceleration_unit': 'mm/s^2', 'deceleration_unit': 'mm/s^2', 'jerk_unit': 'mm/s^3', 'position_scale': 1e-06, 'velocity_scale': 0.001, 'acceleration_scale': 0.001, 'deceleration_scale': 0.001, 'jerk_scale': 0.001}]",
+      "12:38:52 Connected. Request authority explicitly.",
+      "12:38:52 {'owner': 2, 'owned_by_this_client': True, 'available': False, 'granted': True, 'message': 'Command authority granted.'}",
+      "12:38:52 Common acceleration/deceleration",
+      "12:38:52 Move pick",
+      "12:38:54 grasp_outputs",
+      "12:38:54 grasp_conditions",
+      "12:38:54 Move place",
+      "12:38:54 Stop requested",
+      "12:38:54 User Stop",
+      "12:38:54 Cleanup",
+      "12:38:54 Stop / Standstill confirmed; I/O unchanged by cleanup",
+      "12:38:54 cancelled",
+      "12:38:54 Close requested: await bounded cleanup, then release/disconnect",
+      "12:38:54 Authority released",
+      "12:38:54 Connection closed"
+    ]
+  }
+]

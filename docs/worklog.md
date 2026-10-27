@@ -4,6 +4,34 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-10-27
+
+### Basic mode의 불필요한 CSP interpolation SDO 초기화 제거
+
+- 시작과 복구 경로가 모든 축에 무조건 CSP interpolation을 쓰던 문제를 수정했다.
+- server mode를 초기화 단계에 명시적으로 전달하고 Basic에서는 해당 SDO 단계를 생략한다.
+  초기화 실패 후 재시도, bus reconnect와 axis restart의 공통 복구 경로에도 같은 조건을 적용했다.
+- Advanced는 PP/PV 시작에서도 이후 CSP 전환용 설정을 유지한다. 기존 profile mode 정의와
+  CSP 필수 RxPDO 필드(velocity offset 설정 포함)로 축별 대상을 제한한다.
+  실제 firmware의 OD 지원 자동 조회나 새 capability/환경변수는 추가하지 않았다.
+- 검증: device instance motion config, staged initialization, initialization lifecycle,
+  bus recovery, recovery refresh, PDO transport parity, axis status/runtime logging,
+  typed configuration, startup logging, EtherCAT state transition logging과 error contract static의
+  unittest 91개 통과. `git diff --check` 통과. Node-RED 테스트는 실행하지 않았다.
+- DEC-032/TD-022 로그 분리, `.env`, Reference 및 device/emct 사용자 파일은 수정하지 않았다.
+  서버 재시작과 실장치 SDO 검증은 수행하지 않았다.
+
+## 2026-10-26
+
+### 2026-10-26 상태 이벤트와 주기 축 로그 분리
+
+- `MOTION_SERVER_STATUS_LOGS`는 client 연결/해제, 권한 변경, 축 enable/stop/homing 등 기존 상태 이벤트를 제어한다.
+- 신규 선택 옵션 `MOTION_SERVER_AXIS_STATUS_LOGS`는 반복되는 `Axis status: WKC=...` 출력만 제어하며 기본값은 `0`이다. 기존 상태 이벤트 옵션을 따라가는 fallback은 없다.
+- `MOTION_SERVER_AXIS_STATUS_LOG_PERIOD`는 축 로그 주기에만 적용한다. 축 로그를 켰을 때만 양수여야 한다.
+- startup/listening 및 warning/error 출력 정책은 변경하지 않는다. EtherCAT cycle statistics도 기존 별도 옵션을 유지한다.
+- 구현은 typed logging 설정, 주기 출력 조건, Compose 전달 및 실행 안내에 한정한다. 새로운 runtime method나 장치 capability는 요구하지 않는다.
+- 검증: 두 스위치의 네 조합, 옵션 생략 기본값, 잘못된 옵션 거부, 주기 제한, 축 로그가 꺼졌을 때 장치 내부 데이터 접근 불필요를 확인했다. 관련 unittest 44개 통과.
+
 ## 2026-10-20
 
 ### TD-040 32 bit DC Clock Rollover 연속 시간 보정 완료

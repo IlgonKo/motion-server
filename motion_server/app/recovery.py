@@ -225,10 +225,11 @@ def _restore_process_image(
     deadline,
 ):
     clear_axis_restart_commands(runtime)
-    write_csp_interpolation_modes(
-        runtime,
-        state["csp_interpolation_modes"],
-    )
+    if state["server_mode"] == "advanced":
+        write_csp_interpolation_modes(
+            runtime,
+            state["csp_interpolation_modes"],
+        )
     for axis_index, mode_name in enumerate(state["motion_modes"]):
         profile = axis_device_profile(runtime, axis_index)
         mode_code = profile.mode_code(mode_name)

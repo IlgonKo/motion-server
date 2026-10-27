@@ -1,0 +1,14 @@
+test_cancel_in_flight_request_is_not_retracted (__main__.Tests.test_cancel_in_flight_request_is_not_retracted) ... ok
+test_cancel_preserves_grasp_outputs (__main__.Tests.test_cancel_preserves_grasp_outputs) ... ok
+test_fail_timeout_loss_and_fault (__main__.Tests.test_fail_timeout_loss_and_fault) ... ok
+test_inputs_require_both_and_correct_station (__main__.Tests.test_inputs_require_both_and_correct_station) ... ok
+test_invalid_config (__main__.Tests.test_invalid_config) ... ok
+test_no_duplicate_or_resume (__main__.Tests.test_no_duplicate_or_resume) ... ok
+test_normal_and_schema_contract (__main__.Tests.test_normal_and_schema_contract) ... ok
+test_old_snapshot_and_invalid_do_not_satisfy (__main__.Tests.test_old_snapshot_and_invalid_do_not_satisfy) ... ok
+test_snapshot_is_frozen (__main__.Tests.test_snapshot_is_frozen) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 3.565s
+
+OK

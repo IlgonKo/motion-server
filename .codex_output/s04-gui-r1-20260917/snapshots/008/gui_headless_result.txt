@@ -1,0 +1,1 @@
+HEADLESS callback/worker test; real Tk/OS interaction NOT tested.

@@ -1,0 +1,43 @@
+{
+  "workspace": "C:\\Users\\Festo\\AppData\\Local\\Temp\\s04-preflight-g6sphwkh",
+  "report": "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-114100",
+  "port": 59994,
+  "mock_pid": 18200,
+  "checks": {
+    "server_alive_after_agent": true,
+    "server_status_after_agent": true,
+    "parent_read_and_copy": true,
+    "server_alive_after_collection": true,
+    "server_status_after_collection": true,
+    "parent_execution": false,
+    "owned_mock_stopped": true
+  },
+  "collection_errors": [],
+  "evaluator_sid": "S-1-5-21-2027780094-2317742195-3342994412-1004",
+  "added_permission": "(OI)(CI)(RX)",
+  "command": [
+    "C:\\Users\\Festo\\AppData\\Local\\OpenAI\\Codex\\bin\\fd4c151a749f3ab4\\codex.EXE",
+    "exec",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "windows.sandbox=\"elevated\"",
+    "-c",
+    "sandbox_workspace_write.network_access=true",
+    "--json",
+    "-o",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-preflight-20260917-114100\\final.txt",
+    "-"
+  ],
+  "cli_version": "codex-cli 0.153.4",
+  "cli_pid": 18812,
+  "cli_exit": 0,
+  "sha256": {
+    "probe.py": "5c48cdbf6de15054d377fdbf70a8a344adaa3eff7922f1cc911dd1c6ce3b0c19",
+    "summary.md": "2e3bff985b5ab39907222ffc06bcbf7956582d288d811961b890c6db64bc5961",
+    "nested/note.txt": "0c68d059df6f52f945c1ecbbc5126cecb71689c3f02e7dc94f3600ddd052b8c8"
+  },
+  "cleanup_reason": "Preflight ended; stop only its owned Mock fixture"
+}

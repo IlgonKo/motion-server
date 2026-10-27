@@ -1,0 +1,37 @@
+{
+  "case": "input_timeout",
+  "exit_code": 1,
+  "checks": {
+    "bounded_exit": true,
+    "observer_healthy": true,
+    "request_schema": true,
+    "no_auto_enable_home_disable_recovery": true,
+    "authority_not_reacquired": true,
+    "common_profile_once": true,
+    "pick_request": true,
+    "move_velocities": true,
+    "no_place": true,
+    "no_release_output": true,
+    "not_success_exit": true,
+    "completion_before_outputs": true,
+    "stop_requested": true,
+    "authority_released": true,
+    "outputs_retained": true
+  },
+  "schema_errors": [],
+  "model_tokens": {
+    "additional_model_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "note": "Deterministic execution; generation usage recorded separately, evaluator conversation excluded"
+  },
+  "passed": true,
+  "duration": 10.808178000152111,
+  "command": [
+    "C:\\Users\\Festo\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04_sigint_runner.py",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-basic-r2-20260917\\evaluation\\input_timeout\\interrupt",
+    "C:\\Users\\Festo\\Documents\\motion-server\\.codex_output\\s04-basic-r2-20260917\\evaluation\\input_timeout\\workspace\\generated\\run.py",
+    "--run-mock"
+  ]
+}

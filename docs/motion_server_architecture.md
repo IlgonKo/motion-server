@@ -188,11 +188,13 @@ authority/*    command authority 대상
 ```text
 MOTION_SERVER_COMMAND_LOGS=1  수신 JSON command 로그
 MOTION_SERVER_STATUS_LOGS=1   authority, mode, homing, enable/disable, stop/reset,
-                              client connection, periodic Axis status 로그
-MOTION_SERVER_STATUS_LOG_PERIOD=1.0  periodic Axis status 로그 주기
+                              client connection 상태 이벤트 로그
+MOTION_SERVER_AXIS_STATUS_LOGS=0  periodic Axis status/WKC 로그 (기본 비활성)
+MOTION_SERVER_AXIS_STATUS_LOG_PERIOD=1.0  periodic Axis status 로그 주기
 ```
 
-일반 운전에서는 `MOTION_SERVER_STATUS_LOGS=0`으로 두고, 상태 변화 추적이 필요할 때만 켠다.
+상태 변화 추적은 `MOTION_SERVER_STATUS_LOGS=1`로 유지하면서 반복 축 출력만
+`MOTION_SERVER_AXIS_STATUS_LOGS=0`으로 끌 수 있다. 축 로그 주기는 축 로그 활성 시에만 양수로 검증한다.
 
 ## Basic Mode와 Advanced Mode
 
@@ -213,5 +215,12 @@ Advanced mode 전용 기능:
 - CSP mode 노출
 - trajectory command
 - system/axis/manualCW
+
+CSP interpolation SDO 초기화는 Advanced mode에서만 수행한다. Advanced에서는 초기
+motion mode가 PP/PV여도 이후 CSP 전환을 위해 설정하며, 축 profile에 CSP mode가 없거나
+현재 RxPDO에 CSP 필수 필드(활성화된 velocity offset 포함)가 없으면 해당 축은 건너뛴다.
+Basic에서는 시작, 초기화 재시도, bus reconnect와 axis restart 모두 CSP interpolation을 쓰지 않는다.
+장치 firmware의 실제 OD write 지원 여부까지 PDO로 보장하지는 않으며, 적용 대상 축의
+SDO 실패는 기존 warning/계속 시작 정책을 유지한다.
 
 사용자 API 문서는 Basic mode 기준으로 별도 문서에 정리한다.

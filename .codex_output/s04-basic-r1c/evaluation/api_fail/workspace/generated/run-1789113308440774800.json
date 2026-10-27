@@ -1,0 +1,147 @@
+{
+  "state": "failed",
+  "stage": "authority/release",
+  "cleanup_complete": false,
+  "events": [
+    {
+      "stage": "metadata/X",
+      "monotonic": 862823.8215586,
+      "data": null
+    },
+    {
+      "stage": "metadata/X",
+      "monotonic": 862823.8341849,
+      "data": {
+        "axis": 0,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "metadata/Y",
+      "monotonic": 862823.8342332,
+      "data": null
+    },
+    {
+      "stage": "metadata/Y",
+      "monotonic": 862823.8420449,
+      "data": {
+        "axis": 1,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "metadata/Z",
+      "monotonic": 862823.8420836,
+      "data": null
+    },
+    {
+      "stage": "metadata/Z",
+      "monotonic": 862823.849647,
+      "data": {
+        "axis": 2,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "authority/request",
+      "monotonic": 862823.8496924,
+      "data": null
+    },
+    {
+      "stage": "profile/0",
+      "monotonic": 862823.8790356,
+      "data": null
+    },
+    {
+      "stage": "profile/1",
+      "monotonic": 862823.8857366,
+      "data": null
+    },
+    {
+      "stage": "profile/2",
+      "monotonic": 862823.8925691,
+      "data": null
+    },
+    {
+      "stage": "pick/move",
+      "monotonic": 862823.9016822,
+      "data": null
+    },
+    {
+      "stage": "stopping",
+      "monotonic": 862823.9064778,
+      "data": "RuntimeError: {\"type\": \"system/axes/move_abs\", \"result\": \"fail\", \"failure\": {\"code\": \"OPERATION_FAILED\", \"message\": \"The operation failed.\", \"details\": {\"operation\": \"system/axes/move_abs\"}}, \"request_id\": \"python-a56a67-8\"}"
+    },
+    {
+      "stage": "cleanup/stop",
+      "monotonic": 862823.9140863,
+      "data": null
+    },
+    {
+      "stage": "authority/release",
+      "monotonic": 862823.9301546,
+      "data": null
+    }
+  ],
+  "error": "RuntimeError: {\"type\": \"system/axes/move_abs\", \"result\": \"fail\", \"failure\": {\"code\": \"OPERATION_FAILED\", \"message\": \"The operation failed.\", \"details\": {\"operation\": \"system/axes/move_abs\"}}, \"request_id\": \"python-a56a67-8\"}",
+  "failed_stage": "pick/move",
+  "cleanup_error": "INCOMPLETE: Stop/Standstill unconfirmed: {\"type\": \"system/axes/stop\", \"result\": \"fail\", \"failure\": {\"code\": \"OPERATION_FAILED\", \"message\": \"The operation failed.\", \"details\": {\"operation\": \"system/axes/stop\"}}, \"request_id\": \"python-a56a67-10\"}",
+  "authority_released": true
+}

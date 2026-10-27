@@ -1,0 +1,342 @@
+{
+  "state": "failed",
+  "stage": "authority/release",
+  "cleanup_complete": true,
+  "events": [
+    {
+      "stage": "metadata/X",
+      "monotonic": 862844.6388867,
+      "data": null
+    },
+    {
+      "stage": "metadata/X",
+      "monotonic": 862844.6549396,
+      "data": {
+        "axis": 0,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "metadata/Y",
+      "monotonic": 862844.6549813,
+      "data": null
+    },
+    {
+      "stage": "metadata/Y",
+      "monotonic": 862844.6634797,
+      "data": {
+        "axis": 1,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "metadata/Z",
+      "monotonic": 862844.6635137,
+      "data": null
+    },
+    {
+      "stage": "metadata/Z",
+      "monotonic": 862844.6713023,
+      "data": {
+        "axis": 2,
+        "user_position_unit": 256,
+        "user_position_unit_name": "m",
+        "motion_kind": "linear",
+        "pv_allowed": true,
+        "converting_unit_exponents": [
+          6,
+          3,
+          3,
+          3
+        ],
+        "position_unit": "mm",
+        "velocity_unit": "mm/s",
+        "acceleration_unit": "mm/s^2",
+        "deceleration_unit": "mm/s^2",
+        "jerk_unit": "mm/s^3",
+        "position_scale": 1e-06,
+        "velocity_scale": 0.001,
+        "acceleration_scale": 0.001,
+        "deceleration_scale": 0.001,
+        "jerk_scale": 0.001
+      }
+    },
+    {
+      "stage": "authority/request",
+      "monotonic": 862844.6713406,
+      "data": null
+    },
+    {
+      "stage": "profile/0",
+      "monotonic": 862844.7004408,
+      "data": null
+    },
+    {
+      "stage": "profile/1",
+      "monotonic": 862844.7057927,
+      "data": null
+    },
+    {
+      "stage": "profile/2",
+      "monotonic": 862844.7144057,
+      "data": null
+    },
+    {
+      "stage": "pick/move",
+      "monotonic": 862844.7224435,
+      "data": null
+    },
+    {
+      "stage": "stopping",
+      "monotonic": 862849.7324218,
+      "data": "RequestTimeoutError: Motion Server request timed out after 5s"
+    },
+    {
+      "stage": "cleanup/stop",
+      "monotonic": 862849.7342336,
+      "data": null
+    },
+    {
+      "stage": "cleanup/standstill",
+      "monotonic": 862849.7641369,
+      "data": {
+        "type": "system/feedback",
+        "process_data_valid": true,
+        "server_health": {
+          "initialized": true,
+          "runtime_state": "normal",
+          "diagnostic_level": "normal",
+          "fault_count": 0,
+          "alarm_count": 0,
+          "representative_diagnostic": null,
+          "initialization_failure": null
+        },
+        "target_positions": [
+          0.49999999999999994,
+          0.6,
+          0.7
+        ],
+        "actual_positions": [
+          0.49999999999999994,
+          0.6,
+          0.7
+        ],
+        "actual_velocities": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "statuswords": [
+          33831,
+          33831,
+          33831
+        ],
+        "mode_displays": [
+          1,
+          1,
+          1
+        ],
+        "command_authority": {
+          "owner": 2,
+          "owned_by_this_client": true,
+          "available": false
+        },
+        "io": {
+          "devices": [
+            {
+              "id": "io0",
+              "slave_index": 3,
+              "profile": "cpx_ap_i_ec",
+              "input_bytes": 32,
+              "output_bytes": 16,
+              "digital_inputs": [
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              "digital_outputs": [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              "analog_inputs": [
+                0,
+                0,
+                0,
+                0,
+                100,
+                0,
+                0,
+                0
+              ],
+              "analog_outputs": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "modules": [
+                {
+                  "slot": 1,
+                  "type": "do",
+                  "raw": "do:8",
+                  "input_offset": null,
+                  "output_offset": 0,
+                  "input_bytes": 0,
+                  "output_bytes": 1,
+                  "digital_inputs": 0,
+                  "digital_outputs": 8,
+                  "name": "CPX-AP-I-8DO-M8-3P",
+                  "outputs": {
+                    "digital": [
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false
+                    ]
+                  }
+                },
+                {
+                  "slot": 2,
+                  "type": "aio",
+                  "raw": "aio:4:4",
+                  "input_offset": 0,
+                  "output_offset": 1,
+                  "input_bytes": 8,
+                  "output_bytes": 9,
+                  "analog_inputs": 4,
+                  "analog_outputs": 4,
+                  "analog_bits": 16,
+                  "analog_signed": true,
+                  "name": "CPX-AP-I-4AI4AO-U-I-M12",
+                  "inputs": {
+                    "analog": [
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  "outputs": {
+                    "analog": [
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  }
+                },
+                {
+                  "slot": 3,
+                  "type": "di",
+                  "raw": "di:8",
+                  "input_offset": 8,
+                  "output_offset": null,
+                  "input_bytes": 1,
+                  "output_bytes": 0,
+                  "digital_inputs": 8,
+                  "digital_outputs": 0,
+                  "name": "CPX-AP-I-8DI-M8-3P",
+                  "inputs": {
+                    "digital": [
+                      true,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false
+                    ]
+                  }
+                },
+                {
+                  "slot": 4,
+                  "type": "ai",
+                  "raw": "ai:4",
+                  "input_offset": 9,
+                  "output_offset": null,
+                  "input_bytes": 8,
+                  "output_bytes": 0,
+                  "analog_inputs": 4,
+                  "analog_outputs": 0,
+                  "analog_bits": 16,
+                  "analog_signed": true,
+                  "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+                  "inputs": {
+                    "analog": [
+                      100,
+                      0,
+                      0,
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "stage": "authority/release",
+      "monotonic": 862849.7673006,
+      "data": null
+    }
+  ],
+  "error": "RequestTimeoutError: Motion Server request timed out after 5s",
+  "failed_stage": "pick/move",
+  "authority_released": true
+}

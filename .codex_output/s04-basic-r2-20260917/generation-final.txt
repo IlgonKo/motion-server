@@ -1,0 +1,15 @@
+generated/에 구현했습니다.
+
+- [사용 안내](generated/README.md), [사용자 설정](generated/settings.json)
+- [실행 결과](generated/RESULTS.md), [실제 Feedback 기록](generated/last_run.json)
+- 자체 테스트 **11개 통과**
+- 지정 Mock에서 **1회 완료**: Pick → 파지 확인 → Place → 해제 → Stop 확인 → 제어권 해제
+- 실장비는 실행하지 않았습니다.
+
+다시 1회 실행하려면:
+
+```powershell
+& 'C:/Users/Festo/AppData/Local/Python/pythoncore-3.14-64/python.exe' -B generated/run.py --run-mock
+```
+
+실제 축 단위는 mm로 확인했습니다. 물리 배선·부하·이동 경로는 미확인 사항으로 안내에 명시했습니다.

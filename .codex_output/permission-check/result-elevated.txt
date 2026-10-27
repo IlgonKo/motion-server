@@ -1,0 +1,7 @@
+1. **Read `input.txt`:** Exit 0. Output: `permission-check-input-20260911`
+2. **Create `output.txt` using `apply_patch`:** Tool completed without error, returning `{}`. Requested content: `permission-check-output`. No read-back verification performed.
+3. **Run `python --version`:** Exit 1. Error: “The term 'python' is not recognized as a name of a cmdlet, function, script file, or executable program.”
+
+**Effective policy:** Workspace-write; current folder writable, with `.git`, `.agents`, and `.codex` restricted to read-only. Approval policy: `never`; escalation unavailable.
+
+No retries, bypasses, or additional checks performed.

@@ -51,6 +51,8 @@ class DeviceInstanceMotionConfigTest(unittest.TestCase):
         writes = []
 
         class Profile:
+            MOTION_MODES = {"csp": 8}
+
             def write_csp_interpolation_mode(self, runtime, axis_index, value):
                 writes.append((axis_index, value))
                 return value
@@ -62,10 +64,30 @@ class DeviceInstanceMotionConfigTest(unittest.TestCase):
                 for profile in profiles
             ],
         )
+        runtime.axis_csp_velocity_offset_enabled = lambda _axis: False
+        for slave in runtime.slaves:
+            slave.rxpdo = SimpleNamespace(has_field=lambda _field: True)
 
         write_csp_interpolation_modes(runtime, (1, 4))
 
         self.assertEqual(writes, [(0, 1), (1, 4)])
+
+    def test_csp_initialization_skips_axes_without_mode_or_required_pdo(self):
+        from unittest.mock import Mock
+        profiles = [Mock(MOTION_MODES=modes) for modes in (
+            {"pp": 1, "csp": 8}, {"pp": 1}, {"csp": 8}, {"csp": 8},
+        )]
+        runtime = SimpleNamespace(
+            slaves=[SimpleNamespace(
+                device_profile=profile,
+                rxpdo=SimpleNamespace(has_field=lambda field, missing=missing: field != missing),
+            ) for profile, missing in zip(profiles, (None, None, "target_position", "velocity_offset"))],
+            axis_csp_velocity_offset_enabled=lambda axis: axis == 3,
+        )
+        write_csp_interpolation_modes(runtime, (4, 4, 4, 4))
+        profiles[0].write_csp_interpolation_mode.assert_called_once_with(runtime, 0, 4)
+        for profile in profiles[1:]:
+            profile.write_csp_interpolation_mode.assert_not_called()
 
     def test_rejects_velocity_offset_count_mismatch(self):
         with self.assertRaisesRegex(ValueError, "one value per axis"):

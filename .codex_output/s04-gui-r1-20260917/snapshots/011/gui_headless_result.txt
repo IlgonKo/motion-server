@@ -1,0 +1,3 @@
+HEADLESS callback/worker test; real Tk/OS interaction NOT tested.
+complete completed Stop confirmed; window closed
+stop cancelled Stop confirmed; window closed

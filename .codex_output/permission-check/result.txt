@@ -1,0 +1,7 @@
+Effective policy: **read-only filesystem**, restricted network, approval **`never`**.
+
+1. **Read `input.txt`:** Attempted `Get-Content -LiteralPath input.txt -Raw`. Error: `CreateProcess … rejected: blocked by policy`. No contents returned.
+2. **Write `output.txt`:** Denied by policy. `apply_patch` was not attempted; no file created.
+3. **Run `python --version`:** Attempted once. Error: `CreateProcess … rejected: blocked by policy`. No version returned.
+
+Stopped without retries, alternate shells, escalation, or bypasses.

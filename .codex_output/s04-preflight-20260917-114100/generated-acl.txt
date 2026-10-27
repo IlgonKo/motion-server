@@ -1,0 +1,36 @@
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh\generated CSS-DATASERVER\CodexSandboxUsers:(I)(OI)(CI)(M)
+                                                                   S-1-5-21-3002450827-2760922951-697413287-3807136837:(I)(OI)(CI)(M)
+                                                                   CSS-DATASERVER\Festo:(I)(OI)(CI)(RX)
+                                                                   NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                                                                   BUILTIN\Administrators:(I)(OI)(CI)(F)
+                                                                   OWNER RIGHTS:(I)(OI)(CI)(F)
+
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh\generated\nested CSS-DATASERVER\CodexSandboxUsers:(I)(OI)(CI)(M)
+                                                                          S-1-5-21-3002450827-2760922951-697413287-3807136837:(I)(OI)(CI)(M)
+                                                                          CSS-DATASERVER\Festo:(I)(OI)(CI)(RX)
+                                                                          NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                                                                          BUILTIN\Administrators:(I)(OI)(CI)(F)
+                                                                          OWNER RIGHTS:(I)(OI)(CI)(F)
+
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh\generated\probe.py CSS-DATASERVER\CodexSandboxUsers:(I)(M)
+                                                                            S-1-5-21-3002450827-2760922951-697413287-3807136837:(I)(M)
+                                                                            CSS-DATASERVER\Festo:(I)(RX)
+                                                                            NT AUTHORITY\SYSTEM:(I)(F)
+                                                                            BUILTIN\Administrators:(I)(F)
+                                                                            OWNER RIGHTS:(I)(F)
+
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh\generated\summary.md CSS-DATASERVER\CodexSandboxUsers:(I)(M)
+                                                                              S-1-5-21-3002450827-2760922951-697413287-3807136837:(I)(M)
+                                                                              CSS-DATASERVER\Festo:(I)(RX)
+                                                                              NT AUTHORITY\SYSTEM:(I)(F)
+                                                                              BUILTIN\Administrators:(I)(F)
+                                                                              OWNER RIGHTS:(I)(F)
+
+C:\Users\Festo\AppData\Local\Temp\s04-preflight-g6sphwkh\generated\nested\note.txt CSS-DATASERVER\CodexSandboxUsers:(I)(M)
+                                                                                   S-1-5-21-3002450827-2760922951-697413287-3807136837:(I)(M)
+                                                                                   CSS-DATASERVER\Festo:(I)(RX)
+                                                                                   NT AUTHORITY\SYSTEM:(I)(F)
+                                                                                   BUILTIN\Administrators:(I)(F)
+                                                                                   OWNER RIGHTS:(I)(F)
+
+Successfully processed 5 files; Failed processing 0 files

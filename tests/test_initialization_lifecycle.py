@@ -52,6 +52,7 @@ class InitializationLifecycleTest(unittest.TestCase):
     def initialize(self, session):
         return initialize_runtime_session(
             session,
+            server_mode="basic",
             ethercat_config=object(),
             motion_config=self.motion,
             logging_config=object(),

@@ -1,0 +1,192 @@
+{
+  "type": "system/feedback",
+  "process_data_valid": true,
+  "server_health": {
+    "initialized": true,
+    "runtime_state": "normal",
+    "diagnostic_level": "normal",
+    "fault_count": 0,
+    "alarm_count": 0,
+    "representative_diagnostic": null,
+    "initialization_failure": null
+  },
+  "target_positions": [
+    0.49999999999999994,
+    0.6,
+    0.7
+  ],
+  "actual_positions": [
+    0.49999999999999994,
+    0.6,
+    0.7
+  ],
+  "actual_velocities": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "statuswords": [
+    33831,
+    33831,
+    33831
+  ],
+  "mode_displays": [
+    1,
+    1,
+    1
+  ],
+  "command_authority": {
+    "owner": null,
+    "owned_by_this_client": false,
+    "available": true
+  },
+  "io": {
+    "devices": [
+      {
+        "id": "io0",
+        "slave_index": 3,
+        "profile": "cpx_ap_i_ec",
+        "input_bytes": 32,
+        "output_bytes": 16,
+        "digital_inputs": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "digital_outputs": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "analog_inputs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "analog_outputs": [
+          100,
+          0,
+          0,
+          0
+        ],
+        "modules": [
+          {
+            "slot": 1,
+            "type": "do",
+            "raw": "do:8",
+            "input_offset": null,
+            "output_offset": 0,
+            "input_bytes": 0,
+            "output_bytes": 1,
+            "digital_inputs": 0,
+            "digital_outputs": 8,
+            "name": "CPX-AP-I-8DO-M8-3P",
+            "outputs": {
+              "digital": [
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ]
+            }
+          },
+          {
+            "slot": 2,
+            "type": "aio",
+            "raw": "aio:4:4",
+            "input_offset": 0,
+            "output_offset": 1,
+            "input_bytes": 8,
+            "output_bytes": 9,
+            "analog_inputs": 4,
+            "analog_outputs": 4,
+            "analog_bits": 16,
+            "analog_signed": true,
+            "name": "CPX-AP-I-4AI4AO-U-I-M12",
+            "inputs": {
+              "analog": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "outputs": {
+              "analog": [
+                100,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          {
+            "slot": 3,
+            "type": "di",
+            "raw": "di:8",
+            "input_offset": 8,
+            "output_offset": null,
+            "input_bytes": 1,
+            "output_bytes": 0,
+            "digital_inputs": 8,
+            "digital_outputs": 0,
+            "name": "CPX-AP-I-8DI-M8-3P",
+            "inputs": {
+              "digital": [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ]
+            }
+          },
+          {
+            "slot": 4,
+            "type": "ai",
+            "raw": "ai:4",
+            "input_offset": 9,
+            "output_offset": null,
+            "input_bytes": 8,
+            "output_bytes": 0,
+            "analog_inputs": 4,
+            "analog_outputs": 0,
+            "analog_bits": 16,
+            "analog_signed": true,
+            "name": "CPX-AP-I-4AI-U-I-RTD-M12",
+            "inputs": {
+              "analog": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

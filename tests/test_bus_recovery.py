@@ -80,6 +80,7 @@ def recovery_state(*, connect_error=None):
         "bus_reconnect_timeout": 10.0,
         "axis_restart_timeout": 1.0,
         "csp_interpolation_modes": [4],
+        "server_mode": "basic",
         "motion_modes": ["pp"],
         "recovery_in_progress": None,
     }
@@ -87,6 +88,23 @@ def recovery_state(*, connect_error=None):
 
 
 class BusRecoveryTest(unittest.TestCase):
+    def test_reconnect_csp_initialization_follows_server_mode(self):
+        for mode in ("basic", "advanced"):
+            with self.subTest(mode=mode):
+                runtime, _session, state = recovery_state()
+                state["server_mode"] = mode
+                with (
+                    patch("motion_server.app.recovery.clear_axis_restart_commands"),
+                    patch("motion_server.app.recovery.write_csp_interpolation_modes") as write,
+                    patch("motion_server.app.recovery.exchange"),
+                    patch("motion_server.app.recovery.refresh_after_recovery"),
+                ):
+                    reconnect_runtime(runtime, state)
+                if mode == "advanced":
+                    write.assert_called_once_with(runtime, [4])
+                else:
+                    write.assert_not_called()
+
     def test_disconnect_preserves_runtime_and_creates_bus_fault(self):
         runtime, session, state = recovery_state()
 
