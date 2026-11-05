@@ -3,6 +3,8 @@ import json
 import math
 from pathlib import Path
 
+from control_panel.gamepad_control_panel.machine_state import MACHINE_STATE_NAMES
+
 
 ROLES = ("x", "y", "z", "rotation")
 STICKS = ("left_x", "left_y", "right_x", "right_y")
@@ -35,6 +37,30 @@ ACTION_NAMES = (
     "next_axis",
 )
 
+DEFAULT_HAPTICS = {
+    "enabled": True,
+    "motion": {"low_frequency": 0.05, "high_frequency": 0.10},
+    "alarm": {
+        "low_frequency": 0.80,
+        "high_frequency": 1.00,
+        "duration_ms": 2000,
+    },
+}
+DEFAULT_LIGHTBAR = {
+    "enabled": True,
+    "brightness": 0.35,
+    "states": {
+        "connected_disarmed": {"color": "#0050FF", "blink_period_ms": 0},
+        "authority_owned": {"color": "#00B4B4", "blink_period_ms": 0},
+        "armed": {"color": "#00C828", "blink_period_ms": 0},
+        "moving": {"color": "#0091DC", "blink_period_ms": 0},
+        "homing": {"color": "#A03CFF", "blink_period_ms": 1000},
+        "warning": {"color": "#FFB400", "blink_period_ms": 1000},
+        "fault_alarm": {"color": "#FF0000", "blink_period_ms": 500},
+        "off": {"color": "#000000", "blink_period_ms": 0},
+    },
+}
+
 
 @dataclass(frozen=True)
 class EnableInputConfig:
@@ -43,6 +69,33 @@ class EnableInputConfig:
     index: int
     threshold: float | None = None
     pressed_when: str | None = None
+
+
+@dataclass(frozen=True)
+class HapticEffectConfig:
+    low_frequency: float
+    high_frequency: float
+    duration_ms: int = 0
+
+
+@dataclass(frozen=True)
+class HapticsConfig:
+    enabled: bool
+    motion: HapticEffectConfig
+    alarm: HapticEffectConfig
+
+
+@dataclass(frozen=True)
+class LightbarStateConfig:
+    color: tuple[int, int, int]
+    blink_period_ms: int
+
+
+@dataclass(frozen=True)
+class LightbarConfig:
+    enabled: bool
+    brightness: float
+    states: dict[str, LightbarStateConfig]
 
 
 @dataclass(frozen=True)
@@ -67,6 +120,8 @@ class GamepadConfig:
     update_period: float
     speed_scales: tuple[float, ...]
     speed_scale_default: float
+    haptics: HapticsConfig
+    lightbar: LightbarConfig
 
 
 def load_config(path, profiles_path=None):
@@ -161,7 +216,73 @@ def load_config(path, profiles_path=None):
         update_period=update_period_ms / 1000.0,
         speed_scales=scales,
         speed_scale_default=default_scale,
+        haptics=parse_haptics(value.get("haptics", DEFAULT_HAPTICS)),
+        lightbar=parse_lightbar(value.get("lightbar", DEFAULT_LIGHTBAR)),
     )
+
+
+def parse_haptics(value):
+    if not isinstance(value, dict):
+        raise ValueError("haptics must be an object")
+    if set(value) != {"enabled", "motion", "alarm"}:
+        raise ValueError("haptics must contain exactly enabled, motion, and alarm")
+    if type(value["enabled"]) is not bool:
+        raise ValueError("haptics.enabled must be Boolean")
+    motion = parse_haptic_effect(value["motion"], "haptics.motion", timed=False)
+    alarm = parse_haptic_effect(value["alarm"], "haptics.alarm", timed=True)
+    return HapticsConfig(enabled=value["enabled"], motion=motion, alarm=alarm)
+
+
+def parse_haptic_effect(value, field, *, timed):
+    if not isinstance(value, dict):
+        raise ValueError(f"{field} must be an object")
+    expected = {"low_frequency", "high_frequency"}
+    if timed:
+        expected.add("duration_ms")
+    if set(value) != expected:
+        raise ValueError(f"{field} must contain exactly {sorted(expected)}")
+    low = finite_number(value["low_frequency"], f"{field}.low_frequency")
+    high = finite_number(value["high_frequency"], f"{field}.high_frequency")
+    if not 0.0 <= low <= 1.0 or not 0.0 <= high <= 1.0:
+        raise ValueError(f"{field} frequency values must be in [0, 1]")
+    duration = 0
+    if timed:
+        duration = strict_int(value["duration_ms"], f"{field}.duration_ms", minimum=1)
+    return HapticEffectConfig(low_frequency=low, high_frequency=high, duration_ms=duration)
+
+
+def parse_lightbar(value):
+    if not isinstance(value, dict):
+        raise ValueError("lightbar must be an object")
+    if set(value) != {"enabled", "brightness", "states"}:
+        raise ValueError("lightbar must contain exactly enabled, brightness, and states")
+    if type(value["enabled"]) is not bool:
+        raise ValueError("lightbar.enabled must be Boolean")
+    brightness = finite_number(value["brightness"], "lightbar.brightness")
+    if not 0.0 <= brightness <= 1.0:
+        raise ValueError("lightbar.brightness must be in [0, 1]")
+    raw_states = value["states"]
+    if not isinstance(raw_states, dict) or set(raw_states) != set(MACHINE_STATE_NAMES):
+        raise ValueError(f"lightbar.states must contain exactly {list(MACHINE_STATE_NAMES)}")
+    states = {
+        name: parse_lightbar_state(raw_states[name], f"lightbar.states.{name}")
+        for name in MACHINE_STATE_NAMES
+    }
+    return LightbarConfig(enabled=value["enabled"], brightness=brightness, states=states)
+
+
+def parse_lightbar_state(value, field):
+    if not isinstance(value, dict) or set(value) != {"color", "blink_period_ms"}:
+        raise ValueError(f"{field} must contain exactly color and blink_period_ms")
+    color = value["color"]
+    if not isinstance(color, str) or len(color) != 7 or color[0] != "#":
+        raise ValueError(f"{field}.color must use #RRGGBB")
+    try:
+        rgb = tuple(int(color[index:index + 2], 16) for index in (1, 3, 5))
+    except ValueError as exc:
+        raise ValueError(f"{field}.color must use #RRGGBB") from exc
+    period = strict_int(value["blink_period_ms"], f"{field}.blink_period_ms", minimum=0)
+    return LightbarStateConfig(color=rgb, blink_period_ms=period)
 
 
 def load_device_mapping(config_path, profile_name, profiles_path=None):

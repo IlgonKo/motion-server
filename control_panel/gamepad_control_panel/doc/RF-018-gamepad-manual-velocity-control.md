@@ -268,7 +268,7 @@ Single-axis mode는 `system/axis/jog_start`, `system/axis/jog_stop`, `system/axi
 ```
 
 Linear/rotary axis 모두에서 `move_vel`을 사용할 수 있도록 하는 서버 측 계약 정리는
-[TD-034](../td/TD-034-linear-rotary-velocity-command.md)가 담당한다.
+[TD-034](../../../docs/tasks/td/TD-034-linear-rotary-velocity-command.md)가 담당한다.
 
 ## 제외 범위
 

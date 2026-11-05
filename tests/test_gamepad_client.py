@@ -18,8 +18,15 @@ from control_panel.gamepad_control_panel.controller import (  # noqa: E402
 from control_panel.gamepad_control_panel.gui import control_assignments  # noqa: E402
 from control_panel.gamepad_control_panel.input import (  # noqa: E402
     InputSnapshot,
+    OutputStatus,
     PygameJoystickAdapter,
     device_profile_error,
+    scaled_color,
+)
+from control_panel.gamepad_control_panel.machine_state import (  # noqa: E402
+    MachineOutputIntent,
+    MachineState,
+    resolve_machine_output,
 )
 
 
@@ -60,6 +67,9 @@ class FakeClient:
 
 
 class FakeInput:
+    def __init__(self):
+        self.outputs = []
+
     def start(self):
         pass
 
@@ -68,6 +78,12 @@ class FakeInput:
 
     def snapshot(self):
         return neutral_input()
+
+    def set_machine_output(self, intent):
+        self.outputs.append(intent)
+
+    def output_status(self):
+        return OutputStatus()
 
 
 class FakeJoystick:
@@ -96,6 +112,26 @@ class CountedJoystick:
 
     def get_numhats(self):
         return self.hats
+
+
+class OutputJoystick:
+    def __init__(self, *, led_supported=True, rumble_supported=True):
+        self.led_supported = led_supported
+        self.rumble_supported = rumble_supported
+        self.led_calls = []
+        self.rumble_calls = []
+        self.stop_rumble_calls = 0
+
+    def set_led(self, color):
+        self.led_calls.append(tuple(color))
+        return self.led_supported
+
+    def rumble(self, low, high, duration):
+        self.rumble_calls.append((low, high, duration))
+        return self.rumble_supported
+
+    def stop_rumble(self):
+        self.stop_rumble_calls += 1
 
 
 def neutral_input(**buttons):
@@ -683,6 +719,104 @@ class GamepadClientTest(unittest.TestCase):
                 path.write_text(json.dumps(value), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "actions"):
                     load_config(path)
+
+    def test_machine_state_priority_and_active_axis_filter(self):
+        base = dict(
+            server_connected=True,
+            controller_state="Armed",
+            owns_authority=True,
+            statuswords=[0x0027, 0x0127, 0x002F],
+            active_axes=[0],
+        )
+        self.assertEqual(resolve_machine_output(**base).state, MachineState.ARMED)
+        releasing = resolve_machine_output(**{**base, "controller_state": "Releasing"})
+        self.assertEqual(releasing.state, MachineState.AUTHORITY_OWNED)
+        moving = resolve_machine_output(**{**base, "active_axes": [1]})
+        self.assertEqual(moving.state, MachineState.MOVING)
+        self.assertTrue(moving.motion_active)
+        fault = resolve_machine_output(**{**base, "active_axes": [2]})
+        self.assertEqual(fault.state, MachineState.FAULT_ALARM)
+        warning = resolve_machine_output(**base, warning_active=True)
+        self.assertEqual(warning.state, MachineState.WARNING)
+        alarm = resolve_machine_output(
+            **base, warning_active=True, alarm_active=True
+        )
+        self.assertEqual(alarm.state, MachineState.FAULT_ALARM)
+
+    def test_controller_publishes_feedback_based_machine_state(self):
+        gamepad = FakeInput()
+        client = FakeClient()
+        controller = PendantController(self.config, client, gamepad)
+        controller.state = "Armed"
+        controller.update_feedback(feedback([0x0127, 0x0027, 0x0027, 0x0027]))
+
+        controller.tick(neutral_input(enable=True))
+
+        self.assertEqual(gamepad.outputs[-1].state, MachineState.MOVING)
+        self.assertTrue(gamepad.outputs[-1].motion_active)
+        controller.set_alert_state(warning=True)
+        self.assertEqual(gamepad.outputs[-1].state, MachineState.WARNING)
+        controller.set_alert_state(alarm=True)
+        self.assertEqual(gamepad.outputs[-1].state, MachineState.FAULT_ALARM)
+
+    def test_output_adapter_applies_led_blink_and_rumble_edges(self):
+        adapter = PygameJoystickAdapter(self.config)
+        joystick = OutputJoystick()
+        moving = MachineOutputIntent(MachineState.MOVING, motion_active=True)
+        adapter.set_machine_output(moving)
+
+        adapter._apply_output(joystick, 1.0)
+        self.assertEqual(
+            joystick.led_calls,
+            [scaled_color((0, 145, 220), self.config.lightbar.brightness)],
+        )
+        self.assertEqual(joystick.rumble_calls, [(0.05, 0.10, 0)])
+
+        adapter._apply_output(joystick, 1.1)
+        self.assertEqual(len(joystick.led_calls), 1)
+        self.assertEqual(len(joystick.rumble_calls), 1)
+
+        adapter.set_machine_output(
+            MachineOutputIntent(MachineState.FAULT_ALARM, motion_active=True)
+        )
+        adapter._apply_output(joystick, 2.0)
+        self.assertEqual(
+            joystick.led_calls[-1],
+            scaled_color((255, 0, 0), self.config.lightbar.brightness),
+        )
+        self.assertEqual(joystick.rumble_calls[-1], (0.8, 1.0, 2000))
+
+        adapter._apply_output(joystick, 2.25)
+        self.assertEqual(joystick.led_calls[-1], (0, 0, 0))
+        adapter._apply_output(joystick, 4.1)
+        self.assertEqual(joystick.rumble_calls[-1], (0.05, 0.10, 0))
+
+        adapter.set_machine_output(MachineOutputIntent(MachineState.ARMED))
+        adapter._apply_output(joystick, 4.2)
+        self.assertEqual(joystick.stop_rumble_calls, 1)
+
+    def test_output_config_rejects_invalid_color_and_brightness(self):
+        value = json.loads((GAMEPAD_ROOT / "config.example.json").read_text(encoding="utf-8"))
+        cases = (
+            ("brightness", 1.1, "brightness"),
+            ("color", "blue", "#RRGGBB"),
+        )
+        for field, invalid, message in cases:
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                candidate = json.loads(json.dumps(value))
+                if field == "brightness":
+                    candidate["lightbar"]["brightness"] = invalid
+                else:
+                    candidate["lightbar"]["states"]["moving"]["color"] = invalid
+                path = Path(directory) / "config.json"
+                path.write_text(json.dumps(candidate), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, message):
+                    load_config(path)
+
+    def test_lightbar_machine_states_do_not_define_releasing(self):
+        self.assertIn("homing", self.config.lightbar.states)
+        self.assertNotIn("homing_releasing", self.config.lightbar.states)
+        self.assertNotIn("releasing", self.config.lightbar.states)
 
 
 if __name__ == "__main__":

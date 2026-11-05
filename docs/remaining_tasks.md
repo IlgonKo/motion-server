@@ -294,7 +294,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
     Disable을 수행한다.
   - command authority, runtime state, fault state, motion limit와 software limit는 기존 Motion Server API 계약을 따른다.
   - absolute/relative move, sequence, parameter write, safety bypass와 신규 Motion Server gamepad API는 포함하지 않는다.
-- 상세: [RF-018 기능 명세](tasks/rf/RF-018-gamepad-manual-velocity-control.md)
+- 상세: [RF-018 기능 명세](../control_panel/gamepad_control_panel/doc/RF-018-gamepad-manual-velocity-control.md)
 
 ### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
 
@@ -342,6 +342,31 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
     3/3 관측 성공을 일반 신뢰도 보장으로 표현하지 않으며 전 모델 실패 시나리오는 미완료로 남긴다.
   - Node-RED flow 생성은 Python 시퀀스 패턴이 안정화된 이후의 후속 출력 형식으로 둔다.
 - 상세: [RF-019 기능 명세](tasks/rf/RF-019-ai-motion-io-sequence-platform.md)
+
+### RF-020 DualSense Haptic and Lightbar Feedback
+
+- 상태: `in_progress`
+- 우선순위: 보통
+- 선행 작업: `RF-018`
+- 요약: 설정된 Axis가 실제로 Moving인 동안 DualSense에 약한 일반 rumble과 Festo Blue(`#0091DC`)
+  라이트바를 출력하고, 향후 알람 발생 시 설정된 시간 동안 더 강한 rumble로 덮어쓰는 Gamepad 출력
+  기능을 제공한다.
+- 완료 조건:
+  - 이동 진동은 Stick command가 아니라 Motion Server Feedback의 활성 Axis Moving/Standstill을 따른다.
+  - 이동 라이트바는 Festo CI 기준 RGB `0 / 145 / 220` 색조로 연속 점등하며 밝기는 별도로 조절한다.
+  - 연결, 제어권, Armed, Moving, Homing, Warning과 Fault/Alarm 상태별 색상·점멸 패턴을
+    정의하고 높은 우선순위 상태가 해제되면 최신 상태 표시로 복귀한다.
+  - 점멸은 output adapter의 timer로 구현하며 고정 점등 상태에서 동일 LED 명령을 반복하지 않는다.
+  - 약진동, 알람 강진동, Off의 우선순위와 복귀 동작이 명확하다.
+  - 진동·라이트바 미지원 또는 출력 실패가 Motion 명령과 안전 동작에 영향을 주지 않는다.
+  - Gamepad 분리와 앱 종료에서 진동 중지와 이동 라이트바 해제를 best effort로 수행한다.
+  - Motion Server에 Gamepad/Haptic/Lightbar 전용 API를 추가하지 않는다.
+  - USB/Bluetooth DualSense에서 일반 rumble과 라이트바 지원 여부 및 필요한 SDL 설정을 실장비로 검증한다.
+- 구현 전 미결 사항: 알람 local event 계약과 중복/우선순위 정책, Windows 연결별 출력 지원 검증
+- 진행 상황: Machine State 판정, 상태별 RGB/점멸, Moving 약진동, Axis Fault 강진동, GUI 출력 상태와
+  SDL DualSense 확장 출력 설정을 구현했다. 현재 연결 장치에서 LED/rumble 지원을 확인했으며 외부
+  Warning/Alarm event 연동과 연결 방식별 검증은 남아 있다.
+- 상세: [RF-020 기능 명세](../control_panel/gamepad_control_panel/doc/RF-020-dualsense-haptic-feedback.md)
 
 ## Tech Debt
 

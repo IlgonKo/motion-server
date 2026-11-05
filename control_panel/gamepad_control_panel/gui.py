@@ -28,6 +28,7 @@ class PendantWindow:
         self.controller = controller
         self.connection = tk.StringVar(value="Server: Disconnected")
         self.gamepad = tk.StringVar(value="Gamepad: waiting")
+        self.gamepad_output = tk.StringVar(value="DualSense output: waiting")
         self.authority = tk.StringVar(value="Authority: unknown")
         self.operation = tk.StringVar(value="State: Disconnected")
         self.mode = tk.StringVar(value="Mode: multi")
@@ -43,6 +44,7 @@ class PendantWindow:
         for variable in (
             self.connection,
             self.gamepad,
+            self.gamepad_output,
             self.authority,
             self.operation,
             self.mode,
@@ -93,6 +95,13 @@ class PendantWindow:
             if snapshot.connected
             else f"Gamepad: {snapshot.error or 'waiting'}"
         )
+        output = self.controller.input.output_status()
+        led = support_text(output.led_supported)
+        rumble = support_text(output.rumble_supported)
+        detail = f" / {output.error}" if output.error else ""
+        self.gamepad_output.set(
+            f"DualSense output: {output.state}, LED {led}, Rumble {rumble}{detail}"
+        )
         self.authority.set(f"Authority: {status.authority}")
         self.operation.set(f"State: {status.state}")
         self.mode.set(f"Mode: {status.mode} / selected Axis {status.selected_axis}")
@@ -126,3 +135,9 @@ def show(controller):
     root = tk.Tk()
     PendantWindow(root, controller)
     root.mainloop()
+
+
+def support_text(value):
+    if value is None:
+        return "unknown"
+    return "supported" if value else "unsupported"

@@ -6,3 +6,6 @@
 상세 문서에는 배경, 사용자 가치, 범위, 범위 제외, 선행 조건, 기술 제약, 검증 계획과 완료 증거를 기록한다.
 여러 기능에 지속적으로 적용되는 결정은 [Design Decisions](../../decisions.md), 구현 완료 후 현재 동작은
 architecture/API/user 문서, 실제 완료 결과는 [Work Log](../../worklog.md)에 반영한다.
+
+특정 component에만 적용되는 RF/TD는 해당 component의 문서 폴더에서 관리할 수 있다. Gamepad Control
+Panel 문서는 [Gamepad Design Documents](../../../control_panel/gamepad_control_panel/doc/README.md)에 둔다.

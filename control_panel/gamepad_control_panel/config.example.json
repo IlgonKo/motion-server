@@ -47,5 +47,31 @@
   "deadzone": 0.08,
   "update_period_ms": 50,
   "speed_scale_default": 0.1,
-  "speed_scales": [0.05, 0.1, 0.25, 0.5, 1.0]
+  "speed_scales": [0.05, 0.1, 0.25, 0.5, 1.0],
+  "haptics": {
+    "enabled": true,
+    "motion": {
+      "low_frequency": 0.05,
+      "high_frequency": 0.1
+    },
+    "alarm": {
+      "low_frequency": 0.8,
+      "high_frequency": 1.0,
+      "duration_ms": 2000
+    }
+  },
+  "lightbar": {
+    "enabled": true,
+    "brightness": 0.35,
+    "states": {
+      "connected_disarmed": {"color": "#0050FF", "blink_period_ms": 0},
+      "authority_owned": {"color": "#00B4B4", "blink_period_ms": 0},
+      "armed": {"color": "#00C828", "blink_period_ms": 0},
+      "moving": {"color": "#0091DC", "blink_period_ms": 0},
+      "homing": {"color": "#A03CFF", "blink_period_ms": 1000},
+      "warning": {"color": "#FFB400", "blink_period_ms": 1000},
+      "fault_alarm": {"color": "#FF0000", "blink_period_ms": 500},
+      "off": {"color": "#000000", "blink_period_ms": 0}
+    }
+  }
 }

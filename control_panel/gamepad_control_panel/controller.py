@@ -3,6 +3,14 @@ import queue
 import threading
 import time
 
+from control_panel.gamepad_control_panel.machine_state import (
+    FAULT_BIT,
+    MOVING_BIT,
+    MachineOutputIntent,
+    MachineState,
+    resolve_machine_output,
+)
+
 
 ROLE_STICKS = {
     "x": "left_x",
@@ -12,8 +20,6 @@ ROLE_STICKS = {
 }
 OPERATION_ENABLED_MASK = 0x006F
 OPERATION_ENABLED_STATUS = 0x0027
-MOVING_BIT = 1 << 8
-FAULT_BIT = 1 << 3
 
 
 @dataclass(frozen=True)
@@ -48,6 +54,8 @@ class PendantController:
         self._active_jog = None
         self._homing_axis = None
         self._next_homing_poll = 0.0
+        self._warning_active = False
+        self._alarm_active = False
         self._stop = threading.Event()
         self._thread = None
         self._lock = threading.RLock()
@@ -63,12 +71,21 @@ class PendantController:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=self.config.request_timeout + 1.0)
+        set_output = getattr(self.input, "set_machine_output", None)
+        if set_output is not None:
+            set_output(MachineOutputIntent(MachineState.OFF))
         self.input.stop()
         self.client.stop()
 
     def update_feedback(self, message):
         with self._lock:
             self.feedback = dict(message)
+
+    def set_alert_state(self, *, warning=False, alarm=False):
+        with self._lock:
+            self._warning_active = bool(warning)
+            self._alarm_active = bool(alarm)
+            self._publish_machine_output()
 
     def status(self):
         with self._lock:
@@ -93,6 +110,7 @@ class PendantController:
             if not self.client.is_connected:
                 self._set_disarmed("Disconnected")
                 self._remember_inputs(snapshot)
+                self._publish_machine_output()
                 return
             if self.state == "Disconnected":
                 self.state = "Disarmed"
@@ -107,6 +125,7 @@ class PendantController:
                     self.last_error = snapshot.error
                     self._input_error_active = True
                 self._remember_inputs(snapshot)
+                self._publish_machine_output()
                 return
             if self._input_error_active:
                 self.last_error = ""
@@ -150,6 +169,7 @@ class PendantController:
                     self.last_notice = "Armed"
 
             self._remember_inputs(snapshot)
+            self._publish_machine_output()
 
     def _run(self):
         next_tick = time.monotonic()
@@ -233,6 +253,7 @@ class PendantController:
     def _toggle_authority(self):
         if self._owns_authority():
             self.state = "Releasing"
+            self._publish_machine_output()
             response = self._request({"cmd": "system/authority/release"})
             self.state = "Disarmed"
             if response is None:
@@ -456,6 +477,21 @@ class PendantController:
 
     def _remember_inputs(self, snapshot):
         self._previous_buttons = dict(snapshot.buttons)
+
+    def _publish_machine_output(self):
+        set_output = getattr(self.input, "set_machine_output", None)
+        if set_output is None:
+            return
+        intent = resolve_machine_output(
+            server_connected=self.client.is_connected,
+            controller_state=self.state,
+            owns_authority=self._owns_authority(),
+            statuswords=self.feedback.get("statuswords", []),
+            active_axes=self._mapped_axes(),
+            warning_active=self._warning_active,
+            alarm_active=self._alarm_active,
+        )
+        set_output(intent)
 
 
 def scaled_deadzone(value, deadzone):

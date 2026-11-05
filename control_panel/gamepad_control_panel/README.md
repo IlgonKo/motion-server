@@ -1,5 +1,7 @@
 # Motion Server Gamepad Control Panel
 
+Gamepad 전용 RF, TD와 검증 기록은 [Design Documents](doc/README.md)에서 관리한다.
+
 This Windows control panel reads DualSense and other SDL-compatible controllers through the stable
 `pygame-ce` `pygame.joystick` API. It sends only existing Motion Server TCP commands and shows connection,
 Heartbeat, authority, operating mode, speed scale, and Axis state in a small Tkinter window.
@@ -76,6 +78,33 @@ neutral and every Axis Standstill to
 home the selected Axis. Jog input is suppressed while homing is active. The client polls
 `system/axis/status` until homing completes; releasing the Enable trigger during homing immediately sends Disable/Quick Stop.
 The Homing button is rejected in Multi mode.
+
+## DualSense lightbar and haptics
+
+The Gamepad Control Panel drives the DualSense RGB lightbar and standard SDL rumble from Motion Server
+Feedback and the local controller state. Moving is derived from the configured active Axis statuswords, not
+from stick input or a command that was merely sent. Single mode observes the selected Axis and Multi mode
+observes all configured role axes.
+
+The default lightbar priority is Fault/Alarm, Warning, Homing, Moving, Armed, authority owned, connected,
+then Off. Moving uses Festo Blue `#0091DC`. Warning, Homing, and Fault/Alarm blink; steady states send an LED
+update only when the resolved state or brightness changes. Axis Fault starts the configured strong rumble
+once on the rising transition. Actual Axis movement uses weak continuous rumble, which resumes after a timed
+alarm rumble when motion is still active.
+
+`haptics` and `lightbar` in `config.json` configure enable flags, strengths, alarm duration, brightness,
+state colors, and blink periods. Missing blocks use the documented defaults so older configuration files
+remain valid. Invalid strengths, colors, brightness, durations, or incomplete state maps are rejected during
+startup. The panel sets SDL's DualSense enhanced-output hint before joystick initialization; an explicit
+environment override is preserved.
+
+The GUI reports the resolved output state and whether LED and rumble calls are supported. Output errors are
+informational and never alter Motion commands, Stop, Disable, authority, or Heartbeat behavior. Gamepad
+disconnect and application shutdown attempt to stop rumble and turn the lightbar off. Player Indicator and
+microphone-button LEDs are not controlled.
+
+External Warning/Alarm transport is not connected yet. The controller exposes an internal alert-state input
+for that later integration; Axis Fault already drives the Fault/Alarm output state.
 
 ## Windows executable
 
