@@ -567,8 +567,8 @@ Device Profile + ESI
   - 연속 WKC mismatch에서는 slave transport 상태를 추가 확인한다. slave가 존재하면 WKC
     Fault, slave가 사라졌으면 `BUS_DISCONNECTED`로 분류한다.
   - Bus 상태 변화는 EtherCAT lifecycle이며 TCP listener/client lifecycle과 연동하지 않는다.
-    Bus disconnect와 reconnect 동안 기존 TCP 연결을 유지한다. Server process restart에서만
-    TCP 연결이 종료된다.
+    Bus 상태 변화만으로 TCP listener/client를 종료하지 않는다. 다만 동기 recovery 중
+    Heartbeat timeout에 의한 client 연결 단절은 DEC-056에 따라 허용한다.
 - 이유: WKC 불일치와 transport 단절은 복구 가능 범위가 다르다. 연결 유실만으로 서버의
   topology/cache/control 객체까지 폐기할 필요가 없으며, 같은 runtime에서 transport만
   복구해야 reconnect와 server restart의 의미가 구분된다. Bus와 TCP는 독립 transport다.
@@ -640,7 +640,8 @@ Device Profile + ESI
   - startup Bus 연결 실패에서는 runtime을 새로 구성하고, 운전 중 Bus 단절에서는 기존
     AxisRuntime을 유지한 채 transport만 reconnect한다.
   - 별도 recovery worker는 두지 않는다. 동기 recovery 동안 같은 server loop의 다른 API 처리는
-    일시 정지하되 기존 TCP socket과 command authority는 유지한다.
+    일시 정지한다. TCP listener는 유지하지만 client 연결 및 authority 보존은 보장하지
+    않으며, 복구 중 연결 단절에는 DEC-056과 기존 owner 연결 종료 안전 처리를 적용한다.
   - Axis restart 전에 전체 Axis의 homing/trajectory를 중단하고 실제 위치 hold와 disable을
     완료한다. recovery 후 자동 enable 또는 이전 motion 재개는 하지 않는다.
   - Axis restart가 의도적으로 발생시키는 transport 단절은 성공 경로에서 Bus Fault로 생성하지
@@ -879,7 +880,7 @@ Device Profile + ESI
   재연결 상태를 격리한다. Config UI는 Name, Host(127.0.0.1), Port(15000), Default Request Timeout(5초)을
   제공하며 재연결 주기는 노출하지 않는다. Request Node는 optional timeout override를 설정으로만
   제공하고 Feedback/Connection Status Node는 Name과 Config 선택만 가진다.
-  기존 Control Panel용 `motion_server_client`, Axis/IO client와 장비 자료용 `Reference` 폴더는
+  기존 Control Panel용 공통 protocol(현재 `control_panel/common/protocol`, DEC-054), Axis/IO client와 장비 자료용 `Reference` 폴더는
   변경하지 않는다. 기존 client 이관은 새 package 안정화 후 별도 TD에서 검토한다.
   Node-RED example의 connection/status와 authority는 하나의 공통 기반 Flow 및 Dashboard로 제공하고
   Axis, I/O, parameter access, Virtual I/O simulation은 기능 Scenario Flow로 제공한다. 공통 Flow만
@@ -1308,6 +1309,101 @@ Device Profile + ESI
 - 영향: [TD-038](tasks/td/TD-038-authority-release-motion-shutdown.md)에서 모든 motion mode의 target 정리와
   명시적 release의 전체 Axis Stop, owner disconnect의 전체 Axis Disable/Quick Stop, PartialFailure와
   Diagnostic을 구현한다. TD-037은 owner connection 종료를 감지한 뒤 비정상 종료 경로를 호출한다.
+
+## DEC-051 운전 중 Jog 모드 전환은 RxPDO만 사용
+
+- 상태: `accepted`
+- 결정일: 2026-10-28
+- 결정:
+  - `system/axis/jog_start`의 Jog 진입과 `system/axis/jog_stop`의 이전 모드 복원은
+    RxPDO `mode_of_operation`(0x6060:00) 변경과 PDO 교환으로 처리한다. 같은 OD에 SDO를 쓰지 않는다.
+  - 모드별 필수 PDO 필드 검증, Jog 제어워드와 기존 PDO 5회 교환 순서는 유지한다.
+    PDO 매핑이 없을 때 SDO로 대체하지 않는다.
+  - Jog 전환 처리는 handler 내부 helper로 두며 새 API나 device capability를 추가하지 않는다.
+  - OP 진입 전 서버 초기화/Bus 복구와 Jog 외 기존 공통 모드 전환의 SDO 동작은 이번 범위에서 변경하지 않는다.
+  - 0x6061 확인 대기나 새 timeout은 추가하지 않는다. PDO 5회 교환을 모드 전환 완료 확인으로 간주하지 않는다.
+- 이유: Jog는 이미 0x6060 RxPDO 매핑을 요구하므로 동일 값을 SDO로 중복 쓰는 것은 필요하지 않다.
+- 검토한 대안: 공통 mode 설정 함수의 SDO를 일괄 삭제하면 OP 이전 초기화/복구까지 변경되므로 채택하지 않는다.
+- 영향: Jog handler, Jog API 설명과 회귀 테스트에 반영한다. 실제 드라이브 전환은 별도 실축 시험으로 확인한다.
+
+## DEC-052 개별 축 Drive Fault 공통 대응
+
+- 상태: `accepted`
+- 결정일: 2026-10-28
+- 결정:
+  - 유효한 축 Statusword의 Drive Fault bit 최초 검출 시 해당 축의 운전 지령을 취소한다.
+    Fault 유지 중에는 반복 초기화하지 않고, Fault bit 해제를 관측한 뒤 재발하면 다시 처리한다.
+  - Controlword를 0x0007로 설정하여 Enable Operation 및 모드별 동작 지령을 제거한다.
+    위치 목표와 위치 생성기를 현재 위치로 초기화하고 내부 속도 지령을 0으로 만든다.
+    RxPDO에 있는 target_velocity와 velocity_offset도 0으로 정리한다.
+  - PP/PV/CSP는 모드를 유지한다. Jog/Homing은 저장된 진입 이전 모드로 복원하며,
+    Homing 이전이 Jog라면 저장된 Jog 이전 모드까지 복원한다. 초기 설정부터 Jog였던 경우처럼
+    저장된 이전 모드가 없으면 현재 모드를 유지하되 운전 지령은 제거한다.
+  - 복원은 RxPDO로만 수행하며 SDO 쓰기, 별도 blocking PDO 교환, 자동 Fault Reset/Enable은 하지 않는다.
+    Fault 해제나 Enable만으로 취소된 동작을 재개하지 않는다.
+  - 취소된 축은 기존 Homing/trajectory의 후속 완료 처리에서 제외하여 이전 지령이 재적용되지 않게 한다.
+    다른 참여 축은 정지·취소하지 않는다. 다축 연계 처리는 추후 Trajectory Controller 범위다.
+  - Diagnostic 기록/acknowledge 계약, API 형식과 장치 capability는 변경하지 않는다.
+    Warning, 일반 API Fail 및 Bus 통신 장애는 이 Drive Fault 규칙의 신규 트리거가 아니다.
+- 이유: 위치 hold만으로는 PV/Jog/Homing의 잔여 지령과 Enable 요청이 남아 복구 후 의도하지 않은 동작이 가능하다.
+- 영향: Fault 축 공통 처리, 개별 동작 취소 기록과 상태 표시, 자동 테스트에 반영한다.
+  기존 정상 Jog/Homing 종료 및 초기화/Bus recovery 계약은 유지한다.
+
+## DEC-053 ROS/ROS2 및 MoveIt 범위 제외
+
+- 상태: `accepted`
+- 결정일: 2026-11-24
+- 대체 관계: DEC-005/006의 ROS·MoveIt 배포/후속 개발, RF-008 재개 계획 및 과거 결정의 ROS 후속 이관 요구를 대체한다.
+- 결정: ROS/ROS2, ROS Bridge/Control Panel과 MoveIt 관련 개발, 설정 이관, 배포 및 검증을
+  Motion Server 프로젝트 범위에서 제외한다. API 변경 시 ROS adapter/client 동반 수정 의무도 제외한다.
+  RF-008은 `out_of_scope`로 관리하고 완료로 표시하지 않는다.
+- 이유: 사용자 결정에 따라 Motion Server의 개발 범위를 명확히 한다.
+- 영향: ROS/MoveIt 자료는 과거 이력으로 유지한다. 기존 소스 삭제나 패키지 구성 변경은 이번에 수행하지 않는다.
+  Motion Server 자체 Trajectory API/Controller, Python·Node-RED reference client 및 Axis/IO Control Panel은 범위에 유지한다.
+- 후속 결정(2026-11-24): 사용자 요청으로 ROS/MoveIt 소스·전용 Docker·실행 스크립트를 삭제한다.
+  전용 환경변수, 활성 문서의 실행 안내와 정적 검사 참조도 제거하며 과거 RF/TD 이력은 보존한다.
+
+## DEC-054 Control Panel 공통 protocol 모듈 위치 정리
+
+- 상태: `accepted`
+- 결정일: 2026-11-24
+- 결정: 최상위 `motion_server_client`의 response decoder와 Heartbeat helper를
+  `control_panel/common/protocol`로 이동한다. Axis/IO Panel, 테스트와 패키징은 새 경로를 사용한다.
+  기존 폴더와 호환 import는 남기지 않는다.
+- 이유: 실제 사용처는 Control Panel이며 TCP 연결을 제공하는 범용 client가 아니므로 책임에 맞는 위치와 이름을 사용한다.
+- 영향: 통신 동작과 API 형식은 유지한다. 독립 Python reference client의 경계와 구현은 변경하지 않는다.
+
+## DEC-055 TCP listener 기동 실패와 EtherCAT 연결 실패의 종료 경계
+
+- 상태: `accepted`
+- 결정일: 2026-11-24
+- 결정: listener 생성/옵션/bind/listen의 OS 오류는 endpoint·단계·OS 오류 원문을 기록하고
+  획득한 자원을 정리한 뒤 종료 코드 1로 종료한다. Python과 Windows package에서 동일하게 적용한다.
+  서버 loop와 예상하지 못한 내부 예외는 listener 시작 오류로 분류하지 않는다.
+- 이유: listener를 열 수 없으면 degraded TCP 서비스도 제공할 수 없다.
+- 영향: TD-035에서 공통 내부 listener helper를 도입한다. TCP가 가능한 EtherCAT 초기화 실패는
+  TD-039의 기존 degraded/recovery 계약을 유지한다. 공개 API나 initialization cause를 확장하지 않는다.
+  자동 포트 변경, 자동 재시도 및 OS 설정 변경은 하지 않는다.
+
+- Windows 보완(2026-11-24): listener는 SO_EXCLUSIVEADDRUSE로 포트를 독점한다.
+  Windows의 SO_REUSEADDR가 중복 bind를 허용하는 것을 실제 시험으로 확인했으므로 사용하지 않는다.
+  다른 플랫폼의 SO_REUSEADDR는 유지한다. 여러 서버는 서로 다른 TCP port로 실행한다.
+
+## DEC-056 동기 복구 중 TCP 연결 단절 허용
+
+- 상태: `accepted`
+- 결정일: 2026-11-24
+- 대체 관계: DEC-027 및 후속 recovery 결정의 TCP client/authority 유지 보장을 이 결정으로 한정한다.
+- 결정: 별도 recovery worker 없이 동기 복구를 유지한다. 복구 중 Heartbeat 처리가 지연되어
+  TCP client 연결이 끊기는 것을 허용한다. 서버 process와 TCP listener는 유지하지만,
+  복구 중 다른 API 응답이나 개별 client 연결 유지를 보장하지 않는다.
+- 연결 종료에는 기존 Heartbeat 및 authority owner 연결 종료 안전 처리를 그대로 적용한다.
+  재연결 후 authority를 자동 획득하거나 이전 motion/실패한 요청을 자동 재실행하지 않는다.
+- reconnect 응답을 받기 전에 연결이 끊겼다는 사실만으로 Bus 복구 실패를 판정하지 않는다.
+  새 연결에서 server/bus status를 조회하여 실제 결과를 확인한 뒤 필요한 후속 명령을 결정한다.
+- 이유: 동기 recovery가 같은 server loop의 Heartbeat/API 처리를 지연시키는 것은 허용된 동작이다.
+- 영향: RF-005와 API 사용 안내 및 실장비 시험 판정 기준을 정합화한다. worker 추가,
+  Heartbeat timeout 변경, 연결 종료 안전 처리 우회 또는 새로운 API는 추가하지 않는다.
 
 ## 새 결정 작성 양식
 

@@ -489,7 +489,7 @@ S08C2 조사 결과와 결정:
 
 S09 완료 증거:
 
-- 독립 `motion_server_client` response decoder가 legacy 응답과 신규 Success/Fail envelope를 같은 client
+- 독립 `motion_server_client` (현재 `control_panel/common/protocol`, DEC-054) response decoder가 legacy 응답과 신규 Success/Fail envelope를 같은 client
   view로 정규화한다.
 - 신규 Fail의 code/message와 승인된 authority/target details를 안전하게 변환하고 malformed response는
   `MALFORMED_RESPONSE`로 처리한다.

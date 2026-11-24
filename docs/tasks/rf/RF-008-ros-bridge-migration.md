@@ -2,7 +2,11 @@
 
 ## 상태 및 재개 조건
 
-별도 결정 전까지 개발을 보류한다. Motion Server API와 configuration 구조가 안정되고 관련 TD가 정리된 후 재개한다.
+상태: `out_of_scope` (2026-11-24, DEC-053).
+
+ROS/ROS2, ROS Bridge/Control Panel 및 MoveIt의 개발·이관·설정·배포·검증은 프로젝트 범위에서 제외한다.
+API 안정화에 따른 자동 재개 계획은 폐기한다. 아래 목표와 구현·검증 계획은 과거 이력으로만 보존한다.
+2026-11-24 후속 요청에 따라 기존 ROS/MoveIt 소스, Docker 정의와 실행 스크립트도 삭제했다.
 
 ## 목표
 

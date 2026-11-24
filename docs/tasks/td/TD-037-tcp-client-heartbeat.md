@@ -85,7 +85,7 @@ Operation Enabled 상태가 그대로 유지될 수 있다. 모든 motion mode�
 
 Heartbeat는 server protocol의 필수 계약이므로 server와 다음 공식 client를 같은 변경 단위에서 전환한다.
 
-- `motion_server_client` 공통 client
+- `control_panel/common/protocol`의 공통 Heartbeat helper (DEC-054에서 기존 `motion_server_client` 이관)
 - Axis Control Panel
 - IO Control Panel
 - Python reference client와 examples

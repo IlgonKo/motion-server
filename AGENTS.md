@@ -2,6 +2,11 @@
 
 ## Design and contract boundaries
 
+- ROS/ROS2 and MoveIt are outside the project scope (DEC-053). Do not include their
+  adapters, panels, configuration migration, packaging or tests in future work unless
+  the user explicitly changes this scope. ROS/MoveIt code has been removed;
+  retained RF/TD documentation is historical material.
+
 - Read the applicable `docs/decisions.md` entries and RF/TD detail document before implementation.
 - For interface, protocol or capability work, identify the following before editing code:
   - public contract;

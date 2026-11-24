@@ -4,6 +4,21 @@
 
 runtime fault의 상태, 사용자에게 보이는 진단 정보와 reset/reconnect/restart의 책임 경계를 일관되게 만든다.
 
+## 2026-10-28 개별 축 Drive Fault 대응 보완 (DEC-052)
+
+- 기존 공통 경로는 매 사이클 Fault 축 위치만 hold했고 PV 속도, Jog 지령, Enable 요청과
+  Homing Drive Fault 종료 처리는 통일되어 있지 않았다.
+- Drive Fault 최초 검출 시 해당 축 Controlword를 0x0007로 만들고 위치/속도 지령과
+  위치 생성기를 정리한다. PP/PV/CSP 모드는 유지하고 임시 Jog/Homing은 저장된 이전 모드로 복원한다.
+- 모드 복원은 RxPDO만 사용한다. Fault bit가 유지되는 동안 중복 취소하지 않으며
+  bit 해제 후 재발하면 새로 처리한다. 이전 모드가 없는 초기 Jog는 모드만 유지한다.
+- 취소된 축은 Homing/trajectory의 후속 진행·완료 처리에서 제외한다. 이는 해당 축의 명령
+  재적용 방지이며 다른 축을 정지시키는 다축 연계 처리는 아니다. 다축 정책은 추후 정리한다.
+- 자동 Fault Reset/Enable은 없다. Diagnostic의 latching/acknowledge 계약과 공개 API는 유지한다.
+- 검증: `tests/test_drive_fault_response.py`에서 모드별 지령 취소, 최초 검출/재발,
+  Warning 제외, 매핑 없는 속도 필드, 지연 Jog Stop, Homing/trajectory 후속 재적용 방지를 확인한다.
+  실축 시험은 별도 수행한다.
+
 ## 구현 범위
 
 - normal, initialization-error, bus-disconnected와 fault 상태 및 전이를 정의한다.
@@ -71,8 +86,8 @@ class ServerRuntimeState(Enum):
   전환한다.
 - Bus reconnect는 같은 AxisRuntime에서 transport와 device/process data를 다시 초기화한다.
   자동 재시도는 하지 않고 사용자 명령으로 시작하며, `NORMAL` 상태에서는 reconnect를 거부한다.
-- Bus 상태와 TCP 연결은 연동하지 않는다. disconnect/reconnect 동안 기존 TCP listener와 client를
-  유지하고 Server process restart에서만 TCP 연결을 종료한다. 상세 근거는 `DEC-027`을 따른다.
+- Bus 상태 변화만으로 TCP 연결을 종료하지 않는다. TCP listener는 유지하되 동기 recovery 중
+  Heartbeat timeout 등에 의한 client 연결 단절은 허용한다. `DEC-027`, `DEC-056`을 따른다.
 
 ### 확정: 공개 Fault Reset API
 
@@ -92,8 +107,11 @@ class ServerRuntimeState(Enum):
 - Bus reconnect와 Axis restart는 모든 recovery 단계가 완료된 뒤 Success/Fail을 반환하는 동기
   명령으로 구현한다. Server restart만 응답 후 process를 재시작한다.
 - 별도 recovery worker는 만들지 않는다. recovery handler가 실행되는 동안 같은 server loop의
-  다른 API 요청 처리는 일시 정지한다. TCP socket과 command authority는 유지되며 recovery가
-  끝난 뒤 기존 client 요청 처리를 재개한다.
+  다른 API 요청 및 Heartbeat 처리는 일시 정지할 수 있다. client 연결과 authority 보존은
+  보장하지 않는다. 연결 종료 시 기존 안전 처리와 authority 회수를 적용하며, 재연결 후
+  authority는 명시적으로 요청한다. 연결이 유지된 client의 요청 처리는 recovery 후 재개한다.
+- 복구 응답 수신 전 연결이 끊기면 결과는 미확정이다. 새 연결에서 server/bus status를 조회해
+  실제 복구 결과를 확인한다. 연결 단절만으로 복구 실패를 판정하거나 명령을 자동 재전송하지 않는다.
 - Fault 조건이 resolve되어도 fault-reset으로 clear되기 전까지 관련 runtime/device의
   `FAULT`와 motion 제한을 유지한다.
 - recovery 실패 Diagnostic은 `BUS_CONNECTION_LOST`, `BUS_RECONNECT_FAILED`,
@@ -144,7 +162,7 @@ RF-005 구현을 시작하기 위해 추가로 결정해야 하는 사양은 없
   성공한 Axis의 실제 recovery 결과는 되돌리지 않는다. 실패한 Axis Fault는 유지한다.
 - 동기 recovery 명령이 실행 중이면 같은 recovery를 중첩 실행하지 않고 Fail로 거부한다.
   별도 worker를 사용하지 않으므로 recovery 호출이 반환될 때까지 status와 안전 명령을 포함한
-  다른 API 처리도 일시 정지한다. socket과 authority 보존은 요청 동시 처리 보장을 뜻하지 않는다.
+  다른 API 처리도 일시 정지한다. 이 동안 client 연결 단절을 허용하며 authority 보존도 보장하지 않는다.
 - TD-025가 완성되기 전에는 현재 축 parameter refresh 경계를 adapter로 호출한다. RF-005는
   recovery 완료 시점과 대상 전달을 소유하고, 범용 cache validity와 refresh 구현은 TD-025가
   교체·확장한다.
@@ -292,10 +310,16 @@ reconnect가 해결한 Initialization Fault의 내부 acknowledge/clear도 이 R
 복구 완료 후 parameter OD refresh와 cache invalid 처리는
 [TD-025](../td/TD-025-runtime-parameter-cache.md)가 담당한다.
 
+### 2026-11-24 연결 유지 계약 보완
+
+- 위 구현 결과 및 2026-08-26 시험의 TCP/authority 유지 기록은 당시 구현·관측 결과이다.
+  현재 계약은 DEC-056에 따라 동기 recovery 중 연결 단절을 허용하며, 연결 유지를 보장하지 않는다.
+- owner 연결 종료 안전 처리, authority 회수와 재연결 후 명시적인 authority 요청은 유지한다.
+
 ## 검증 계획
 
 - mock backend에 초기화, disconnect와 fault를 주입한다.
-- 상태별 API 허용/거부, TCP/authority 유지와 재복구를 검증한다.
+- 상태별 API 허용/거부, TCP 연결 유지 또는 단절 후 authority 처리와 재복구를 검증한다.
 - 지원 실장치의 cable disconnect/reconnect와 drive fault recovery를 시험한다.
 
 ## 완료 증거
@@ -336,10 +360,29 @@ reconnect가 해결한 Initialization Fault의 내부 acknowledge/clear도 이 R
 
 ### 후속 선택 검증
 
-- reconnect 처리 중 기존 TCP socket은 유지되지만 status/stop 등 다른 API 응답은 recovery
-  완료까지 대기하는지 확인
+- 동기 recovery 중 응답 지연 및 Heartbeat timeout 연결 단절을 허용하고, 재연결 후 상태 조회와
+  기존 authority 종료 정책이 적용되는지 확인
 - reconnect/restart 실패 주입 시 timeout, `BUS_RECONNECT_FAILED` 및 `AXIS_RESTART_FAILED`와
   후속 fault-reset clear 경로 확인
 
 위 항목은 자동 오류 주입 테스트와 확정된 동기 recovery 계약으로 검증했으며 RF-005 완료의
 추가 blocking 항목으로 두지 않는다.
+
+### 2026-11-24 실장비 케이블 분리 기동 및 Bus 복구 확인
+
+- 구성: pysoem, CMMT-AS 5축과 CPX-AP-I-EC 1대, 총 6 slave, TCP port 15000.
+- EtherCAT cable을 분리한 상태에서 기동하여 `bus_connection / bus_connection_failed`를 확인했다.
+  상세 로그는 `EtherCAT discovery failed: result=-1 expected_slaves=6`와 interface를 표시했고,
+  Python traceback 없이 TCP listener 및 degraded server loop가 유지됐다.
+- Axis Control Panel에서 TCP 연결과 `initialization error`, `initialized no`, Fault 1 / Alarm 0,
+  `process data stale`, `SERVER_INITIALIZATION_FAILED` 표시를 확인했다.
+- cable 연결 후 authority를 획득하고 `system/bus/reconnect`를 1회 전송했다. 동기 recovery 중
+  시험 client에서 Heartbeat timeout으로 연결이 종료되어 reconnect의 직접 Success/Fail 응답은 받지 못했다.
+- 새 읽기 전용 연결에서 확인한 결과:
+  - server: `initialized=true`, `runtime_state=normal`, `initialization_failure=null`.
+  - bus: `available=true`, `connected=true`, device 6 / axis 5, WKC `18/18`, `wkc_ok=true`.
+  - server/bus diagnostic: `normal`, 활성 status 없음. Axis mode display는 모두 `1`.
+- 판정: TD-039의 예상 탐색 실패 로그, degraded 상태 조회 및 이후 Bus 복구를 실장비에서 확인했다.
+  복구 중 client 연결 단절은 DEC-056에 따라 허용하며, 복구 성공은 재접속 후 상태 조회로 확인했다.
+- 이 시험에서 motion/enable/axis fault-reset, TD-035의 실제 포트 충돌·접근 거부 시험 및
+  Node-RED 시험은 수행하지 않았다. owner 연결 종료 안전 처리 자체의 실장비 검증 결과로 확대하지 않는다.

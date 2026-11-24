@@ -1,7 +1,7 @@
 # TD-039 EtherCAT Slave 탐색 실패 예외 분류 및 로그 정리
 
 - 등록일: 2026-09-22
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 높음
 - 관련 작업: TD-018, TD-035
 
@@ -51,7 +51,7 @@ RuntimeError: Expected 3 EtherCAT slaves, found -1.
 - 실패 중 열린 transport/runtime 자원이 정리되고 정상 탐색·연결 회귀가 통과한다.
 - 예상하지 못한 프로그래밍 오류의 진단 정보는 유지한다.
 
-## 진행 상황
+## 등록 당시 진행 상황
 
 - 사용자 로그 및 현재 예외 생성/로깅 경로를 확인해 등록했다.
 - 실제 버스 재접속, 코드/설정 변경, 구현 시험은 수행하지 않았다.
@@ -65,3 +65,31 @@ RuntimeError: Expected 3 EtherCAT slaves, found -1.
   처리하고, 예상 실패의 기본 로그에는 traceback을 출력하지 않는다.
 - 음수/0/부족/정상 반환, transport 정리, degraded API 및 recovery, 예상하지 못한 오류 로그를
   포함한 관련 자동 테스트 85개가 통과했다. 실장비 시험과 Node-RED 시험은 수행하지 않았다.
+
+### 2026-11-24 재검증 및 완료 처리
+
+- 기존 제품 코드에 음수 탐색 결과와 장치 수 부족의 typed exception 분류가 이미 반영되어 있음을 확인했다.
+  추가 제품 코드 변경 없이 상단 및 Remaining Tasks의 누락된 완료 상태를 갱신했다.
+- EtherCAT state transition logging, initialization model/lifecycle, bus recovery 및 TD-035 관련
+  테스트 총 54개가 통과했다. 탐색 음수/0/부족/정상 반환, transport 정리, 예상 실패 traceback 제외,
+  예상하지 못한 RuntimeError traceback 유지와 degraded/recovery 경로를 재검증했다.
+- 이 자동 재검증 시점에는 실장비 연결과 Node-RED 테스트를 수행하지 않았다. 후속 실장비 결과는 아래에 기록한다.
+
+### 2026-11-24 실장비 케이블 분리 기동 및 Bus 복구 확인
+
+- 구성: pysoem, CMMT-AS 5축과 CPX-AP-I-EC 1대, 총 6 slave, TCP port 15000.
+- EtherCAT cable을 분리한 상태에서 기동하여 `bus_connection / bus_connection_failed`를 확인했다.
+  상세 로그는 `EtherCAT discovery failed: result=-1 expected_slaves=6`와 interface를 표시했고,
+  Python traceback 없이 TCP listener 및 degraded server loop가 유지됐다.
+- Axis Control Panel에서 TCP 연결과 `initialization error`, `initialized no`, Fault 1 / Alarm 0,
+  `process data stale`, `SERVER_INITIALIZATION_FAILED` 표시를 확인했다.
+- cable 연결 후 authority를 획득하고 `system/bus/reconnect`를 1회 전송했다. 동기 recovery 중
+  시험 client에서 Heartbeat timeout으로 연결이 종료되어 reconnect의 직접 Success/Fail 응답은 받지 못했다.
+- 새 읽기 전용 연결에서 확인한 결과:
+  - server: `initialized=true`, `runtime_state=normal`, `initialization_failure=null`.
+  - bus: `available=true`, `connected=true`, device 6 / axis 5, WKC `18/18`, `wkc_ok=true`.
+  - server/bus diagnostic: `normal`, 활성 status 없음. Axis mode display는 모두 `1`.
+- 판정: TD-039의 예상 탐색 실패 로그, degraded 상태 조회 및 이후 Bus 복구를 실장비에서 확인했다.
+  복구 중 client 연결 단절은 DEC-056에 따라 허용하며, 복구 성공은 재접속 후 상태 조회로 확인했다.
+- 이 시험에서 motion/enable/axis fault-reset, TD-035의 실제 포트 충돌·접근 거부 시험 및
+  Node-RED 시험은 수행하지 않았다. owner 연결 종료 안전 처리 자체의 실장비 검증 결과로 확대하지 않는다.

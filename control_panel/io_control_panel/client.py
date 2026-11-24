@@ -5,7 +5,7 @@ import socket
 import threading
 import time
 
-from motion_server_client import (
+from control_panel.common.protocol import (
     HEARTBEAT_POLL_SECONDS,
     HEARTBEAT_TIMEOUT_SECONDS,
     decode_server_message,

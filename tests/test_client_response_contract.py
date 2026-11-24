@@ -1,7 +1,7 @@
 import unittest
 
 from control_panel.axis_control_panel.panel_update_data import initial_feedback, merge_axis_status
-from motion_server_client import decode_server_message, heartbeat_ack, is_fail_message
+from control_panel.common.protocol import decode_server_message, heartbeat_ack, is_fail_message
 
 
 class ClientResponseContractTest(unittest.TestCase):

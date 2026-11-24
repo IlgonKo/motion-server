@@ -1,5 +1,5 @@
-from motion_server_client.response import decode_server_message, is_fail_message
-from motion_server_client.heartbeat import (
+from control_panel.common.protocol.response import decode_server_message, is_fail_message
+from control_panel.common.protocol.heartbeat import (
     HEARTBEAT_POLL_SECONDS,
     HEARTBEAT_TIMEOUT_SECONDS,
     heartbeat_ack,

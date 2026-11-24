@@ -18,6 +18,7 @@ from motion_server.app.initialization import (
 from motion_server.diagnostic import DiagnosticManager
 from motion_server.diagnostic.startup import detect_initialization_fault
 from motion_server.app.session import ServerSession
+from motion_server.app.listener import ListenerStartupException, log_listener_startup_failure
 
 
 class MotionServerApplication:
@@ -107,6 +108,13 @@ class MotionServerApplication:
         )
 
     def run(self, runner=None):
+        try:
+            return self._run(runner)
+        except ListenerStartupException as exception:
+            log_listener_startup_failure(exception)
+            return 1
+
+    def _run(self, runner=None):
         if self._config is None:
             if runner is not None:
                 return runner(

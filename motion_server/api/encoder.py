@@ -168,6 +168,7 @@ def software_position_limits_api_values(software_position_limits, state=None):
 
 def public_trajectory_state(state):
     trajectory = dict(state.get("trajectory", {}))
+    trajectory.pop("fault_cancelled_axes", None)
     axes = trajectory.get("axes", [])
     points = []
     for point in trajectory.get("points", []) or []:
@@ -185,9 +186,12 @@ def public_axis_trajectory_state(state, axis_index):
     trajectory = dict(public_trajectory_state(state))
     axes = list(trajectory.get("axes", []))
     axis_index = int(axis_index)
-    active_for_axis = bool(trajectory.get("active", False) and axis_index in axes)
+    cancelled = axis_index in state.get("trajectory", {}).get("fault_cancelled_axes", [])
+    active_for_axis = bool(trajectory.get("active", False) and axis_index in axes and not cancelled)
     trajectory["axis"] = axis_index
     trajectory["active"] = active_for_axis
+    if cancelled:
+        trajectory["state"] = "fault"
 
     if axis_index not in axes:
         trajectory["points"] = []
@@ -211,6 +215,7 @@ def public_axis_trajectory_state(state, axis_index):
 
 def public_homing_state(state):
     homing = dict(state["homing"])
+    homing.pop("fault_cancelled_axes", None)
     homing.pop("original_motion_modes", None)
     homing.pop("initial_referenced", None)
     homing.pop("referenced_seen_low", None)
@@ -223,6 +228,9 @@ def public_axis_homing_state(state, axis_index):
     axis_index = int(axis_index)
     homing["axis"] = axis_index
     homing["active"] = bool(homing.get("active", False) and axis_index in axes)
+    if axis_index in state["homing"].get("fault_cancelled_axes", []):
+        homing["active"] = False
+        homing["state"] = "fault"
 
     per_axis = {}
     for axis_state in homing.get("per_axis", []) or []:

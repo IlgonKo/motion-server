@@ -1,6 +1,10 @@
-# ROS2 CiA402 EtherCAT Sandbox
+# Motion Server
 
 This project has two execution paths.
+
+ROS/ROS2 and MoveIt are outside the project scope as of 2026-11-24 (DEC-053).
+ROS/MoveIt source, launch scripts and Docker definitions have been removed.
+Motion Server's own Trajectory Controller remains in scope.
 
 Motion Server documentation:
 
@@ -44,8 +48,7 @@ The mock path uses the same Motion Server TCP API as the real drive path, but
 selects the virtual CiA402 servo backend.
 
 ```text
-ROS Control Panel
-  -> ros/bridge.py
+Axis/IO Control Panel or reference client
   -> TCP JSON
   -> Motion Server backend=mock
   -> MockMaster / MockSlave
@@ -54,18 +57,17 @@ ROS Control Panel
 
 ## Real Festo CMMT path
 
-The real-drive path keeps ROS2 in Docker and runs PySOEM on the PC that is
+The real-drive path runs PySOEM on the PC that is
 physically connected to the EtherCAT device.
 
 ```text
-Docker ROS2 GUI / command nodes
-  -> ros/bridge.py
+Axis/IO Control Panel or reference client
   -> TCP JSON
   -> Motion Server on the EtherCAT host PC
   -> Festo CMMT-AS
 ```
 
-Use the scripts under `scripts/host`, `scripts/ros`, and `scripts/windows`
+Use the scripts under `scripts/host` and `scripts/windows`
 for the current recommended entry points.
 
 ## Recommended real-drive startup
@@ -346,187 +348,6 @@ Windows PowerShell, only when the EtherCAT device is connected to Windows:
 .\scripts\windows\motion_server.ps1
 ```
 
-ROS Docker bash:
-
-```bash
-bash scripts/ros/start.sh --build
-bash scripts/ros/panel.sh --build
-```
-
-After the image exists, normal startup does not rebuild it:
-
-```bash
-bash scripts/ros/start.sh
-bash scripts/ros/panel.sh
-```
-
-`ros_bridge` runs in the background as a Motion Server TCP client.
-`ros_control_panel` runs only while the GUI is open. They use separate Docker
-images: the Bridge image has only ROS messaging/runtime dependencies, while the
-ROS Control Panel image also contains Tk/X11 GUI dependencies. The compose
-services are separated so the bridge can keep running when the panel is closed.
-
-MoveIt is prepared as a third ROS image so planning dependencies do not bloat
-the Bridge or Control Panel images:
-
-```bash
-bash scripts/ros/moveit.sh --build
-bash scripts/ros/moveit.sh --check
-```
-
-Build the local MoveIt test description package before opening the Setup
-Assistant. This installs `ros2_cia402_cartesian_description` into
-`install/moveit`, so the Setup Assistant can resolve the package through the
-ament index:
-
-```bash
-bash scripts/ros/moveit.sh --build-workspace
-```
-
-For the first 3-axis Cartesian test, load this xacro in the Setup Assistant:
-
-```text
-/workspace/ros_moveit/ros2_cia402_cartesian_description/urdf/cartesian_3axis.urdf.xacro
-```
-
-Then open the MoveIt Setup Assistant:
-
-```bash
-bash scripts/ros/moveit.sh --setup-assistant
-```
-
-The model uses prismatic joints named `X`, `Y`, and `Z`, matching the default
-Bridge joint names. To display the description package before using the Setup
-Assistant:
-
-```bash
-bash scripts/ros/moveit.sh --display-cartesian
-```
-
-If the Setup Assistant crashes while loading RViz preview in Windows Docker/X11,
-use the hand-written MoveIt config package instead:
-
-```bash
-bash scripts/ros/moveit.sh --build-workspace
-bash scripts/ros/moveit.sh --move-group
-```
-
-The MoveIt container uses the same compose project and `ROS_DOMAIN_ID` as the
-Bridge and ROS Control Panel. The ROS Bridge provides a MoveIt-compatible
-`FollowJointTrajectory` action server:
-
-```text
-/cia402_joint_trajectory_controller/follow_joint_trajectory
-```
-
-Action completion is controlled by `.env`:
-
-```text
-ROS_BRIDGE_ACTION_GOAL_TOLERANCE=0.01
-ROS_BRIDGE_ACTION_RESULT_TIMEOUT=0.0
-```
-
-`ROS_BRIDGE_ACTION_RESULT_TIMEOUT=0.0` means the Bridge waits until all axes are
-inside tolerance or the goal is canceled. Increase
-`ROS_BRIDGE_ACTION_GOAL_TOLERANCE` if the drive feedback unit is coarse or if small
-settling errors should still count as reached.
-
-Rebuild the Bridge image after action-server changes:
-
-```bash
-bash scripts/ros/start.sh --build
-```
-
-Then start `move_group` with the hand-written config:
-
-```bash
-bash scripts/ros/moveit.sh --build-workspace
-bash scripts/ros/moveit.sh --move-group
-```
-
-The ROS Bridge Motion Server endpoint is configured in `.env`:
-
-```text
-MOTION_SERVER_PORT=15000
-MOTION_SERVER_HOST=192.168.0.12
-ROS_BRIDGE_AUTO_REQUEST_AUTHORITY=1
-```
-
-Use `192.168.0.12` when the Motion Server runs on the Ubuntu EtherCAT host from a
-Windows ROS container. Use `127.0.0.1` when ROS and Motion Server containers run
-on the same Linux host with host networking.
-
-By default, the ROS Bridge requests Motion Server command authority automatically
-after connecting. Set `ROS_BRIDGE_AUTO_REQUEST_AUTHORITY=0` if command authority
-should be managed by another client such as the local Axis Panel.
-Authority is connection-based: the Bridge does not use or expose command tokens,
-and request buttons do not forcibly take authority from another connected
-client.
-
-Standard ROS motion command:
-
-```text
-/joint_trajectory            trajectory_msgs/JointTrajectory, standard position command
-```
-
-Project-specific management topics:
-
-```text
-/motion_mode                  std_msgs/String, "pp" or JSON {"axis":0,"mode":"csp"}
-/controlword                  std_msgs/Int32MultiArray, [cw] or [axis, cw]
-/jog_position                 std_msgs/Float64MultiArray, [axis, distance]
-/alarm_ack                    std_msgs/Empty
-/authority/acquire            std_msgs/Empty
-/authority/release            std_msgs/Empty
-```
-
-The ROS Control Panel Command tab can select the command transport:
-
-```text
-Action Controller  -> /cia402_joint_trajectory_controller/follow_joint_trajectory
-Topic Debug        -> /joint_trajectory
-```
-
-`Action Controller` is the recommended default because it exercises the same
-`FollowJointTrajectory` interface that MoveIt uses. `Topic Debug` remains as a
-simple fire-and-forget compatibility path. Repeat motion follows the selected
-transport and supports 2 to 8 points. For example, with 3 points configured the
-panel repeats `A -> B -> C -> A`. The authority request/release buttons remain
-in the ROS Control Panel as project-specific control ownership management, not
-as motion commands.
-
-Axis limit/configuration values are exposed as ROS parameters on
-`/ros_command_bridge`, because max velocity, acceleration, deceleration, and
-Kp are configuration data rather than normal motion command data:
-
-```text
-axis_0.max_velocity
-axis_0.acceleration
-axis_0.deceleration
-axis_0.kp
-```
-
-The same parameter pattern is repeated for each axis. The legacy
-`/target_positions`, `/motion_limits`, and `/repeat_motion_command` topics are
-still accepted by the Bridge for compatibility with earlier test tools, but new
-integrations and the ROS Control Panel should prefer parameters and standard
-trajectory commands.
-
-Core ROS feedback topics:
-
-```text
-/joint_states
-/target_position_feedback
-/actual_positions
-/actual_velocities
-/statuswords
-/drive_diagnostics
-/motion_limits_feedback
-/motion_modes_feedback
-/authority/status
-/command_rejected
-```
-
 ## Update the Ubuntu EtherCAT host
 
 The Linux checkout is maintained directly from GitHub. Clone it once:
@@ -550,17 +371,12 @@ Runtime `.env` files remain local to the Linux host and are not tracked by Git.
 ```text
 motion_server/         Motion Server TCP API, backend selection, local panel, and host entrypoint
 control_panel/         Axis, I/O, and Gamepad Control Panels
+control_panel/common/protocol/ Shared response decoding and Heartbeat helpers for Axis/I/O Panels
 diagnostics/         Adapter listing, PDO dump, and smoke-test utilities
 docker/motion_server/  Motion Server Dockerfile and compose file
 docker/axis_panel/   Axis Control Panel Dockerfile
-docker/ros/          ROS Compose file
-docker/ros_bridge/   ROS Bridge Dockerfile
-docker/ros_control_panel/ ROS Control Panel Dockerfile
-docker/ros_moveit/   ROS MoveIt Dockerfile
 scripts/host/        Ubuntu EtherCAT host commands: start, stop, panel, service, adapters
-scripts/ros/         ROS container launch helpers
 scripts/windows/     Windows sync helper and optional direct Motion Server launcher
-ros/                 ROS bridge/control panel and trace display
 ethercat/            Mock/PySOEM EtherCAT transport, distributed clock, and WKC code
 device/pdo_metadata/ PDO mapping entry and data type metadata helpers
 device/cia402/       Common CiA402 state machine

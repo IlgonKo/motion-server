@@ -4,6 +4,113 @@
 날짜는 기본적으로 Git commit 날짜를 기준으로 정리했고, 아직 commit되지 않은 작업은 현재 작업일 기준으로 별도 기록한다.
 미완료 기능과 기술 부채는 [Remaining Tasks](remaining_tasks.md)에서 별도로 관리한다.
 
+## 2026-11-24
+
+### TD-035 Windows 포트 독점 수정 및 실제 재시험 완료
+
+- `motion_server/app/listener.py`에 Windows SO_EXCLUSIVEADDRUSE를 적용했다.
+  다른 플랫폼의 기존 재사용 옵션과 공통 오류/자원 정리 경계는 유지했다.
+- `tests/test_listener_startup.py`에 실제 중복 bind 거부·다른 포트 허용·종료 후 재기동 및
+  Windows REUSEADDR 경쟁 socket 차단 검증을 추가했다. 관련 테스트 56개 통과.
+- 실장비 서버가 사용 중인 15000에 mock 서버를 재기동하여 bind/WinError 10048,
+  종료 코드 1, traceback 및 listening 진입 없음 확인. 기존 PID 29500 listener 유지 확인.
+- DEC-055와 TD-035 상세/목록을 갱신하고 complete로 처리했다. 기존 실장비 서버는 재시작하지 않았다.
+  Node-RED 시험, 패키지 빌드 및 커밋/푸쉬는 수행하지 않았다.
+
+### TD-035 실제 포트 중복 시험 및 재개
+
+- 실장비 서버가 15000 포트를 사용 중인 상태에서 별도 mock 서버를 같은 포트로 기동했다.
+- 예상한 bind 실패 대신 mock도 listening에 진입했다. 45초 후 시험용 프로세스만 종료하고
+  기존 실장비 서버 PID 29500의 listener 유지를 확인했다.
+- Windows SO_REUSEADDR의 중복 bind 허용 동작을 확인했다. TD-035를 in_progress로 재개하고
+  Windows 독점 bind 정책 및 실제 중복 기동 검증을 보완사항으로 기록했다. 제품 코드는 변경하지 않았다.
+
+### 복구 중 TCP 단절 허용 및 실장비 시험 기록
+
+- DEC-056: 동기 recovery 중 Heartbeat 지연에 따른 client 연결 단절을 허용한다.
+  listener는 유지하며 기존 owner 연결 종료 안전 처리 및 authority 회수 정책을 적용한다.
+  재연결 후 상태를 조회하고 authority는 명시적으로 요청한다. 복구/이전 motion의 자동 재전송은 하지 않는다.
+- 6 slave(5축 + CPX)에서 케이블 분리 기동 시 traceback 없이 discovery result=-1 상세 로그,
+  degraded TCP 서비스 및 Axis Panel의 초기화 Fault 표시를 확인했다.
+- 케이블 연결 후 reconnect 1회 요청 중 Heartbeat timeout으로 직접 응답은 받지 못했지만,
+  새 연결의 상태 조회에서 initialized=true, runtime normal, bus connected, WKC 18/18,
+  server/bus diagnostic normal을 확인했다. 연결 단절 자체를 복구 실패로 판정하지 않았다.
+- RF-005, TD-039, API 안내 및 Remaining Tasks를 정합화했다. 상세 증거는 TD-039/RF-005에 기록했다.
+- 이번 추가 작업은 문서만 변경했다. TD-035 실장비 포트 오류 시험, motion/enable/fault-reset 및
+  Node-RED 시험은 수행하지 않았다.
+
+### TD-035 구현 및 TD-039 재검증 완료
+
+- TCP listener 준비 구간의 OS 오류를 공통 helper에서 분류하고 Application 경계에서 상세 원인과
+  종료 코드 1로 처리했다. Python/Windows package 진입점의 종료 코드 전파도 반영했다.
+- 정상/degraded/configuration-error에서 socket/runtime 정리를 검증하고, 예상 밖 오류와 loop 오류는
+  기존 진단을 유지한다. 포트나 OS 설정은 변경하지 않았다.
+- TD-039는 2026-10-20 구현이 이미 존재하여 재검증 후 목록/상세 문서의 상태를 complete로 정리했다.
+- 변경/생성: `motion_server/app/listener.py`, `motion_server/application.py`, `motion_server/server.py`,
+  `motion_server/__main__.py`, `packaging/windows_motion_server.py`, `tests/test_listener_startup.py`,
+  TD-035/039 상세 문서, Remaining Tasks, DEC-055와 작업 기록.
+- 관련 unittest 54개와 `git diff --check` 통과. 실장비·Node-RED 시험 및 패키지 빌드는 수행하지 않았다.
+
+### Control Panel 공통 protocol 모듈 이관
+
+- DEC-054에 따라 `motion_server_client`의 3개 Python 파일을 `control_panel/common/protocol`로 이동하고
+  `control_panel/common/__init__.py`를 추가했다. 기존 소스·캐시 및 최상위 폴더를 삭제했다.
+- Axis/IO Panel import, response contract 테스트와 정적 검사 대상, Axis/IO PyInstaller spec을 새 경로로 정리했다.
+- README, RF-002, TD-005/037의 모듈 경로를 갱신했다. 통신 동작과 reference Python client 구현은 유지했다.
+- 검증: client response contract, Control Panel feedback, error contract static 테스트 33개 통과.
+  Axis/IO Panel client import 성공, 활성 코드·패키징·테스트의 기존 import 참조 없음,
+  기존 폴더 부재 및 `git diff --check` 확인. 실제 실행 파일 패키지 빌드는 수행하지 않았다.
+
+### ROS/MoveIt 코드 제거
+
+- 후속 요청에 따라 `ros/`, `ros_moveit/`, `scripts/ros/`, `docker/ros/`,
+  `docker/ros_bridge/`, `docker/ros_control_panel/`, `docker/ros_moveit/`의 추적 파일 28개를 삭제했다.
+- `.env.example`과 로컬 `.env`의 ROS 전용 설정, Motion Server Compose의 ROS 로그 환경변수,
+  정적 검사 대상·예외 목록, README 실행 안내·폴더 목록을 정리했다.
+  공통 Panel의 `MOTION_SERVER_HOST`와 Motion Server 자체 trajectory는 유지했다.
+- 검증: error contract static, typed configuration, application 테스트 31개 통과.
+  활성 소스/스크립트/배포/테스트에서 ROS·MoveIt 참조 검색 결과 없음. `git diff --check` 통과.
+- 자동 승인 정책이 셸 삭제를 차단하여 `.pyc` 캐시 5개와 빈 디렉터리의 물리적 정리는 남았다.
+  소스 파일 삭제는 파일별 patch로 완료했다. 커밋/푸쉬는 수행하지 않았다.
+
+### ROS/MoveIt 프로젝트 범위 제외
+
+- DEC-053에 ROS/ROS2 및 MoveIt 개발·이관·배포·검증 제외를 기록했다.
+- RF-008을 `out_of_scope`로 변경하고 RF-009에서 ROS 연동 요구를 제외했다.
+  Motion Server 자체 Trajectory Controller는 범위에 유지한다.
+- README/문서 안내 및 AGENTS.md에 범위를 반영했다. 과거 이력과 기존 코드는 보존했다.
+- 문서 변경으로 실행 테스트는 수행하지 않았다.
+
+## 2026-10-28
+
+### 개별 축 Drive Fault 공통 대응
+
+- DEC-052와 RF-005에 개별 축 Fault 대응 및 다축 연계 처리 제외 범위를 기록했다.
+- Fault 최초 검출 시 해당 축 Controlword=0x0007, 위치 hold/위치 생성기 초기화,
+  내부 속도 및 매핑된 속도 PDO 0 설정, Jog/Homing 이전 모드 RxPDO 복원을 구현했다.
+- Fault가 유지되는 동안 중복 초기화하지 않으며 해제 후 재발하면 다시 처리한다.
+  Fault 취소 축을 Homing/trajectory 후속 완료 처리에서 제외하여 이전 명령 재적용을 막았다.
+  다른 참여 축의 제어워드와 목표는 변경하지 않는다.
+- 취소 후 늦게 도착한 Jog Stop이 복원 모드를 PP로 바꾸지 않도록 보완했다.
+- 검증: Drive Fault/Jog/Stop, Bus recovery/staged initialization, runtime fault reset/diagnostic,
+  diagnostic serialization, authority release, API schema unittest 84개 통과. `git diff --check` 통과.
+- 변경/생성: `control/axis_operations.py`, `app/state.py`, `server.py`,
+  `handlers/command/{jog,homing,trajectory}.py`, `api/encoder.py` (모두 `motion_server/` 아래),
+  `tests/test_drive_fault_response.py`, `docs/decisions.md`, RF-005 상세 문서와 이 작업 기록.
+- 실축 조작, 서버 재기동 및 Node-RED 테스트는 수행하지 않았다.
+
+### Jog 모드 전환의 중복 SDO 쓰기 제거
+
+- DEC-051에 따라 Jog 진입과 종료 후 이전 모드 복원에서 0x6060:00 SDO 쓰기를 제거했다.
+  Jog handler 내부 helper에서 필수 PDO 필드를 검증하고 RxPDO 값을 변경한 뒤 기존 5회 교환을 수행한다.
+- 초기화/Bus 복구 및 Jog 외 공통 모드 설정은 변경하지 않았다. API/capability, timeout,
+  모드 표시값 대기나 SDO fallback은 추가하지 않았다.
+- 변경 파일: `motion_server/handlers/command/jog.py`, `tests/test_jog_mode_transition.py`,
+  `docs/decisions.md`, `docs/motion_server_api_basic.md`, `docs/worklog.md`.
+- 검증: Jog entry/PP·PV·CSP 복원, 반복 Jog와 매핑 누락 거부, Stop, Bus recovery,
+  staged initialization unittest 총 30개 통과. SDO 호출 없이 PDO 모드 값이 전송되는 것을 확인했다.
+- 실축 조작과 Node-RED 테스트는 수행하지 않았다.
+
 ## 2026-10-27
 
 ### Basic mode의 불필요한 CSP interpolation SDO 초기화 제거

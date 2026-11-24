@@ -2,7 +2,6 @@ from motion_server.control.pdo_contract import require_pdo_fields_for_mode
 from motion_server.device_manager.profile_access import axis_device_profile
 from motion_server.app.cycle import exchange
 from motion_server.control.axis_operations import (
-    configure_motion_mode,
     disabled_operation_axes,
     hold_axis_at_actual_position,
     reject_if_any_axis_disabled,
@@ -13,6 +12,14 @@ from motion_server.api import (
     raise_operation_rejected,
     selected_single_axis,
 )
+
+
+def _configure_jog_transition_mode(runtime, mode_name, axis_index):
+    # Jog entry/restoration runs with cyclic PDO active; do not also write 0x6060 by SDO.
+    require_pdo_fields_for_mode(runtime, mode_name, axis_index)
+    profile = axis_device_profile(runtime, axis_index)
+    runtime.slaves[axis_index].rxpdo.mode_of_operation = profile.mode_code(mode_name)
+    exchange(runtime, cycles=5)
 
 
 def start_jog(message, runtime, state, client):
@@ -40,7 +47,7 @@ def start_jog(message, runtime, state, client):
         if state["motion_modes"][axis_index] != "jog":
             state["jog_previous_modes"][axis_index] = state["motion_modes"][axis_index]
             hold_axis_at_actual_position(runtime, state, axis_index)
-            configure_motion_mode(runtime, "jog", axis_index)
+            _configure_jog_transition_mode(runtime, "jog", axis_index)
             state["motion_modes"][axis_index] = "jog"
             update_motion_mode_summary(state)
     except Exception as exc:
@@ -83,10 +90,13 @@ def stop_jog(message, runtime, state, client):
         slave.rxpdo.controlword = 0x000F
     exchange(runtime, cycles=5)
 
-    previous_mode = state["jog_previous_modes"][axis_index] or "pp"
+    current_mode = state["motion_modes"][axis_index]
+    previous_mode = state["jog_previous_modes"][axis_index] or (
+        current_mode if current_mode != "jog" else "pp"
+    )
     try:
         hold_axis_at_actual_position(runtime, state, axis_index)
-        configure_motion_mode(runtime, previous_mode, axis_index)
+        _configure_jog_transition_mode(runtime, previous_mode, axis_index)
         state["motion_modes"][axis_index] = previous_mode
         update_motion_mode_summary(state)
     except Exception as exc:

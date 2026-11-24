@@ -11,8 +11,6 @@ SOURCE_ROOTS = (
     "ethercat",
     "device",
     "control_panel",
-    "motion_server_client",
-    "ros",
 )
 
 # Broad catches are approved by function rather than line number so formatting
@@ -93,8 +91,6 @@ APPROVED_BROAD_CATCHES = {
     "motion_server/server.py::initialize_runtime_session",
     "motion_server/server.py::reconnect_failed_initialization",
     "motion_server/server.py::run_main_once",
-    "ros/bridge.py::connection_loop",
-    "ros/control_panel.py::follow_joint_action_ready",
 }
 
 

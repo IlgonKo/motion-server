@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from configuration.models import CmmtDeviceConfig
 from motion_server.handlers.command.homing import update_homing_state
 from motion_server.app.cycle import CycleStats, exchange, wait_until_cycle_time
+from motion_server.app.listener import open_listener
 from motion_server.control.axis_units import (
     axis_motion_api_to_drive,
     axis_position_counts_per_api_units,
@@ -245,6 +246,7 @@ def run_server_loop(
             cycle_stats.add("send_call", send_call_duration_ns / 1_000_000_000.0)
         dc_phase_lock.update(getattr(runtime, "last_tx_dc_time_ns", None), cycle_stats)
         record_pre_log_snapshot(runtime, state, cycle_stats)
+        hold_faulted_axes(runtime, state)
         update_homing_state(runtime, state)
         process_pending_authority_release(runtime, state)
         log_csp_command_step_anomalies(runtime, state)
@@ -800,10 +802,7 @@ def run_main_once(
                     flush=True,
                 )
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-            server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            server.bind((MOTION_SERVER_BIND_HOST, server_config.port))
-            server.listen(1)
+        with open_listener(MOTION_SERVER_BIND_HOST, server_config.port) as server:
             print(
                 format_listening_endpoint(
                     MOTION_SERVER_BIND_HOST,
@@ -832,10 +831,7 @@ def run_main_once(
 
 def run_configuration_degraded_once(session, bootstrap_config):
     state = initial_degraded_state(session)
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((MOTION_SERVER_BIND_HOST, bootstrap_config.port))
-        server.listen(1)
+    with open_listener(MOTION_SERVER_BIND_HOST, bootstrap_config.port) as server:
         print(
             f"Motion Server listening on {MOTION_SERVER_BIND_HOST}:"
             f"{bootstrap_config.port} in configuration-error state",

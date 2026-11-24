@@ -18,7 +18,8 @@ Node-RED 같은 low-code 환경과 최소 Python 코드에서 Control Panel 없�
 
 ## Python Reference Client 경계
 
-- 기존 Control Panel용 `motion_server_client` package를 확장하지 않는다. 새 Python package는
+- 기존 Control Panel용 `control_panel/common/protocol` 모듈을 확장하지 않는다.
+  (2026-11-24 DEC-054에서 기존 `motion_server_client`를 이 위치로 이관했다.) 새 Python package는
   `reference_clients/python/motion_server_reference_client` 아래에 독립적으로 구성하고 자체
   `pyproject.toml`과 README를 제공한다.
 - 공통 client 모듈은 임의의 공개 API message를 `request()`로 전송할 수 있어야 하며 특정 축이나

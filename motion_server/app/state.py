@@ -100,6 +100,7 @@ def initial_server_state(
         "last_trajectory_complete_time": None,
         "homing": inactive_homing_state(),
         "jog_previous_modes": [None for _ in range(axis_count_value)],
+        "handled_drive_fault_axes": set(),
         "command_authority_owner": None,
         "authority_release": None,
     }

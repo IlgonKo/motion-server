@@ -61,7 +61,10 @@ def set_homing_start_bit(runtime, axis_indices, enabled):
 
 def finish_homing(runtime, state, result, message):
     homing = state.get("homing", {})
-    axes = homing.get("axes", [])
+    axes = [
+        axis for axis in homing.get("axes", [])
+        if axis not in homing.get("fault_cancelled_axes", [])
+    ]
     if not axes:
         return
 
@@ -76,6 +79,9 @@ def finish_homing(runtime, state, result, message):
             state["motion_modes"][axis_index] = original_mode
 
     update_motion_mode_summary(state)
+    if homing.get("fault_cancelled_axes") and result == "complete":
+        result = "fault"
+        message = "Drive Fault cancelled axis motion."
     homing["active"] = False
     homing["state"] = result
     homing["message"] = message
@@ -160,7 +166,10 @@ def update_homing_state(runtime, state):
     if not homing.get("active"):
         return
 
-    axes = homing.get("axes", [])
+    axes = [
+        axis for axis in homing.get("axes", [])
+        if axis not in homing.get("fault_cancelled_axes", [])
+    ]
     statuses = [
         homing_axis_status(runtime, axis_index)
         for axis_index in axes

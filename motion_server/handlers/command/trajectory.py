@@ -269,7 +269,8 @@ def update_active(runtime, state):
     active = progress["active"]
     segment = progress["segment"]
     for axis_index, position in progress["positions"].items():
-        positions[axis_index] = position
+        if axis_index not in trajectory.get("fault_cancelled_axes", []):
+            positions[axis_index] = position
 
     state["target_positions"] = positions
     trajectory["time_from_start"] = elapsed
@@ -299,15 +300,19 @@ def update_active(runtime, state):
                 "final_positions": points[-1]["positions"],
             },
         )
+        remaining = [
+            (axis, position) for axis, position in zip(axes, points[-1]["positions"])
+            if axis not in trajectory.get("fault_cancelled_axes", [])
+        ]
         completed = runtime.complete_trajectory(
-            axes,
-            points[-1]["positions"],
+            [axis for axis, _ in remaining],
+            [position for _, position in remaining],
         )
         for axis_index, final_position in completed.items():
             positions[axis_index] = final_position
         state["target_positions"] = positions
         trajectory["active"] = False
-        trajectory["state"] = "complete"
+        trajectory["state"] = "fault" if trajectory.get("fault_cancelled_axes") else "complete"
         trajectory["segment"] = max(0, len(points) - 2)
         state["last_trajectory_complete_time"] = time.monotonic()
         log_trajectory_snapshot(

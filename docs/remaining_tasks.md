@@ -19,7 +19,9 @@
 - 단순한 예외 처리나 방어 코드에는 표식을 붙이지 않는다. 교체 또는 제거 계획이 있는
   임시 호환 로직에만 사용한다.
 
-기능 상태 값은 `planned`, `reserved`, `blocked`, `in_progress`, `complete`를 사용한다.
+기능 상태 값은 `planned`, `reserved`, `blocked`, `in_progress`, `complete`, `out_of_scope`를 사용한다.
+2026-11-24 DEC-053에 따라 ROS/ROS2 및 MoveIt 개발·이관·배포·검증은 범위에서 제외한다.
+과거 완료 기록의 ROS 언급은 이력이며 후속 작업 요구가 아니다.
 Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 완료된 Tech Debt도 추적 이력을 위해 이 문서에 유지한다.
 
@@ -90,7 +92,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 - 완료 조건:
   - normal, initialization-error, bus-disconnected와 fault 상태 및 전이가 명세된다.
   - source별 fault-reset, bus reconnect와 process restart의 책임 및 허용 조건이 구현된다.
-  - Bus disconnect/reconnect 중 기존 runtime, TCP client와 authority 유지 정책이 일관되게 적용된다.
+  - Bus disconnect/reconnect 중 runtime 유지와 복구 중 TCP 단절 허용, 연결 종료 시 authority 처리 정책이 일관되게 적용된다.
   - PySOEM Axis restart 완료·timeout·재연결 결과가 TD-025 cache refresh 호출 경계에 전달된다.
   - mock 오류 주입과 대표 실장치 복구 시나리오가 모두 통과한다.
 - 상세: [RF-005 기능 명세](tasks/rf/RF-005-runtime-recovery.md)
@@ -123,14 +125,10 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-008 ROS Bridge 후속 이관 및 테스트
 
-- 상태: `reserved`
-- 우선순위: 보통
-- 요약: Motion Server API 안정화 후 ROS Bridge와 ROS 실행 구성을 최신 계약으로 이관한다.
-- 완료 조건:
-  - command, authority, feedback과 axis/I/O status가 최신 API specification과 일치한다.
-  - Motion Server mm/deg와 ROS SI unit 변환 경계가 문서화되고 자동 테스트된다.
-  - ROS Docker, Control Panel과 connection 설정이 최신 configuration model을 사용한다.
-  - mock 및 실장치 기준 trajectory/feedback smoke test 절차가 재현된다.
+- 상태: `out_of_scope`
+- 우선순위: 해당 없음
+- 요약: DEC-053에 따라 ROS/ROS2 및 MoveIt 연동을 프로젝트 범위에서 제외한다.
+- 종료 기준: 구현 완료가 아닌 범위 제외. 기존 계획은 이력으로 보존하며 API 안정화 후 자동 재개하지 않는다.
 - 상세: [RF-008 기능 명세](tasks/rf/RF-008-ros-bridge-migration.md)
 
 ### RF-009 Motion Server Trajectory API 정리
@@ -140,7 +138,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 - 요약: 다축 trajectory command의 API 계약, mode별 동작과 책임 경계를 정리한다.
 - 완료 조건:
   - trajectory/stop payload, 단위, validation과 완료·중단 응답이 명세된다.
-  - PP/PV/CSP별 지원 범위와 반복 동작, 단축 move, ROS 입력의 책임 경계가 확정된다.
+  - PP/PV/CSP별 지원 범위와 반복 동작, 단축 move의 책임 경계가 확정된다. ROS/MoveIt 연동은 제외한다.
   - handler, feedback와 cancel/error path가 구현되고 virtual backend 자동 테스트가 통과한다.
   - 지원 mode의 실장치 smoke test 및 안전 제한 조건이 문서화된다.
 - 상세: [RF-009 기능 명세](tasks/rf/RF-009-trajectory-api.md)
@@ -807,7 +805,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-035 TCP Listener 기동 실패 예외 처리
 
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 높음
 - 요약: 예약/점유 포트 등으로 TCP listener 기동이 실패하면 traceback 대신 명확한 원인을 기록하고 자원을 정리한 뒤 통제된 실패 종료로 처리한다.
 - 완료 조건:
@@ -875,7 +873,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-039 EtherCAT Slave 탐색 실패 예외 분류 및 로그 정리
 
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 높음
 - 요약: EtherCAT 탐색 실패/장치 수 부족을 예상 연결 실패로 분류하고 일반 RuntimeError traceback 대신 상세 원인을 안내한다.
 - 완료 조건:

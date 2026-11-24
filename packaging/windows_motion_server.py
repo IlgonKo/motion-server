@@ -9,11 +9,11 @@ from motion_server.application import MotionServerApplication
 
 
 if __name__ == "__main__":
-    MotionServerApplication.from_source(
+    sys.exit(MotionServerApplication.from_source(
         ConfigurationSource(
             project_root=root,
             project_filename="config.txt",
             device_filename="config.txt",
         ),
         argv=sys.argv[1:],
-    ).run()
+    ).run())

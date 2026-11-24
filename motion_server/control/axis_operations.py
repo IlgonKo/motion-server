@@ -31,13 +31,46 @@ def hold_axis_at_actual_position(runtime, state, axis_index):
 
 
 def hold_faulted_axes(runtime, state):
-    axes = faulted_axes(runtime)
-    if axes:
-        state["target_positions"] = runtime.hold_axes(
-            state["target_positions"],
-            axes,
-        )
-        runtime.set_target_positions(state["target_positions"])
+    axes = set(faulted_axes(runtime))
+    handled = state.setdefault("handled_drive_fault_axes", set())
+    handled.intersection_update(axes)
+    for axis_index in sorted(axes - handled):
+        _cancel_faulted_axis(runtime, state, axis_index)
+        handled.add(axis_index)
+
+
+def _cancel_faulted_axis(runtime, state, axis_index):
+    slave = runtime.slaves[axis_index]
+    # Remove motion/start/reset bits and Enable Operation before changing mode.
+    slave.rxpdo.controlword = 0x0007
+    hold_axis_at_actual_position(runtime, state, axis_index)
+    runtime.sync_velocity_command(axis_index, 0.0)
+    for field in ("target_velocity", "velocity_offset"):
+        if slave.rxpdo.has_field(field):
+            setattr(slave.rxpdo, field, 0)
+
+    mode = state["motion_modes"][axis_index]
+    homing = state.get("homing", {})
+    if mode == "homing":
+        mode = homing.get("original_motion_modes", {}).get(axis_index, mode)
+    # Homing may itself have been entered from Jog.
+    if mode == "jog":
+        mode = state["jog_previous_modes"][axis_index] or mode
+    slave.rxpdo.mode_of_operation = axis_device_profile(runtime, axis_index).mode_code(mode)
+    state["motion_modes"][axis_index] = mode
+    state["jog_previous_modes"][axis_index] = None
+    update_motion_mode_summary(state)
+
+    # Cancel only this axis; peer axes are left to the owning controller.
+    for operation in (homing, state.get("trajectory", {})):
+        if operation.get("active") and axis_index in operation.get("axes", []):
+            cancelled = operation.setdefault("fault_cancelled_axes", [])
+            if axis_index not in cancelled:
+                cancelled.append(axis_index)
+            if set(operation["axes"]).issubset(cancelled):
+                operation["active"] = False
+                operation["state"] = "fault"
+                operation["message"] = "Drive Fault cancelled axis motion."
 
 
 def operation_enabled_axes(runtime, axes):

@@ -42,6 +42,12 @@ system/io/*          I/O 장치 명령
 
 기본 포트는 `MOTION_SERVER_PORT`로 설정한다. 일반 기본값은 `15000`이다.
 
+동기 Bus reconnect/Axis restart 중에는 같은 server loop의 Heartbeat와 API 처리가 지연될 수 있다.
+이때 Heartbeat timeout으로 client 연결이 끊기는 것을 허용한다(DEC-056). TCP listener는 유지하지만
+복구 중 개별 연결이나 응답을 보장하지 않는다. 응답 전에 연결이 끊기면 새 연결에서
+`system/server/status`, `system/bus/status`로 결과를 확인하고, 필요한 제어권은 명시적으로 다시 요청한다.
+복구 명령이나 이전 motion을 자동 재전송하지 않는다. 기존 owner 연결 종료 안전 정책은 유지한다.
+
 모든 TCP 연결은 transport Heartbeat에 응답해야 한다. server는 기본 50 ms마다
 `{"type":"system/heartbeat","sequence":N}` challenge를 보내며 client는 일반 request를 만들지 않고
 `{"type":"system/heartbeat/ack","sequence":(N+1) mod 2^32}`를 반환한다. ACK에는 `cmd`와
@@ -324,6 +330,10 @@ Jog:
 {"cmd": "system/axis/jog_start", "axis": 0, "direction": "positive", "speed": "slow"}
 {"cmd": "system/axis/jog_stop", "axis": 0}
 ```
+
+운전 중 Jog 진입과 Jog Stop 후 이전 모드 복원은 RxPDO의 `mode_of_operation`(0x6060:00)을
+변경하여 전달하며, 해당 OD에 SDO를 중복 쓰지 않는다. 모드별 필수 PDO 필드가 없으면 거부한다.
+기존 PDO 교환 및 Jog 제어워드 처리는 유지하며, API Success가 실제 정지 완료를 의미하지는 않는다.
 
 Profile:
 

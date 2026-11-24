@@ -32,9 +32,8 @@
 - Windows standalone package
 - Linux Docker deployment
 
-별도 지시 전까지 ROS Bridge와 Trajectory API 개발은 보류한다. 단, Motion Server API
-namespace, feedback 형식, 단위 정책을 변경한 경우에는 이후 ROS Bridge와 Trajectory API
-재개 시 반영해야 할 내용을 [Remaining Tasks](remaining_tasks.md)에 기록한다.
+ROS/ROS2 및 MoveIt은 DEC-053에 따라 개발·검증 범위에서 제외하고 관련 코드를 제거했다.
+Motion Server 자체 Trajectory API는 RF-009에서 별도로 관리한다.
 
 ## 테스트 레벨
 
@@ -46,7 +45,7 @@ namespace, feedback 형식, 단위 정책을 변경한 경우에는 이후 ROS B
 
    ```powershell
    cd C:\Users\Festo\Documents\motion-server
-   python -B -m compileall -q motion_server ethercat device control_panel interfaces ros packaging diagnostics
+   python -B -m compileall -q motion_server ethercat device control_panel packaging diagnostics
    ```
 
 2. Legacy 제품명 검사
