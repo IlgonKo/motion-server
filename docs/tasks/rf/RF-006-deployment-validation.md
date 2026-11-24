@@ -18,6 +18,7 @@
 ## 검증 계획
 
 - 새 Windows PC에서 설치, NIC 선택, startup와 Basic mode smoke test를 수행한다.
+- Windows CSP/동기 제어는 공식 미지원이며 cycle 주기 성능·jitter 검증을 제외한다(DEC-057).
 - 새 Linux PC에서 Docker 설치, EtherCAT NIC 설정, startup와 Basic mode smoke test를 수행한다.
 - 누락 catalog, 잘못된 설정과 upgrade scenario를 확인한다.
 

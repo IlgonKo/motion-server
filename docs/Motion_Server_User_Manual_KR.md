@@ -6,6 +6,9 @@ Motion Server와 Axis/IO Control Panel을 이용해 축과 I/O를 제어하는 �
 장비 설치, 축 commissioning, 정상 서버 기동과 실제 이동 경로 확인은 사용자가 담당한다.
 ROS/ROS2 및 MoveIt 연동은 지원 범위에서 제외한다. 기존 Rev. 1.0 Word 문서는 현재 API의 사용 안내로 사용하지 않는다.
 
+Windows에서는 CSP를 포함한 동기 제어 기능을 공식 지원하지 않는다. Windows의 주기 성능과
+실시간 동기 제어 성능은 보증하지 않으며, CI와 Mock 테스트는 기능 동작을 검증한다(DEC-057).
+
 ## 시작과 제어권
 
 서버를 먼저 실행하고 Panel의 Host와 Port를 맞춘다. 같은 PC에서는 Host를 `127.0.0.1`로 설정한다.

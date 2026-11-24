@@ -457,9 +457,11 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-010 회귀 검증 실행 및 보고 체계
 
-- 상태: `in_progress`
+- 상태: `complete`
 - 우선순위: 높음
 - 요약: 기존 회귀를 profile·CI·JSON 보고로 통합하고 실장치 인수 절차를 분리한다.
+- 검증: CI 45327417682에서 Windows/Ubuntu × Python 3.12/3.14 모두 성공.
+  Windows는 기능 회귀이며 CSP/동기 제어 및 주기 성능 검증은 제외한다(DEC-057).
 - 완료 조건:
   - 설정, ESI/IODD, PDO codec, API와 virtual servo 핵심 경로의 자동 테스트가 제공된다.
   - mock 회귀 테스트가 clean environment의 CI에서 통과한다.

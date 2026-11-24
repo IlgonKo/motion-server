@@ -6,6 +6,18 @@
 
 ## 2026-11-24
 
+### 원격 CI 실패 수정·재검증 및 Windows 지원 범위 확정
+
+- Tk 순환 객체가 통신 worker에서 수거되는 시험 간 간섭을 제거하고 메인 스레드에서 정리했다.
+- Mock Homing 준비의 모드 복원 대기를 추가하고 기능 회귀 fixture cycle을 2ms로 설정했다.
+  준비 실패 로그도 보강했다. 제품 heartbeat timeout은 유지했다.
+- TCP_NODELAY 가설 검증 변경은 효과가 충분하지 않아 원복했다. 최종 제품 코드 변경은 없다.
+- `f169be3`의 GitHub CI 45327417682: Windows/Ubuntu × Python 3.12/3.14 모두 성공, 각 598개 실행.
+  Linux의 플랫폼 skip 3개는 기존과 동일하다. TD-010 complete, RF-006 실제 배포 인수는 별도 유지.
+- DEC-057: Windows에서 CSP 등 동기 제어 공식 미지원, 주기 성능 검증 제외.
+  API·PP 시퀀스·I/O·GUI·실패 대응 기능 회귀는 유지한다. 매뉴얼과 배포/시험 문서에 반영했다.
+- Node-RED 시험과 실장비 조작은 하지 않았다.
+
 ### 커밋·푸쉬 및 원격 CI 검증
 
 - `d4d3fdf`를 main에 커밋·푸쉬하고 GitHub Actions run 45324527718의 네 job 종료를 확인했다.

@@ -1,6 +1,6 @@
 # TD-010 회귀 검증 실행 및 보고 체계
 
-- 상태: `in_progress`
+- 상태: `complete`
 - 갱신일: 2026-11-24
 
 ## 현재 구조
@@ -30,11 +30,15 @@
 
 - 최종: 로컬 .env 없는 소스 복사본과 신규 venv에서 문서 음성 검사 포함 598개 통과(55.42초).
 
-## 남은 완료 조건
+## 원격 CI 완료 및 후속 인수
 
-- 원격 CI run 45324527718은 Ubuntu/Python 3.12만 성공했다. Windows의 homing 준비 중
-  heartbeat timeout, Python 3.14의 GUI/worker 종료 실패를 재현·수정하고 matrix를 재검증한다.
-  세부 실패는 아래 검증 기록을 참조한다. 원격 검증 미통과로 `in_progress`를 유지한다.
-- 새 실제 하드웨어 환경에서 smoke-test 증거를 RF-006 체크리스트에 기록한다.
+- 최초 run 45324527718의 실패를 조사하고 Tk 객체의 worker GC를 메인 스레드 test 경계로 옮겼다.
+- Mock 준비에서 referenced bit뿐 아니라 homing inactive 및 PP 모드 복원을 확인한다.
+  공유 runner의 동기 homing 대기가 200ms heartbeat 예산을 소진하지 않도록 기능 시험용
+  cycle을 8ms에서 2ms로 조정했다. 제품 timeout/제어 계약 변경은 없다.
+- 최종 commit `f169be3`, [CI run 45327417682](https://github.com/IlgonKo/motion-server/actions/runs/45327417682):
+  Windows/Ubuntu × Python 3.12/3.14 모두 성공. 각 598개 실행, Linux는 플랫폼 조건에 따른 skip 3개.
+- DEC-057: Windows 주기 성능 시험은 제외하며 CSP를 포함한 동기 제어는 공식 미지원이다.
+- 실제 신규 하드웨어 배포 인수는 RF-006에 남긴다. TD-010의 별도 조회 profile과 절차는 제공됐다.
 
 - 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)

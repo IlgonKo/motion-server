@@ -56,18 +56,50 @@ Ubuntu 3.14는 GUI Jog 조건 대기 timeout과 연결 해제 시험의 worker �
 같은 로그에 Tk `Variable.__del__`의 `main thread is not in main loop`가 반복 기록되었다.
 이 로그만으로 모든 실패의 근본 원인이 같거나 runner 부하만의 문제라고 단정하지 않는다.
 
-후속 작업은 Tk 객체의 스레드/수명 관리, homing 중 heartbeat 처리, 손실 시험의 종료 경로를
+최초 실패 당시 후속 작업은 Tk 객체의 스레드/수명 관리, homing 중 heartbeat 처리, 손실 시험의 종료 경로를
 분리 재현하는 것이다. 제품 timeout 변경이나 실패 테스트 제외는 하지 않았다.
 실패 traceback과 개별 시간은 해당 run의 `regression-*` artifacts에서 확인할 수 있다.
 결과 기록만 추가한 후속 문서 commit은 `[skip ci]`로 중복 실행을 생략한다.
 
 ## 남은 인수
 
-- TD-010: 원격 CI 실패 원인 수정과 Windows/Linux matrix 재검증. 로컬 성공만으로 완료 처리하지 않는다.
+- TD-010: 아래 최종 원격 재검증으로 완료했다.
 - RF-010: 새 DOCX/PDF 제작·렌더 검증 및 문서 기반 신규 환경 설치. 현재는 Markdown 2.0이며
   Word 1.0은 obsolete 이력으로 보존하고 배포에서 제외했다. 현 PC에 Word/LibreOffice가 없다.
 - RF-006: 새 Windows/Linux PC, Npcap/NIC 및 실장비, catalog 선택, upgrade/rollback 인수.
   현 PC의 Docker daemon 연결이 실패하여 Linux container 실행은 검증하지 않았다.
 
-TD-009는 complete, 나머지 3개는 in_progress로 유지한다. 신규 환경 인수 항목을
+TD-009와 TD-010은 complete, RF-010과 RF-006은 in_progress로 유지한다. 신규 환경 인수 항목을
 로컬 자동 시험 결과만으로 완료 처리하지 않는다.
+
+## 원격 CI 실패 수정 및 최종 재검증
+
+- 검증 commit: `f169be3bde45f20a6ab09cb88b67dae6fa322e4d`.
+- [최종 CI run 45327417682](https://github.com/IlgonKo/motion-server/actions/runs/45327417682): 모두 성공.
+
+| 환경 | 실행 수 | 결과 | 시간 |
+| --- | --- | --- | --- |
+| Windows / Python 3.12 | 598 | 성공 | 129.124초 |
+| Windows / Python 3.14 | 598 | 성공 | 57.623초 |
+| Ubuntu / Python 3.12 | 598 | 성공, 플랫폼 skip 3개 | 100.787초 |
+| Ubuntu / Python 3.14 | 598 | 성공, 플랫폼 skip 3개 | 76.136초 |
+
+### 확인한 원인과 최종 변경
+
+1. 닫힌 Tk 창의 Variable/callback 순환 참조가 이후 TCP worker의 자동 GC에서 정리됐다.
+   `scripts/run_tests.py`는 시험 중 자동 GC를 일시 중지하고 메인 스레드의 시험 경계에서 수거한다.
+   종료 시 기존 GC 설정을 복원한다. 수정 후 원격 Tk 스레드 오류 및 GUI/worker 대기 실패가 사라졌다.
+2. Windows 공유 runner에서는 설정한 8ms 주기와 달리 loop 평균 약 14ms, 최대 약 125ms 지연이
+   관찰됐다. 여러 cycle을 동기 처리하는 Homing 준비와 200ms heartbeat 예산이 충돌했다.
+   기능 회귀 fixture의 Mock cycle을 2ms로 낮추고, 다음 축 준비 전 homing inactive와 PP 모드
+   복원을 확인한다. 준비 실패 시 축과 서버 로그를 남긴다.
+3. Nagle 지연 가능성을 조사해 TCP_NODELAY를 시험했으나 잔여 실패가 계속돼 제품 변경은 원복했다.
+   최종 제품 server/client 코드와 heartbeat timeout은 변경하지 않았다. 임시 timer 측정 코드도 제거했다.
+
+최종 코드 변경 파일은 `scripts/run_tests.py`, `tests/test_ai_pick_place_tcp.py`다.
+로컬 전체 598개 통과 후, 최종 Mock 설정의 통합 13개 통과 및 위 원격 전체 회귀를 확인했다.
+추가/삭제한 테스트는 없고 기존 실패를 skip하거나 retry하여 통과시키지 않았다.
+
+DEC-057에 따라 Windows에서는 CSP를 포함한 동기 제어를 공식 지원하지 않으며 주기 성능을
+검증하지 않는다. 2ms는 시험 fixture의 설정값으로, Windows의 실시간 성능 보증이 아니다.
+Node-RED 시험, 실장비 제어 및 운영 서버 재시작은 하지 않았다.

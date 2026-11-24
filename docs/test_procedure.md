@@ -22,6 +22,13 @@ Linux headless에서는 test 명령 앞에 `xvfb-run -a`를 붙인다. CI는 Win
 Unit과 TCP integration은 각각 별도 process로 실행하여 GUI/module 상태를 격리할 수 있다.
 실장치 profile과 배포 인수 기준은 [배포 검증](deployment_validation.md)을 따른다.
 
+DEC-057에 따라 Windows에서 CSP를 포함한 동기 제어 기능은 공식 지원하지 않으며,
+cycle 주기 성능·jitter 검증을 수행하지 않는다. Windows CI는 기능 회귀다.
+공통 계산 로직 단위 시험이나 Mock cycle 설정을 실시간 성능 보증으로 해석하지 않는다.
+회귀 실행기는 자동 순환 GC를 일시 중지하고 test 경계의 메인 스레드에서 수거한다.
+닫힌 Tk 창의 Variable/callback cycle이 다음 TCP worker에서 정리되는 것을 막기 위한 것으로,
+시험이 끝나면 기존 GC 설정을 복원한다.
+
 ## RF-015 IO-Link 입력 디코딩 회귀
 
 - 자동 검증: `python -m unittest tests.test_io_link_decoding` 및 아래 profile별 회귀 검증을 실행한다.

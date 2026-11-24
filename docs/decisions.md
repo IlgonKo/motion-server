@@ -1405,6 +1405,19 @@ Device Profile + ESI
 - 영향: RF-005와 API 사용 안내 및 실장비 시험 판정 기준을 정합화한다. worker 추가,
   Heartbeat timeout 변경, 연결 종료 안전 처리 우회 또는 새로운 API는 추가하지 않는다.
 
+## DEC-057 Windows 공식 지원 및 검증 범위
+
+- 상태: `accepted`
+- 결정일: 2026-11-24
+- 결정: Windows에서는 CSP를 포함한 동기 제어 기능을 공식 지원하지 않는다.
+  Windows의 EtherCAT cycle 주기 성능, jitter 및 실시간 동기 제어 성능은 검증 대상에서 제외한다.
+- Windows CI는 API, PP 기반 시퀀스, I/O, GUI, 연결/제어권 및 실패 대응의 기능 회귀를 검증한다.
+  공통 알고리즘의 단위 테스트 실행은 Windows 동기 제어 지원이나 성능 보증을 의미하지 않는다.
+- Mock integration의 cycle 설정은 기능 시험을 위한 값이다. 실제 Windows 장치의 달성 가능한
+  주기나 권장 운전 주기로 제시하지 않는다. Linux CI 성공도 실제 하드웨어 동기 성능 보증은 아니다.
+- 영향: TD-010과 RF-006, 사용자 매뉴얼 및 시험 절차에 반영한다. 이번 결정만으로 API나
+  runtime 기능을 삭제하거나 Windows 설정을 자동 거부하는 코드는 추가하지 않는다.
+
 ## 새 결정 작성 양식
 
 ```text
