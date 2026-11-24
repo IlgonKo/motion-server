@@ -6,6 +6,15 @@
 
 ## 2026-11-24
 
+### 커밋·푸쉬 및 원격 CI 검증
+
+- `d4d3fdf`를 main에 커밋·푸쉬하고 GitHub Actions run 45324527718의 네 job 종료를 확인했다.
+- Ubuntu/Python 3.12 성공. Ubuntu/3.14, Windows/3.12 및 3.14 실패로 전체 CI는 실패다.
+- Mock homing 준비 중 heartbeat timeout, GUI Jog 대기 및 손실 시험 worker 종료 실패를 기록했다.
+  Tk 객체 정리의 스레드 오류도 관찰됐으며 근본 원인은 추가 재현이 필요하다.
+- TD-010은 in_progress 유지. timeout 완화·테스트 제외·실장비 조작·Node-RED 테스트는 하지 않았다.
+- 상세: [배포 준비 검증 결과](validation/2026-11-24-release-readiness.md).
+
 ### TD-009 RF-010 문서 정합성 및 TD-010 RF-006 검증 체계 정리
 
 - 공개 API 57개와 JSON 예제 59개를 Schema/registry 기반으로 검증하도록 만들었다.

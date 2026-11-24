@@ -32,8 +32,9 @@
 
 ## 남은 완료 조건
 
-- 변경을 push한 뒤 GitHub clean checkout의 Windows/Linux matrix 실행 결과를 확인한다.
-  workflow 작성만으로 원격 CI가 통과했다고 표시하지 않는다.
+- 원격 CI run 45324527718은 Ubuntu/Python 3.12만 성공했다. Windows의 homing 준비 중
+  heartbeat timeout, Python 3.14의 GUI/worker 종료 실패를 재현·수정하고 matrix를 재검증한다.
+  세부 실패는 아래 검증 기록을 참조한다. 원격 검증 미통과로 `in_progress`를 유지한다.
 - 새 실제 하드웨어 환경에서 smoke-test 증거를 RF-006 체크리스트에 기록한다.
 
 - 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)

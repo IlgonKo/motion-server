@@ -36,9 +36,34 @@ Windows 64 bit / Python 3.14.3에서 실행했다. Node-RED 실행 시험, 실�
 패키지는 검증용으로 별도 생성했으며 운영 설정·Npcap installer를 포함하지 않는다.
 server mock smoke 통과가 Panel EXE 전체 GUI 조작이나 실장비 driver 정상 동작을 의미하지 않는다.
 
+## 원격 CI 결과
+
+- 검증 commit: `d4d3fdf1477a0fff176109fa272637857671b0a7`, `main` push 완료.
+- [GitHub Actions run 45324527718](https://github.com/IlgonKo/motion-server/actions/runs/45324527718): 전체 실패.
+- 네 환경 모두 API 문서 검사를 통과했고 각각 598개 회귀 테스트를 실행했다.
+
+| 환경 | 결과 |
+| --- | --- |
+| Ubuntu / Python 3.12 | 성공 |
+| Ubuntu / Python 3.14 | 실패 2개, skip 3개 |
+| Windows / Python 3.12 | error 7개 |
+| Windows / Python 3.14 | 실패 1개, error 2개 |
+
+Windows error는 mock TCP 테스트 준비 단계의 `system/axis/home` 요청 중
+`ConnectionLostError: Motion Server Heartbeat timed out`이다. Windows 3.14의 추가 실패는
+제어권 해제 시험에서 worker가 제한 시간 안에 끝나지 않은 것이다.
+Ubuntu 3.14는 GUI Jog 조건 대기 timeout과 연결 해제 시험의 worker 종료 대기 실패다.
+같은 로그에 Tk `Variable.__del__`의 `main thread is not in main loop`가 반복 기록되었다.
+이 로그만으로 모든 실패의 근본 원인이 같거나 runner 부하만의 문제라고 단정하지 않는다.
+
+후속 작업은 Tk 객체의 스레드/수명 관리, homing 중 heartbeat 처리, 손실 시험의 종료 경로를
+분리 재현하는 것이다. 제품 timeout 변경이나 실패 테스트 제외는 하지 않았다.
+실패 traceback과 개별 시간은 해당 run의 `regression-*` artifacts에서 확인할 수 있다.
+결과 기록만 추가한 후속 문서 commit은 `[skip ci]`로 중복 실행을 생략한다.
+
 ## 남은 인수
 
-- TD-010: push 후 GitHub CI matrix 실행 증거. 현재는 workflow 작성 및 로컬 clean-source 통과.
+- TD-010: 원격 CI 실패 원인 수정과 Windows/Linux matrix 재검증. 로컬 성공만으로 완료 처리하지 않는다.
 - RF-010: 새 DOCX/PDF 제작·렌더 검증 및 문서 기반 신규 환경 설치. 현재는 Markdown 2.0이며
   Word 1.0은 obsolete 이력으로 보존하고 배포에서 제외했다. 현 PC에 Word/LibreOffice가 없다.
 - RF-006: 새 Windows/Linux PC, Npcap/NIC 및 실장비, catalog 선택, upgrade/rollback 인수.
