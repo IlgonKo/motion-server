@@ -17,6 +17,8 @@ SOURCE_ROOTS = (
 # changes do not invalidate the contract. Adding a new entry requires selecting
 # one of the documented boundary/translation/best-effort purposes.
 APPROVED_BROAD_CATCHES = {
+    # RF-011: best-effort worker diagnostic sink cannot interrupt server logging.
+    "motion_server/file_logging.py::_notice",
     "control_panel/axis_control_panel/client.py::_connection_loop",
     "control_panel/axis_control_panel/connection.py::try_send",
     "control_panel/axis_control_panel/diagnosis.py::process_panel_sdo_read_queue",

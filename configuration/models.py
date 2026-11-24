@@ -146,6 +146,14 @@ class PreLoggingConfig:
 
 
 @dataclass(frozen=True)
+class FileLogConfig:
+    enabled: bool = False
+    path: Path | None = None
+    max_bytes: int = 10485760
+    backup_count: int = 10
+
+
+@dataclass(frozen=True)
 class LoggingConfig:
     command: CommandLogConfig
     status: StatusLogConfig
@@ -155,6 +163,7 @@ class LoggingConfig:
     position_feedback_lag: PositionFeedbackLagLogConfig
     csp_command_step: CspCommandStepLogConfig
     pre_logging: PreLoggingConfig
+    file: FileLogConfig = FileLogConfig()
 
 
 @dataclass(frozen=True)

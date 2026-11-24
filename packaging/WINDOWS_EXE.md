@@ -141,3 +141,16 @@ three formats and checks the Word revision and PDF signature.
 `Manual/motion_server_api_basic.md` and `Manual/deployment_validation.md` are included.
 `-SkipNpcapDownload` explicitly omits the Npcap installer and does not prove hardware readiness.
 A local build is not a clean Windows/Linux acceptance test.
+
+## Windows service registration
+
+The package includes `register_service.ps1`, `Tools/service/MotionServerService.exe`
+(WinSW), its default XML, dependency metadata and license. Run the registration script
+as administrator. It replaces only a stopped `MotionServer` service and never starts
+or stops the service automatically. Existing service customizations are reset.
+Manage the installed service through Windows Services.
+
+See `Manual/windows_service.md` in the package or [the service guide](../docs/windows_service.md).
+The current `system/server/restart` process replacement is not yet integrated with
+service management; TD-042 tracks same-process reinitialization. Until that work is
+verified, restart a service deployment through Windows Services.

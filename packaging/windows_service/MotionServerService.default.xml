@@ -1,0 +1,16 @@
+<service>
+  <id>MotionServer</id>
+  <name>Motion Server</name>
+  <description>Motion Server. Configuration: package config.txt.</description>
+  <executable>%BASE%\..\..\motion_server.exe</executable>
+  <workingdirectory>%BASE%\..\..</workingdirectory>
+  <startmode>Automatic</startmode>
+  <!-- WinSW defaults to LocalSystem when serviceaccount is omitted. -->
+  <stoptimeout>30 sec</stoptimeout>
+  <onfailure action="restart" delay="5 sec"/>
+  <onfailure action="restart" delay="5 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 day</resetfailure>
+  <!-- Server file logging is optional and controlled only by config.txt. -->
+  <log mode="none"/>
+</service>

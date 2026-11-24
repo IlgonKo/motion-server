@@ -8,6 +8,9 @@ from configuration import (
     load_configuration_snapshot,
     parse_cli_overrides,
 )
+from configuration.builder import build_file_log_config
+from configuration.models import FileLogConfig
+from motion_server.file_logging import FileLoggingSession
 from device import available_device_names
 from motion_server.app.initialization import (
     InitializationStage,
@@ -31,7 +34,9 @@ class MotionServerApplication:
         initialization_status=None,
         initialization_exception=None,
         list_adapters=False,
+        file_logging=FileLogConfig(),
     ):
+        self._file_logging = file_logging
         self._bootstrap_config = bootstrap_config
         self._config = config
         self._initialization_status = (
@@ -77,7 +82,10 @@ class MotionServerApplication:
             cli_overrides,
         )
 
+        file_logging = FileLogConfig()
         try:
+            file_logging = build_file_log_config(
+                snapshot.values, (source.project_root / source.project_filename).resolve().parent)
             raw_config = load_configuration(
                 available_profiles=available_device_names(),
                 snapshot=snapshot,
@@ -87,6 +95,7 @@ class MotionServerApplication:
                 raw_config,
                 cli_overrides,
                 bootstrap=bootstrap_config,
+                file_logging=file_logging,
             )
         except Exception as exc:
             failure = initialization_failure_from_exception(
@@ -99,20 +108,31 @@ class MotionServerApplication:
                 initialization_status=InitializationStatus.failed(failure),
                 initialization_exception=exc,
                 list_adapters=list_adapters,
+                file_logging=file_logging,
             )
         return cls(
             bootstrap_config,
             typed_config,
             initialization_status=InitializationStatus.ready(),
             list_adapters=list_adapters,
+            file_logging=file_logging,
         )
 
     def run(self, runner=None):
-        try:
-            return self._run(runner)
-        except ListenerStartupException as exception:
-            log_listener_startup_failure(exception)
-            return 1
+        from motion_server.server import ServerRestartRequested, restart_current_process
+        with FileLoggingSession(self._file_logging):
+            try:
+                return self._run(runner)
+            except ListenerStartupException as exception:
+                log_listener_startup_failure(exception)
+                return 1
+            except KeyboardInterrupt:
+                # Runtime finally blocks have already performed device cleanup.
+                return 0
+            except ServerRestartRequested:
+                pass
+        # Release the file lock and drain before the replacement process starts.
+        restart_current_process()
 
     def _run(self, runner=None):
         if self._config is None:
@@ -122,11 +142,7 @@ class MotionServerApplication:
                     initialization_status=self._initialization_status,
                     diagnostic_manager=DiagnosticManager(),
                 )
-            from motion_server.server import (
-                ServerRestartRequested,
-                restart_current_process,
-                run_configuration_degraded_once,
-            )
+            from motion_server.server import run_configuration_degraded_once
 
             session = ServerSession(self._initialization_status)
             log_initialization_failure(
@@ -137,15 +153,7 @@ class MotionServerApplication:
                 session,
                 at=self._initialization_status.failure.occurred_at,
             )
-            while True:
-                try:
-                    run_configuration_degraded_once(
-                        session,
-                        self._bootstrap_config,
-                    )
-                    return
-                except ServerRestartRequested:
-                    restart_current_process()
+            return run_configuration_degraded_once(session, self._bootstrap_config)
 
         dependencies = {
             "server_config": self._config.server,
@@ -163,7 +171,6 @@ class MotionServerApplication:
         # Runtime recovery lifecycle belongs to this composition root.
         from motion_server.server import (
             ServerRestartRequested,
-            restart_current_process,
             run_main_once,
             list_adapters,
         )
@@ -176,13 +183,8 @@ class MotionServerApplication:
             InitializationStatus.ready(),
             diagnostic_manager=DiagnosticManager(),
         )
-        while True:
-            try:
-                run_main_once(session, **dependencies)
-                return
-            except ServerRestartRequested:
-                print(
-                    "Motion Server restart requested; restarting process.",
-                    flush=True,
-                )
-                restart_current_process()
+        try:
+            return run_main_once(session, **dependencies)
+        except ServerRestartRequested:
+            print("Motion Server restart requested; restarting process.", flush=True)
+            raise

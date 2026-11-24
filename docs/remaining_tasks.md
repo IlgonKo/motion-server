@@ -161,8 +161,8 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-011 Windows Service 등록 및 파일 로그 옵션
 
-- 상태: `planned`
-- 진행: 2026-11-24 정책·등록 기본값 확정. MotionServer/자동 시작/LocalSystem, 실패 시 5초 후 2회 재시도·이후 무동작·1일 초기화. 서비스 실행/중지 연결과 접근 권한은 구현 중 검증하며 추가 정책 결정은 없다.
+- 상태: `complete`
+- 진행: 비동기 로그·교체 등록·WinSW 패키징 완료. 실제 SCM/LocalSystem 기본 13개 및 장애 복구·Npcap 접근·저장 복원·강제 종료 추가 12개 검사 통과. 재부팅 시험은 사용자 지시로 제외. 실장비 동작 인수와 TD-042 API Restart는 별도 범위.
 - 우선순위: 보통
 - 요약: 서비스 등록 스크립트를 제공하고 이후 운영은 사용자가 Windows 기본 도구로 수행한다. 파일 로그는 실행 모드와 독립된 선택 기능이다.
 - 완료 조건:
@@ -924,3 +924,16 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 응답/실패/연결 단절을 표시하고 자동 authority 획득이나 재전송을 하지 않는다.
   - 축 feedback 수신 후 본 화면 전환 및 관련 회귀 검증이 통과한다.
 - 상세: [TD-041 기술 명세](tasks/td/TD-041-axis-panel-bootstrap-recovery.md)
+
+### TD-042 Server Restart의 동일 프로세스 내 전체 재초기화
+
+- 상태: `open`
+- 우선순위: 높음
+- 관련 작업: RF-011
+- 요약: system/server/restart를 새 프로세스 실행 대신 PID를 유지하는 서버 전체 재초기화로 변경한다.
+- 완료 조건:
+  - 설정 재로드 및 Diagnostic/runtime/listener 재생성이 같은 PID에서 수행된다.
+  - 연결·제어권·장치·worker·잠금을 정리하며 반복 실행 시 자원 누수가 없다.
+  - 기존 초기화 실패 정책과 외부 종료 우선 동작을 유지한다.
+  - 서비스 실행 상태를 유지하는 API Restart 통합 검증 및 의미 변경 문서화가 완료된다.
+- 상세: [TD-042 기술 명세](tasks/td/TD-042-server-restart-in-process-reinitialization.md)

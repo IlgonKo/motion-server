@@ -25,6 +25,7 @@ class ConfigurationModel:
     project_root: Path
     values: MappingProxyType
     bus: BusConfig
+    main_config_directory: Path | None = None
 
     def value(self, name, default=""):
         return self.values.get(name, default)
@@ -147,4 +148,5 @@ def load_configuration(
     values = device_defaults
     values.update(project_values)
     values.update(process_values)
-    return ConfigurationModel(project_root, MappingProxyType(values), bus)
+    return ConfigurationModel(project_root, MappingProxyType(values), bus,
+                              (project_root / snapshot.project_filename).resolve().parent)

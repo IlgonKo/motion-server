@@ -36,6 +36,8 @@ class DiagnosticManager:
                 raise ValueError(
                     "An active Diagnostic code cannot change its definition",
                 )
+            if active.history.resolved_at is not None:
+                self._log_transition("detected again", active)
             active.history.resolved_at = None
             return active
 
@@ -54,12 +56,14 @@ class DiagnosticManager:
         self._used_ids.add(status.diagnostic_id)
         self._by_key[key] = status
         self._by_id[status.diagnostic_id] = status
+        self._log_transition("detected", status)
         return status
 
     def acknowledge(self, diagnostic_id, *, at=None):
         status = self._required_status(diagnostic_id)
         if status.history.acknowledged_at is None:
             status.history.acknowledged_at = at or self._clock()
+            self._log_transition("acknowledged", status)
         return self._clear_if_ready(status)
 
     def acknowledge_faults(self, *, source=None, source_type=None, at=None):
@@ -101,6 +105,7 @@ class DiagnosticManager:
             raise KeyError(key)
         if status.history.resolved_at is None:
             status.history.resolved_at = at or self._clock()
+            self._log_transition("resolved", status)
         return self._clear_if_ready(status)
 
     def status(self, diagnostic_id):
@@ -139,7 +144,19 @@ class DiagnosticManager:
         key = self._key(status.definition.code, status.source)
         del self._by_key[key]
         del self._by_id[status.diagnostic_id]
+        self._log_transition("cleared", status)
         return status
+
+    @staticmethod
+    def _log_transition(action, status):
+        # Emit transitions only, never each diagnostic polling cycle.
+        print(
+            f"Diagnostic {action}: code={status.definition.code} "
+            f"level={status.definition.level.value} "
+            f"source={status.source.type.value}:{status.source.index} "
+            f"id={status.diagnostic_id}",
+            flush=True,
+        )
 
     @staticmethod
     def _key(code, source):

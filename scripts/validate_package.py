@@ -11,6 +11,9 @@ from xml.etree import ElementTree
 def inspect(root):
     required = [
         'motion_server.exe', 'config.example.txt',
+        'register_service.ps1', 'Tools/service/MotionServerService.exe',
+        'Tools/service/MotionServerService.default.xml',
+        'Tools/service/dependency.json', 'Tools/service/WinSW-LICENSE.txt',
         'device/cmmt/config.example.txt', 'device/cpx_ap_i_ec/config.example.txt',
         'device/io_link/iodd',
         'Tools/axis_control_panel/axis_control_panel.exe',
@@ -19,6 +22,7 @@ def inspect(root):
         'Manual/Motion_Server_User_Manual_KR.md',
         'Manual/Motion_Server_Installation_Manual_Basic_Mode.md',
         'Manual/motion_server_api_basic.md', 'Manual/deployment_validation.md',
+        'Manual/windows_service.md',
         '_internal/motion_server/api/schema/axis.json',
         '_internal/device/cmmt/esi', '_internal/device/cpx_ap_i_ec/esi',
         '_internal/device/io_link/iodd', 'Reference/cmmt_error_catalog.json',
@@ -27,6 +31,12 @@ def inspect(root):
         'AI Reference/docs/ai/README.md',
     ]
     errors = [f'Missing: {path}' for path in required if not (root/path).exists()]
+    dependency = root/'Tools/service/dependency.json'
+    wrapper = root/'Tools/service/MotionServerService.exe'
+    if dependency.exists() and wrapper.exists():
+        expected = json.loads(dependency.read_text(encoding='utf-8'))['sha256']
+        if hashlib.sha256(wrapper.read_bytes()).hexdigest() != expected:
+            errors.append('WinSW service executable checksum mismatch')
     for relative in ('_internal/device/cmmt/esi', '_internal/device/cpx_ap_i_ec/esi',
                      '_internal/device/io_link/iodd'):
         if not list((root/relative).rglob('*.xml')):

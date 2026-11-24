@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 from configuration.file_parser import split_config_list, split_indexed_config_list
 from configuration.loader import ConfigurationModel
@@ -20,6 +21,7 @@ from configuration.models import (
     IoLinkPortConfig,
     IoModuleConfig,
     LoggingConfig,
+    FileLogConfig,
     MotionConfig,
     MotionServerConfig,
     PositionFeedbackLagLogConfig,
@@ -79,6 +81,7 @@ def build_motion_server_config(
     source: ConfigurationModel,
     cli: CliOverrides | None = None,
     bootstrap: BootstrapServerConfig | None = None,
+    file_logging: FileLogConfig | None = None,
 ):
     values = source.values
     cli = cli or CliOverrides()
@@ -156,7 +159,11 @@ def build_motion_server_config(
             False,
         )),
     )
-    logging = build_logging_config(values, cli)
+    logging = build_logging_config(
+        values, cli,
+        file_logging=file_logging or build_file_log_config(
+            values, source.main_config_directory or source.project_root),
+    )
     bus = source.bus if cli.bus is None else parse_bus_config(cli.bus)
     devices = build_device_configs(source, bus=bus, cli=cli)
     config = MotionServerConfig(
@@ -171,9 +178,25 @@ def build_motion_server_config(
     return config
 
 
-def build_logging_config(values, cli=None):
+def build_file_log_config(values, directory):
+    enabled = boolean(values, "MOTION_SERVER_LOG_FILE_ENABLED", False)
+    raw_path = value(values, "MOTION_SERVER_LOG_FILE_PATH", "").strip()
+    max_bytes = integer(values, "MOTION_SERVER_LOG_FILE_MAX_BYTES", 10485760)
+    backups = integer(values, "MOTION_SERVER_LOG_FILE_BACKUP_COUNT", 10)
+    if enabled and not raw_path:
+        raise ValueError("MOTION_SERVER_LOG_FILE_PATH is required when file logging is enabled")
+    if max_bytes <= 0 or backups < 1:
+        raise ValueError("File log max bytes and backup count must be positive")
+    path = Path(raw_path) if raw_path else None
+    if path is not None and not path.is_absolute():
+        path = Path(directory) / path
+    return FileLogConfig(enabled, path, max_bytes, backups)
+
+
+def build_logging_config(values, cli=None, *, file_logging=None):
     cli = cli or CliOverrides()
     return LoggingConfig(
+        file=file_logging if file_logging is not None else build_file_log_config(values, Path.cwd()),
         command=CommandLogConfig(boolean(values, "MOTION_SERVER_COMMAND_LOGS", False)),
         status=StatusLogConfig(
             boolean(values, "MOTION_SERVER_STATUS_LOGS", False),

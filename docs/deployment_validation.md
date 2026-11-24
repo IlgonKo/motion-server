@@ -65,3 +65,11 @@ python -B -m scripts.hardware_status_check --host <서버IP> --port 15000 --repo
 
 status 통과는 실제 이동·정지·Homing·I/O 동작 시험을 대체하지 않는다.
 기존 `diagnostics/pysoem_single_axis_smoke_test.py`는 과거 내부 API 기반 도구이므로 현행 인수 절차에 사용하지 않는다.
+
+## Windows 서비스 인수
+
+[서비스 및 파일 로그 안내](windows_service.md)에 따라 별도 시험 환경에서 등록·교체,
+수동 시작/중지, LocalSystem 접근, 재부팅 및 장애 복구를 확인한다. 등록 스크립트는
+자동 시작·중지를 수행하지 않는다. 현재 이 실제 서비스 인수는 미완료이며,
+WinSW 시험 모드의 Mock 실행 결과로 대체하지 않는다.
+`system/server/restart` 서비스 연동은 TD-042 구현 후 별도로 검증한다.

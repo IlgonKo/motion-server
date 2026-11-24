@@ -201,11 +201,15 @@ try {
     foreach ($manualFile in $manualFiles) {
         Copy-Item -Force $manualFile.FullName (Join-Path $ManualRoot $manualFile.Name)
     }
-    foreach ($name in @("motion_server_api_basic.md", "deployment_validation.md")) {
+    foreach ($name in @("motion_server_api_basic.md", "deployment_validation.md", "windows_service.md")) {
         Copy-Item -LiteralPath (Join-Path "docs" $name) -Destination (Join-Path $ManualRoot $name)
     }
     Copy-Item -Force "packaging\WINDOWS_EXE.md" (Join-Path $PackageRoot "WINDOWS_EXE.md")
     Copy-Item -Force "scripts\windows\list_ethercat_nics.ps1" (Join-Path $ToolsRoot "list_ethercat_nics.ps1")
+    & $Python -B "scripts\windows\service_package.py" --destination $PackageRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "Windows service package assembly failed"
+    }
 
     if (-not $SkipNpcapDownload) {
         $NpcapUrl = "https://npcap.com/dist/npcap-1.88.exe"
