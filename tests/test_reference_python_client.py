@@ -114,17 +114,6 @@ def send_message(connection, message, *, split=None):
 
 
 class ReferencePythonClientTest(unittest.TestCase):
-    def test_connection_disables_tcp_batching(self):
-        with socket.socket() as listener:
-            listener.bind(("127.0.0.1", 0))
-            listener.listen()
-            client = MotionServerClient("127.0.0.1", listener.getsockname()[1])
-            try:
-                client._connect()
-                self.assertEqual(client._socket.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY), 1)
-            finally:
-                client.stop()
-
     def tearDown(self):
         for resource in getattr(self, "resources", []):
             resource.stop()

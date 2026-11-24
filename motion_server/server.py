@@ -67,7 +67,6 @@ from motion_server.app.recovery import (
 )
 from motion_server.failure import CommunicationException
 from motion_server.app.client_transport import (
-    configure_client_socket,
     allocate_client_id,
     close_client,
     flush_client_output,
@@ -279,7 +278,7 @@ def run_server_loop(
         while True:
             try:
                 conn, addr = server.accept()
-                configure_client_socket(conn)
+                conn.setblocking(False)
                 client_id = allocate_client_id(clients)
                 client = {
                     "id": client_id,
@@ -352,7 +351,7 @@ def run_bus_disconnected_loop(
     while state["server_session"].runtime_state is ServerRuntimeState.BUS_DISCONNECTED:
         try:
             conn, addr = server.accept()
-            configure_client_socket(conn)
+            conn.setblocking(False)
             client_id = allocate_client_id(clients)
             client = {
                     "id": client_id,
@@ -414,7 +413,7 @@ def run_degraded_server_loop(
         readable, _, _ = select.select([server], [], [], 0.05)
         if server in readable:
             conn, addr = server.accept()
-            configure_client_socket(conn)
+            conn.setblocking(False)
             client = {
                 "id": next_client_id,
                 "conn": conn,

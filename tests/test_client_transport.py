@@ -1,6 +1,5 @@
 import unittest
 import json
-import socket
 from unittest.mock import patch
 
 from motion_server.api.encoder import (
@@ -8,7 +7,6 @@ from motion_server.api.encoder import (
     send_client_message,
 )
 from motion_server.app.client_transport import (
-    configure_client_socket,
     flush_client_output,
     handle_heartbeat_ack,
     heartbeat_timed_out,
@@ -48,12 +46,6 @@ class _LineSocket:
 
 
 class ClientTransportTests(unittest.TestCase):
-    def test_client_socket_uses_immediate_nonblocking_tcp(self):
-        with socket.socket() as conn:
-            configure_client_socket(conn)
-            self.assertEqual(conn.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY), 1)
-            self.assertFalse(conn.getblocking())
-
     def test_heartbeat_challenge_ack_and_next_sequence(self):
         client = {"conn": _BufferedSendSocket(), "output_buffer": bytearray()}
         initialize_client_heartbeat(client, now=10.0)

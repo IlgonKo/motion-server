@@ -188,8 +188,6 @@ class MotionServerClient:
             timeout=CONNECT_TIMEOUT,
         )
         sock.settimeout(HEARTBEAT_POLL_SECONDS)
-        # Small heartbeat ACKs and requests must not wait for TCP batching.
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         with self._state_lock:
             if self._stop_event.is_set():
                 sock.close()

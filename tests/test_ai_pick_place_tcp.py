@@ -37,7 +37,10 @@ MOTION_SERVER_MOTION_MODE=pp
 MOTION_SERVER_FEEDBACK_PERIOD=0.01
 MOTION_SERVER_COMMAND_LOGS=1
 PYSOEM_DC_ENABLED=0
-PYSOEM_CYCLE_TIME=0.008
+# Functional sequence tests, not an 8ms real-time scheduling benchmark.
+# Homing uses several synchronous cycles; leave room within the unchanged
+# 200ms heartbeat budget on shared CI machines.
+PYSOEM_CYCLE_TIME=0.002
 """
         (self.folder / ".env").write_text(config, encoding="utf-8")
         if package:

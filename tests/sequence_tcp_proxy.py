@@ -60,8 +60,6 @@ class ResponseDelayProxy:
                 return
             downstream.settimeout(1)
             upstream.settimeout(1)
-            for endpoint in (downstream, upstream):
-                endpoint.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             buffers = {downstream: b'', upstream: b''}
             commands = {}
             pending = []

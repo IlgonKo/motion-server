@@ -1,6 +1,5 @@
 import json
 import select
-import socket
 import time
 from collections.abc import Mapping
 
@@ -16,12 +15,6 @@ from motion_server.app.authority_release import abort_owner_connection
 HEARTBEAT_PERIOD_SECONDS = 0.05
 HEARTBEAT_TIMEOUT_SECONDS = 0.2
 UINT32_MODULUS = 1 << 32
-
-
-def configure_client_socket(conn):
-    # Heartbeat and command responses must not wait for Nagle packet batching.
-    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    conn.setblocking(False)
 
 
 def initialize_client_heartbeat(client, *, now=None):
