@@ -88,6 +88,16 @@ MotionServerApplication.from_source(ConfigurationSource(project_root=Path(sys.ar
             for axis in range(3):
                 success(self.client.request({"cmd": "system/axis/home", "axis": axis}))
                 self.wait_for(lambda f, a=axis: bool(f["statuswords"][a] & 32768))
+                # Referenced becomes true before the server restores PP mode.
+                # Do not overlap the next home with that synchronous cleanup.
+                deadline = time.monotonic() + 5
+                while True:
+                    status = success(self.client.request({"cmd": "system/axis/status", "axis": axis}))
+                    if not status["homing"]["active"] and status["motion_mode"] == "pp":
+                        break
+                    if time.monotonic() >= deadline:
+                        self.fail(f"Homing cleanup timeout: {status}")
+                    time.sleep(.01)
             self.config = load_json(ROOT / "reference_clients/python/examples/pick_place/sequence.json")
             self.config.update(stage_timeout=5, input_timeout=.3, feedback_timeout=1, port=self.port)
             self.config["pick"]["positions"] = {"X": .5, "Y": .6, "Z": .7}
