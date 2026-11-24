@@ -9,6 +9,9 @@ from motion_server.application import MotionServerApplication
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["parameter-store"]:
+        from device.virtual_device.parameter_store.__main__ import main as store_main
+        sys.exit(store_main(sys.argv[2:]))
     sys.exit(MotionServerApplication.from_source(
         ConfigurationSource(
             project_root=root,

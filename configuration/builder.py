@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from configuration.file_parser import split_config_list, split_indexed_config_list
 from configuration.loader import ConfigurationModel
 from configuration.bus import parse_bus_config
 from configuration.models import (
     BackendType,
+    VirtualParameterStoreConfig,
     BootstrapServerConfig,
     BusDeviceConfig,
     CmmtDeviceConfig,
@@ -173,6 +175,7 @@ def build_motion_server_config(
         motion=motion,
         logging=logging,
         devices=devices,
+        virtual_parameter_store=build_virtual_parameter_store(source, devices, backend),
     )
     validate_motion_server_config(config)
     return config
@@ -461,3 +464,29 @@ def enum_value(enum_type, raw):
 
 def choose(override, default):
     return default if override is None else override
+
+
+def build_virtual_parameter_store(source, devices, backend):
+    prefix = "MOTION_SERVER_VIRTUAL_DEVICE_"
+    enabled = boolean(source.values, prefix + "PARAMETER_STORE_ENABLED", False)
+    path_text = value(source.values, prefix + "PARAMETER_STORE_PATH", "").strip()
+    path = Path(path_text).expanduser() if path_text else None
+    if path is not None and not path.is_absolute():
+        path = (source.main_config_directory or source.project_root) / path
+    ids = []
+    for item in split_config_list(value(source.values, prefix + "STORAGE_IDS", "")):
+        parts = item.split(":")
+        if len(parts) != 2 or not parts[0].strip().isdigit() or not re.fullmatch(r"[a-z0-9_-]+", parts[1].strip()):
+            raise ValueError("Invalid virtual device storage_id mapping")
+        ids.append((int(parts[0]), parts[1].strip()))
+    if len(set(i for i, _ in ids)) != len(ids) or len(set(v for _, v in ids)) != len(ids):
+        raise ValueError("Duplicate virtual device storage_id or slave index")
+    if set(i for i, _ in ids) - set(d.slave_index for d in devices):
+        raise ValueError("Virtual storage_id references nonexistent slave")
+    if enabled and backend is BackendType.MOCK:
+        if path is None:
+            raise ValueError("Virtual parameter store path is required")
+        required = {d.slave_index for d in devices if isinstance(d.device, CmmtDeviceConfig)}
+        if required - {i for i, _ in ids}:
+            raise ValueError("Every persistent virtual CMMT requires storage_id")
+    return VirtualParameterStoreConfig(enabled, path.resolve() if path else None, tuple(ids))

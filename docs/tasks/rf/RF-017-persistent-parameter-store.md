@@ -1,7 +1,7 @@
 # RF-017 Persistent Device Parameter Store
 
 - 등록일: 2026-09-04
-- 상태: `planned`
+- 상태: `complete`
 - 우선순위: 보통
 - 관련 항목: TD-025, RF-003, RF-013, RF-016
 
@@ -159,8 +159,9 @@ MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS=\
 - 각 revision은 저장 대상 전체 값을 보관한다. 1차는 revision별 조회를 제공하고 diff 명령은 제외한다.
 - 이력은 자동 삭제 없이 유지한다. 보존 기간/용량 제한은 추후 필요 시 논의한다.
 - snapshot 전체 저장과 최신 활성 revision 변경은 한 transaction에서 commit한다. 일부 항목만 commit하지 않는다.
-- 1차 구현은 별도 worker 없는 동기 저장을 우선한다. 성공은 commit 완료 후 반환한다.
-  구현 전 Model_Update/PDO 주기 경로와 저장 지연 영향을 확인하고 주기를 막는 구조라면 근거를 제시하여 비동기 방식을 재논의한다.
+- 2026-11-24 확정: 저장은 전용 worker에서 비동기로 처리한다. PDO/Model_Update에서 SQLite 기록이나 commit 완료를 기다리지 않는다.
+- Model_Update는 immutable snapshot을 전달하고 다음 주기에서 완료 여부만 확인한다. API Success는 commit 완료 후 반환한다.
+- 저장 대기 중에는 서버가 PDO, feedback 및 다른 요청을 계속 처리한다. 같은 장치의 중복 저장은 거부하고, 공통 대기열은 제한한다.
 - 저장 실패 시 이전 저장본과 가상장치 현재값을 유지한다. 자동 rollback이나 자동 재시도하지 않는다.
 - 공통 저장소는 실패를 장치 모델에 반환한다. 장치 응답/오류 상태 변환은 모델 책임이며 저장 실패만으로 공통 Drive Fault를 생성하지 않는다.
 
@@ -199,7 +200,7 @@ MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS=\
 공통 설계 및 1차 범위 논의는 완료했다. 다음은 구현 과정의 확인 항목이다.
 
 - 서버/CLI 저장소 잠금, Factory Reset 실패 시 원자성, SQL 내부 표현을 확정 계약대로 구현한다.
-- 저장 지연과 Model_Update/PDO 주기 영향을 확인한다. 동기 저장이 주기를 막는 구조라면 근거와 함께 재논의한다.
+- worker 저장 지연 주입 중 Model_Update 진행과 commit 이전 Success 금지를 검증한다.
 - 저장 실패의 장치 응답 및 복원 실패의 기존 초기화 진단 전달 경계를 검증한다.
 - CPX/AP/IOL 실제 저장 연결은 1차 완료 조건에 포함하지 않는다. 하위 장치 storage_id와 장치별 저장 동작은 후속 범위에서 다룬다.
 
@@ -240,3 +241,100 @@ MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS=\
 - 저장 실패 시 이전 저장본과 현재값을 유지하며, 복원 실패 시 부분 복원 상태로 운전하지 않는다.
 - 실장비 snapshot 저장 및 장비 간 이전 기능은 포함하지 않으며 기존 실장비 parameter save 동작을 유지한다.
 - storage_id 및 저장 경로, 동일 값 재저장, 원자적 저장, 이력 조회, 복원 검증과 Factory Reset 테스트가 통과한다.
+
+## 구현 전 경로 점검 — 2026-11-24
+
+- 설계 문서 커밋: `4359e7b`.
+- `MockSlave.write_sdo()`는 OD write 직후 동기적으로 model_update를 호출한다.
+- `VirtualCiA402Servo._apply_od_commands()`가 저장 command edge를 처리한다.
+- `MockMaster.receive_processdata()`도 exchange_processdata → model_update를 동기 호출한다.
+- 서버 루프는 PDO 교환과 client 처리를 같은 실행 흐름에서 수행한다. 현재 저장 command 경로에
+  SQLite commit을 추가하면 디스크 작업 시간만큼 PDO/Heartbeat 처리가 지연되는 구조다.
+- `CMMTDeviceProfile.save_parameters()`는 command write 직후 status/result를 읽고 command를 clear한다.
+  worker만 추가하면 commit 전에 결과를 읽을 수 있으므로 완료 대기/응답 경계도 검토해야 한다.
+- 사용자 확인 결과 동기 저장은 주기성을 방해하므로 비동기 저장으로 변경했다. worker와 완료 응답 경계를 함께 구현한다.
+- 이는 코드 경로 분석 결과이며 실제 DB 저장 지연 측정이나 실장비 시험 결과는 아니다.
+
+## 구현 결과 — 2026-11-24
+
+### 리뷰 보완 및 재검증
+
+- 기존 0바이트/미초기화 DB를 신규 저장소로 재생성하지 않고 StoreError로 거부한다. 파일이 없는 경우에만 최초 schema 생성을 허용한다.
+- snapshot 이력이 남아 있는데 활성 장치/revision 정보가 없는 경우 기본값 복원과 재저장을 모두 거부한다. 기존 이력은 변경하지 않는다.
+- 관련 회귀 테스트 4개를 추가했다: 기존 빈 파일, 저장 후 truncate, 활성 연결 유실, 정상 신규 storage_id.
+- 수정 후 단위/Mock 회귀 607개, RF-017 집중/TCP 검증 23개 통과(집중 검증의 단위 항목은 전체 회귀와 중복).
+- 저장·복원, 비동기 완료 응답, 실패 및 종료 경계를 다시 검토했으며 이번 검토 범위에서 추가 수정 사항은 발견하지 못했다.
+- 이후 사용자 수동 확인을 반영하여 1차 범위를 완료 처리했다. 실제 패키지 실행 검증은 RF-006 배포 통합 검증에서 추적한다.
+
+- [x] S01: main configuration의 enable/path/storage_id와 상대 경로 기준 검증.
+- [x] S02: SQLite snapshot/revision, 단일 writer worker, OS 잠금, 읽기 전용 이력 조회와 offline Factory Reset.
+- [x] S03: 가상 CMMT-AS/ST 20개 OD 저장·복원 및 기존 param_save API의 비동기 완료 응답 연결.
+- [x] S04: 지연/실패/손상 주입, Mock PDO 지속 처리, 실제 TCP 연결 및 서버 재기동 복원 자동 검증.
+- [x] 사용자 수동 확인 및 1차 범위 완료 승인.
+- 실제 패키지 실행 확인은 RF-006에서 추적한다. CPX/AP/IOL 실제 저장 연결은 후속 범위다.
+
+검증 결과: `python -B -m scripts.run_tests --profile unit` 603개 통과.
+`python -B -m unittest tests.test_virtual_parameter_store_tcp` 1개 통과.
+후자는 0.5초 디스크 지연 주입 중 별도 client 상태 응답·연결 유지와 서버 재기동 복원을 검증했다.
+Windows 주기 성능 보증 시험이 아닌 기능 검증이며 Node-RED/실장비 시험은 제외했다.
+
+### 동작 경계
+
+- DB 파일 작업은 전용 worker 한 개에서 직렬화한다. 요청 순간 복사한 bytes snapshot을 사용한다.
+- 공통 저장 대기열은 실행 중 항목을 포함하여 최대 16개다. 초과 요청은 기다리지 않고 실패한다.
+- 가상 CMMT는 저장 중 status를 busy로 유지한다. 동일 장치에 대한 중복 API 저장 요청은 conflict로 거부한다.
+- 서버는 응답을 보류하고 다음 루프에서 완료를 확인한다. 기존 request_id를 유지하며 commit 완료 전 Success를 보내지 않는다.
+- 가상 저장 완료 대기는 10초로 제한한다. timeout/연결 해제는 이미 접수한 디스크 쓰기를 취소하거나 rollback하는 명령이 아니다.
+  응답을 받지 못한 경우 실제 저장 결과는 CLI history/show로 확인한다. 자동 재시도하지 않는다.
+- 저장 실패는 장치 저장 결과 및 API Fail로 변환한다. 현재 OD를 이전 저장값으로 되돌리거나 Drive Fault를 생성하지 않는다.
+- 실장비 CMMT parameter save 경로는 변경하지 않는다. 비동기 SDO 완료 확인은 Mock 장치에 한정한다.
+- Bus close/reconnect 동안 worker와 OS 잠금은 유지한다. 서버의 최종 runtime 폐기 때 접수한 저장을 마친 뒤 잠금을 해제한다.
+- 장치 restart는 메모리에 보관한 마지막 commit 값을 복원한다. PDO 경로에서 DB를 다시 읽지 않는다.
+- 신규 가상장치 생성은 SQLite 최신 활성 snapshot을 전체 검증 후 적용한다. 저장본 손상은 초기화 실패 상세로 보고한다.
+- `device/cmmt/persistent_parameters.py`의 명시적 20개 주소와 버전을 사용한다. Non-PDO 목록에 항목이 추가돼도 저장 범위는 자동 확대하지 않는다.
+
+### 설정 및 CLI 사용
+
+```ini
+MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_ENABLED=1
+MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_PATH=C:/MotionServerData/virtual-parameters.sqlite
+MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS=0:gantry_x,1:gantry_y
+```
+
+위 slave index는 실제 사용 중인 mock BUS에 맞춰 지정한다. 기존 `system/axis/param_save`로 저장한다.
+아래 CLI는 `--path`에 명시한 파일을 직접 사용하며 서버를 시작하지 않는다.
+
+```powershell
+python -m motion_server parameter-store --path C:/MotionServerData/virtual-parameters.sqlite list
+python -m motion_server parameter-store --path C:/MotionServerData/virtual-parameters.sqlite --json history --storage-id gantry_x
+python -m motion_server parameter-store --path C:/MotionServerData/virtual-parameters.sqlite show --storage-id gantry_x --revision 1
+# 해당 저장소를 사용하는 서버를 종료한 후 실행
+python -m motion_server parameter-store --path C:/MotionServerData/virtual-parameters.sqlite factory-reset --storage-id gantry_x
+```
+
+Windows 패키지는 `python -m motion_server` 대신 `motion_server.exe`를 사용한다. CLI 진입 경로는 연결했으나
+실제 패키지 재빌드/실행 검증은 아직 수행하지 않았다. Docker에서는 SQLite 파일과 WAL/잠금 파일을 함께 유지하도록 부모 폴더를 volume으로 연결한다.
+
+### 수동 확인 절차
+
+1. 별도 mock 설정에서 저장소를 활성화하고 가상축 Profile acceleration 등 저장 대상 값을 바꾼다.
+2. Axis Panel에서 Parameter Save 성공을 확인하고 CLI history에서 revision을 조회한다.
+3. 서버를 재기동하여 값이 유지되는지 확인한다. 저장하지 않은 변경 및 Profile velocity 0x6081은 복원 대상이 아니다.
+4. 동일 값으로 재저장하여 revision이 늘지 않는지 확인한다.
+5. 서버 종료 후 Factory Reset을 실행하고, 재기동 시 현재 preset 기본값으로 초기화되며 과거 이력이 남는지 확인한다.
+
+## 수동 확인 및 완료 — 2026-11-24
+
+- 사용자 보고: CLI history를 이용한 동일 값 재저장/revision 확인 완료.
+- 사용자 보고: Factory Reset 정상 동작 확인 완료.
+- 위 수동 확인과 기존 자동 검증 결과를 근거로 사용자 지시에 따라 RF-017 1차 범위를 complete로 변경했다.
+- 수동 확인은 사용자 수행 결과이며, 모든 제안 시험 항목이나 패키지 EXE 검증을 수행했다고 확대 기록하지 않는다.
+- RF-017 반영 패키지의 재빌드/실행 및 CLI 검증은 아직 미수행이며 RF-006의 배포 통합 검증에 포함한다.
+- CPX/AP/IOL 실제 영구 저장 연결과 실장비 파라미터 이전은 이번 완료 범위에 포함하지 않는다.
+
+### 후속 Windows 패키지 검증 — 2026-11-24
+
+- RF-011 실제 서비스 시험에서 영구 저장이 포함된 패키지를 LocalSystem으로 실행했다.
+- Mock 가상축 0x6083=2233 변경과 param_save 성공, 서비스 재기동 후 동일 값 복원을 확인했다.
+- 패키지 CLI 전체 명령 및 설치 폴더 변경 시 외부 저장소 재사용 인수까지 수행한 것은 아니다.
+- 결과는 [RF-011 검증 기록](../../validation/2026-11-24-rf011-review.md)의 추가 장애·권한 검증에 포함한다.

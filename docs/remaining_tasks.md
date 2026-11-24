@@ -240,12 +240,14 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-017 Persistent Device Parameter Store
 
-- 상태: `planned`
+- 상태: `complete`
+- 완료: 2026-11-24 사용자 CLI history/revision 및 Factory Reset 수동 확인 후 1차 범위 완료 처리. RF-017 반영 패키지 실행 검증은 RF-006에서 추적한다.
 - 우선순위: 보통
 - 요약: 가상장치의 parameter snapshot을 영구 저장하고 변경 이력을 관리하여,
   서버 재시작 후 가상장치 파라미터를 복원한다. 장비 간 이전은 외부 애플리케이션 범위다.
 - 확정 범위: 1차는 공통 저장소·CLI와 가상 CMMT 20개 Non-PDO 설정 OD. Profile velocity 0x6081 제외.
   CPX 연결은 후속 단계, AP/IOL 연결은 RF-013 재개 시 진행한다.
+- 저장 방식: 전용 worker 비동기 저장. PDO/Model_Update는 DB commit을 기다리지 않으며 API Success는 commit 완료 후 반환한다.
 - 완료 조건:
   - CMMT Axis, CPX station/module parameter와 IO-Link ISDU parameter를 공통 address model로
     식별하는 persistent parameter record가 정의된다.

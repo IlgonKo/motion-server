@@ -49,7 +49,7 @@ class ListenerStartupTest(unittest.TestCase):
                 initialization_status=InitializationStatus.failed(failure),
                 initialization_exception=error)
         config = SimpleNamespace(server=server, ethercat=Mock(), motion=Mock(),
-                                 logging=Mock(), devices=[])
+                                 logging=Mock(), devices=[], virtual_parameter_store=None)
         return MotionServerApplication(server, config)
 
     def test_startup_failures_in_all_paths_close_resources_and_return_failure(self):

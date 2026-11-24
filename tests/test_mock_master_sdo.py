@@ -177,15 +177,15 @@ class MockMasterSdoTest(unittest.TestCase):
         self.assertEqual(master.sdo.read_int8(0, 0x6061, 0), 8)
         self.assertEqual(master.slaves[0].txpdo.mode_of_operation_display, 8)
 
-    def test_parameter_save_side_effect_is_owned_by_virtual_device(self):
+    def test_disabled_parameter_store_reports_save_failure_from_virtual_device(self):
         master, _endpoint = create_virtual_axis_master()
 
         master.sdo.write_uint16(0, 0x2005, 0x03, 1)
         master.sdo.write_uint8(0, 0x2005, 0x01, 1)
 
         self.assertEqual(master.sdo.read_uint8(0, 0x2005, 0x02), 0)
-        self.assertEqual(master.sdo.read_uint16(0, 0x2005, 0x04), 0)
-        self.assertEqual(master.sdo.read_uint16(0, 0x2005, 0x05), 1)
+        self.assertEqual(master.sdo.read_uint16(0, 0x2005, 0x04), 1)
+        self.assertEqual(master.sdo.read_uint16(0, 0x2005, 0x05), 0)
 
     def test_virtual_od_reports_missing_sdo_object(self):
         master, _endpoint = create_virtual_axis_master()

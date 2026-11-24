@@ -74,6 +74,8 @@ def route_message(message, runtime, state, client):
         lambda: _route_message_to_handler(message, runtime, state, client),
     )
     if isinstance(response, DeferredResponse):
+        if response.poll is not None:
+            client.setdefault("pending_responses", []).append((dict(message), response, runtime))
         return response
     send_client_message(client, response)
     return response

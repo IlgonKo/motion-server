@@ -82,6 +82,7 @@ def handle_heartbeat_ack(client, message, *, now=None):
 
 
 def service_client(client, runtime, state, dispatch_message):
+    process_pending_responses(client, runtime)
     conn = client["conn"]
     readable, _, _ = select.select([conn], [], [], 0.0)
     if not readable:
@@ -151,6 +152,11 @@ def send_feedback_if_due(client, runtime, state, feedback_period):
 
 
 def close_client(client, runtime, state):
+    for _, deferred, _ in client.pop("pending_responses", []):
+        try:
+            deferred.cancel()
+        except Exception:
+            pass  # Session teardown must still close the connection.
     client_id = client["id"]
     if state.get("command_authority_owner") == client_id:
         if runtime is None:
@@ -179,3 +185,24 @@ def allocate_client_id(clients):
     while next_id in used_ids:
         next_id += 1
     return next_id
+
+
+def process_pending_responses(client, runtime):
+    from motion_server.api.router import request_response
+    from motion_server.api.deferred import DeferredResponse
+    from motion_server.failure import CommunicationException
+    for item in list(client.get("pending_responses", [])):
+        message, deferred, owner_runtime = item
+        def operation():
+            if runtime is not owner_runtime or not runtime.transport_available():
+                try:
+                    deferred.cancel()
+                except Exception:
+                    pass
+                raise CommunicationException("parameter_save_session_lost")
+            result = deferred.poll()
+            return DeferredResponse() if result is None else result
+        response = request_response(message, operation)
+        if not isinstance(response, DeferredResponse):
+            client["pending_responses"].remove(item)
+            send_client_message(client, response)

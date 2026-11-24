@@ -74,6 +74,7 @@ def create_axis_runtime(
     devices,
     *,
     device_profiles=None,
+    parameter_store_config=None,
 ):
     runtime_logger = RuntimeLogger(logging_config)
     sync_mode = ethercat.sync_mode
@@ -95,16 +96,23 @@ def create_axis_runtime(
         for axis_index, slave_index in enumerate(axis_slave_indices)
     ]
 
+    parameter_store = None
     master = None
     device_manager = None
     try:
         if ethercat.backend.value == "mock":
+            if parameter_store_config is not None and parameter_store_config.enabled:
+                from device.virtual_device.parameter_store import StoreWorker
+                parameter_store = StoreWorker(parameter_store_config.path)
+            storage_ids = dict(parameter_store_config.storage_ids) if parameter_store_config else {}
             slaves = []
             for device, device_profile in zip(devices, device_profiles):
                 if device.role.value == "axis":
                     virtual_device = VirtualCiA402Servo(
                         cycle_time=ethercat.cycle.period,
                         device_profile=device_profile,
+                        parameter_store=parameter_store,
+                        storage_id=storage_ids.get(device.slave_index),
                     )
                 elif device.role.value == "io" and (
                     device_profile.name == "cpx_ap_i_ec"
@@ -153,12 +161,14 @@ def create_axis_runtime(
             motion_controller,
             runtime_logger=runtime_logger,
         )
+        runtime.parameter_store = parameter_store
         if ethercat.backend.value == "mock":
             require_pdo_fields_for_mode(runtime, motion.initial_motion_mode)
             require_txpdo_fields(runtime)
         return runtime
     except Exception:
         close_initialization_resource(device_manager or master)
+        close_initialization_resource(parameter_store)
         raise
 
 

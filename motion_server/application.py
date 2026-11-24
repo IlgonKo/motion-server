@@ -161,6 +161,7 @@ class MotionServerApplication:
             "motion_config": self._config.motion,
             "logging_config": self._config.logging,
             "devices": self._config.devices,
+            "virtual_parameter_store": self._config.virtual_parameter_store,
         }
         if runner is not None:
             return runner(

@@ -12,7 +12,12 @@ from device.capabilities import DeviceCapability
 from device.exceptions import DeviceIdentityMismatchException
 
 
+from device.cmmt.persistent_parameters import PERSISTENT_PARAMETER_ROLES, PARAMETER_SCHEMA_VERSION
+
+
 class CMMTDeviceProfile:
+    persistent_parameter_roles = PERSISTENT_PARAMETER_ROLES
+    parameter_schema_version = PARAMETER_SCHEMA_VERSION
     name = "cmmt"
     variant = None
     capabilities = frozenset({DeviceCapability.AXIS_RESTART})
@@ -778,7 +783,9 @@ class CMMTDeviceProfile:
         )
         return True
 
-    def save_parameters(self, master, axis_index):
+    def save_parameters(self, master, axis_index, *, asynchronous=False):
+        if asynchronous:
+            return self._save_parameters_async(master, axis_index)
         master.sdo.write_uint16(
             axis_index,
             self.PARAMETER_SAVE_INDEX,
@@ -819,6 +826,42 @@ class CMMTDeviceProfile:
             "return_code": int(return_code),
             "return_value": int(return_value),
         }
+
+    def _save_parameters_async(self, master, axis_index):
+        import time
+        from device.parameter_save import PendingParameterSave
+        from motion_server.failure import DeviceRejectedException, OperationConflictException, OperationTimeoutException
+        index = self.PARAMETER_SAVE_INDEX
+        sdo = master.sdo
+        if sdo.read_uint8(axis_index, index, self.PARAMETER_SAVE_STATUS_SUBINDEX) != 0 or sdo.read_uint8(axis_index, index, self.PARAMETER_SAVE_COMMAND_SUBINDEX) != 0:
+            raise OperationConflictException("parameter_save", "parameter_save")
+        sdo.write_uint16(axis_index, index, self.PARAMETER_SAVE_SELECTION_SUBINDEX, 1)
+        def clear():
+            sdo.write_uint8(axis_index, index, self.PARAMETER_SAVE_COMMAND_SUBINDEX, 0)
+        try:
+            sdo.write_uint8(axis_index, index, self.PARAMETER_SAVE_COMMAND_SUBINDEX, 1)
+        except Exception:
+            clear()
+            raise
+        deadline = time.monotonic() + 10.0
+        def poll():
+            try:
+                status = sdo.read_uint8(axis_index, index, self.PARAMETER_SAVE_STATUS_SUBINDEX)
+                if status != 0:
+                    if time.monotonic() >= deadline:
+                        raise OperationTimeoutException("parameter_save", 10.0)
+                    return None
+                code = sdo.read_uint16(axis_index, index, self.PARAMETER_SAVE_RETURN_CODE_SUBINDEX)
+                result = sdo.read_uint16(axis_index, index, self.PARAMETER_SAVE_RETURN_VALUE_SUBINDEX)
+                if code:
+                    raise DeviceRejectedException("parameter_save", code)
+            except Exception:
+                clear()
+                raise
+            clear()
+            return {"status": int(status), "return_code": int(code), "return_value": int(result)}
+        result = poll()
+        return PendingParameterSave(poll, clear) if result is None else result
 
     def request_axis_restart(self, master, axis_index):
         self.write_axis_restart_command(master, axis_index, 0)

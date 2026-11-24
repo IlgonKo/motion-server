@@ -14,6 +14,7 @@ class AxisRuntime:
         runtime_logger=None,
         expert_mode=False,
     ):
+        self.parameter_store = None
         self.device_manager = device_manager
         self.motion_controller = motion_controller
         self.diagnostic_manager = diagnostic_manager or DiagnosticManager()

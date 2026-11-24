@@ -19,6 +19,17 @@ SOURCE_ROOTS = (
 APPROVED_BROAD_CATCHES = {
     # RF-011: best-effort worker diagnostic sink cannot interrupt server logging.
     "motion_server/file_logging.py::_notice",
+    # RF-017: release writer/connection resources on construction or submission failure.
+    "device/virtual_device/parameter_store/store.py::__init__",
+    "device/virtual_device/parameter_store/worker.py::__init__",
+    "device/virtual_device/parameter_store/worker.py::save",
+    # RF-017: translate asynchronous device-save failure and clear the handshake.
+    "device/virtual_servo_drive/servo_model.py::_apply_od_commands",
+    "device/cmmt/profile.py::_save_parameters_async",
+    "device/cmmt/profile.py::poll",
+    # RF-017: best-effort pending-command cleanup on client/session loss.
+    "motion_server/app/client_transport.py::close_client",
+    "motion_server/app/client_transport.py::operation",
     "control_panel/axis_control_panel/client.py::_connection_loop",
     "control_panel/axis_control_panel/connection.py::try_send",
     "control_panel/axis_control_panel/diagnosis.py::process_panel_sdo_read_queue",

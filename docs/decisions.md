@@ -956,7 +956,7 @@ Device Profile + ESI
     list/history/show는 서버 실행 중에도 commit 완료된 revision만 읽기 전용으로 조회한다.
     과거 revision 복원, diff, export/import, purge는 1차에서 제외한다.
   - 동일 저장 대상·타입·값·정의 정보의 재저장은 revision 없이 성공한다. 변경 시 snapshot 전체를 transaction으로 저장한다.
-  - 동기 저장을 우선하되 구현 전에 주기 영향을 평가한다. 실패 시 이전 저장본/현재값 유지, 자동 재시도 없음.
+  - 2026-11-24 추가 확정: 전용 worker 비동기 저장. PDO/Model_Update는 snapshot 전달과 완료 확인만 수행하며 API Success는 commit 이후 반환한다. 실패 시 이전 저장본/현재값 유지, 자동 재시도 없음.
   - 새 가상장치 생성 때 최신 저장본을 전체 검증 후 복원한다. 저장본 없음은 기본값, 손상/불일치/읽기 실패는 초기화 실패다.
   - 2026-11-24 수정: 가상장치는 실장치와 같은 OD 구조로 파라미터를 관리한다.
     가상/실장비 간 이전은 외부 애플리케이션 책임이며 Motion Server에 apply/verify 기능을 추가하지 않는다.

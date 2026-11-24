@@ -239,6 +239,13 @@ class BusDeviceConfig:
 
 
 @dataclass(frozen=True)
+class VirtualParameterStoreConfig:
+    enabled: bool = False
+    path: Path | None = None
+    storage_ids: tuple[tuple[int, str], ...] = ()
+
+
+@dataclass(frozen=True)
 class MotionServerConfig:
     project_root: Path
     server: ServerConfig
@@ -246,6 +253,7 @@ class MotionServerConfig:
     motion: MotionConfig
     logging: LoggingConfig
     devices: tuple[BusDeviceConfig, ...]
+    virtual_parameter_store: VirtualParameterStoreConfig = VirtualParameterStoreConfig()
 
     @property
     def axis_count(self):

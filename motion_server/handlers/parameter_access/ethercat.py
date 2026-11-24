@@ -387,8 +387,17 @@ def is_cpx_isdu_access_object(index):
 def save_parameters(message, runtime, client):
     response_type = public_command_name(message)
     axis_index = selected_single_axis(message, runtime, response_type)
-    result = axis_device_profile(runtime, axis_index).save_parameters(
-        runtime,
-        axis_index,
-    )
+    from ethercat.mock_master import MockMaster
+    profile = axis_device_profile(runtime, axis_index)
+    if isinstance(runtime.ethercat_master, MockMaster):
+        result = profile.save_parameters(runtime, axis_index, asynchronous=True)
+    else:
+        result = profile.save_parameters(runtime, axis_index)
+    from device.parameter_save import PendingParameterSave
+    from motion_server.api.deferred import DeferredResponse
+    if isinstance(result, PendingParameterSave):
+        def poll():
+            completed = result.poll()
+            return None if completed is None else {"axis": axis_index, "result": completed}
+        return DeferredResponse(poll, result.cancel)
     return {"axis": axis_index, "result": result}

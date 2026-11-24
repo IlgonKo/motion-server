@@ -1,15 +1,24 @@
 from device.virtual_servo_drive.od_model import VirtualObjectDictionary
 from device.cia402 import CiA402StateMachine
+from device.od_value_codec import encode_od_value, decode_od_value
+from device.virtual_device.parameter_store import StoreError
+import math
 
 
 class VirtualCiA402Servo:
-    def __init__(self, cycle_time=0.001, device_profile=None):
+    def __init__(self, cycle_time=0.001, device_profile=None, *, parameter_store=None, storage_id=None):
         self.cycle_time = cycle_time
         if device_profile is None:
             raise ValueError("VirtualCiA402Servo requires an explicit device_profile")
         self.device_profile = device_profile
 
+        self.parameter_store = parameter_store
+        self.storage_id = storage_id
+        self._save_future = None
+        self._saved_values = ()
+        self._pending_values = ()
         self.od = VirtualObjectDictionary(device_profile)
+        self._restore_parameters()
         self.sm = CiA402StateMachine()
 
         self.actual_position = 0.0
@@ -41,7 +50,75 @@ class VirtualCiA402Servo:
 
         #self.init_object_dictionary()
 
+    def _restore_parameters(self):
+        if self.parameter_store is None:
+            return
+        if not self.storage_id:
+            raise StoreError("Virtual CMMT requires storage_id")
+        saved = self.parameter_store.load(self.storage_id)
+        if saved is None:
+            return
+        self._apply_saved_parameters(saved)
+
+    def _apply_saved_parameters(self, saved):
+        profile, version, values = saved
+        if profile != self.device_profile.name or version != self.device_profile.parameter_schema_version:
+            raise StoreError("Stored device profile or parameter definition mismatch")
+        expected = {("ethercat_od", r.index, r.subindex): r for r in self.device_profile.persistent_parameter_roles}
+        if len(values) != len(expected) or {a for a, _, _ in values} != set(expected):
+            raise StoreError("Stored parameter addresses do not match device definition")
+        decoded = []
+        for address, dtype, raw in values:
+            role = expected[address]
+            if dtype != role.data_type or len(raw) != self.device_profile.expected_data_type_bits(dtype) // 8:
+                raise StoreError("Stored parameter type/size mismatch")
+            value = decode_od_value(dtype, raw)
+            if isinstance(value, float) and not math.isfinite(value):
+                raise StoreError("Stored parameter is not finite")
+            decoded.append((role, value))
+        self._saved_values = tuple(decoded)
+        for role, value in decoded:
+            self.od.write_internal(role.index, value, role.subindex)
+
+    def _begin_parameter_save(self):
+        if self._save_future is not None:
+            return
+        try:
+            if self.parameter_store is None:
+                raise StoreError("Virtual parameter persistence is disabled")
+            values = tuple((("ethercat_od", r.index, r.subindex), r.data_type,
+                            encode_od_value(r.data_type, self.od.read(r.index, r.subindex)))
+                           for r in self.device_profile.persistent_parameter_roles)
+            self._pending_values = values
+            self._save_future = self.parameter_store.save(
+                self.storage_id, self.device_profile.name,
+                self.device_profile.parameter_schema_version, values)
+            self.od.write_role("parameter_save_status", 1)
+            self.od.write_role("parameter_save_return_code", 0)
+            self.od.write_role("parameter_save_return_value", 0)
+        except (StoreError, ValueError, OverflowError):
+            self._finish_parameter_save(False)
+
+    def _finish_parameter_save(self, success):
+        if success:
+            # Retain the committed values for a device restart without disk I/O.
+            self._saved_values = tuple((r, decode_od_value(r.data_type, raw))
+                for (_, _, raw), r in zip(self._pending_values, self.device_profile.persistent_parameter_roles))
+        self._pending_values = ()
+        self.od.write_role("parameter_save_status", 0)
+        self.od.write_role("parameter_save_return_code", 0 if success else 1)
+        self.od.write_role("parameter_save_return_value", 1 if success else 0)
+        self._save_future = None
+
     def _apply_od_commands(self):
+        if self._save_future is not None and self._save_future.done():
+            try:
+                self._save_future.result()
+                success = True
+            except Exception:
+                # DB failures are device-save failures, not Drive Faults.
+                success = False
+            self._finish_parameter_save(success)
         device_reset_command = int(self.od.read_role("device_reset_command"))
         if (
             device_reset_command != self._last_device_reset_command
@@ -55,9 +132,7 @@ class VirtualCiA402Servo:
             parameter_save_command != self._last_parameter_save_command
             and parameter_save_command == 1
         ):
-            self.od.write_role("parameter_save_status", 0)
-            self.od.write_role("parameter_save_return_code", 0)
-            self.od.write_role("parameter_save_return_value", 1)
+            self._begin_parameter_save()
         self._last_parameter_save_command = parameter_save_command
 
         requested_mode = int(self.od.read_role("mode_of_operation"))
@@ -76,6 +151,8 @@ class VirtualCiA402Servo:
     def _apply_device_reset_response(self):
         current_position = self.od.read_role("actual_position")
         self.od.reset_non_pdo_configuration()
+        for role, value in self._saved_values:
+            self.od.write_internal(role.index, value, role.subindex)
         self.od.reset_pdo_values()
         self.od.write_role("target_position", current_position)
         self.od.write_role("actual_position", current_position)

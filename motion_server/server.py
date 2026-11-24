@@ -518,6 +518,7 @@ def initialize_runtime_session(
     motion_config,
     logging_config,
     devices,
+    virtual_parameter_store=None,
 ):
     runtime = None
     stage = InitializationStage.DEVICE_MODEL_BUILD
@@ -539,6 +540,7 @@ def initialize_runtime_session(
             logging_config,
             devices,
             device_profiles=device_profiles,
+            parameter_store_config=virtual_parameter_store,
         )
         session.attach_runtime(runtime)
 
@@ -573,6 +575,7 @@ def fail_runtime_initialization(session, runtime, stage, exception):
     detect_initialization_fault(session, at=failure.occurred_at)
     if runtime is not None:
         close_initialization_resource(runtime)
+        close_initialization_resource(getattr(runtime, "parameter_store", None))
         if session.runtime is runtime:
             session.detach_runtime()
     log_initialization_failure(failure, exception)
@@ -677,6 +680,7 @@ def run_main_once(
     motion_config,
     logging_config,
     devices,
+    virtual_parameter_store=None,
 ):
     if not isinstance(session, ServerSession):
         raise TypeError("run_main_once requires ServerSession")
@@ -688,6 +692,7 @@ def run_main_once(
         motion_config=motion_config,
         logging_config=logging_config,
         devices=devices,
+        virtual_parameter_store=virtual_parameter_store,
     )
 
     try:
@@ -706,6 +711,7 @@ def run_main_once(
                     motion_config=motion_config,
                     logging_config=logging_config,
                     devices=devices,
+                    virtual_parameter_store=virtual_parameter_store,
                 )
                 if recovered_runtime is None:
                     exception = CommunicationException("bus_reconnect")
@@ -827,6 +833,7 @@ def run_main_once(
         owned_runtime = session.detach_runtime()
         if owned_runtime is not None:
             close_initialization_resource(owned_runtime)
+            close_initialization_resource(getattr(owned_runtime, "parameter_store", None))
 
 
 def run_configuration_degraded_once(session, bootstrap_config):

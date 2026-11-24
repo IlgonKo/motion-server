@@ -43,4 +43,10 @@
   catalog 선택과 upgrade/rollback 인수. 현재 Docker client는 있으나 daemon 연결이 실패한다.
   운영 서버 재시작, 실제 축 이동 및 OS/service 설치 변경은 하지 않았다.
 
+- RF-017 완료 후 추가 확인: 영구 저장이 포함된 패키지 재빌드, `motion_server.exe parameter-store`의
+  history/show/factory-reset 실행, 재기동 복원 및 패키지 폴더 변경 후 외부 저장소 재사용을 확인한다.
+  RF-017의 소스/Mock 자동 검증 및 사용자 수동 확인과 구분하며 아직 패키지 검증 완료로 기록하지 않는다.
+
 - 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)
+
+- 후속 RF-011 서비스 인수에서 RF-017 포함 패키지 재빌드 및 LocalSystem Mock param_save/재기동 복원을 확인했다. 위 추가 항목 중 CLI 전체 명령·폴더 변경/외부 저장소 재사용은 계속 별도 인수 대상으로 둔다.
