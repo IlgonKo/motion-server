@@ -9,7 +9,7 @@ import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-INTEGRATION = {'test_ai_pick_place_tcp', 'test_ai_pick_place_extended', 'test_virtual_parameter_store_tcp'}
+INTEGRATION = {'test_ai_pick_place_tcp', 'test_ai_pick_place_extended', 'test_virtual_parameter_store_tcp', 'test_server_restart_tcp'}
 
 
 class ReportResult(unittest.TextTestResult):

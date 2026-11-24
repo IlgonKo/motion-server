@@ -53,6 +53,10 @@ class AsyncFileLog:
             self._condition.notify_all()
         self._thread.join(max(0.0, timeout))
 
+    @property
+    def stopped(self):
+        return not self._thread.is_alive()
+
     def _notice(self, message):
         try:
             self.notify(message)
@@ -248,7 +252,7 @@ class FileLoggingSession:
         self.runtime.addHandler(self.handler)
         sys.stdout = _OutputStream(self.stdout, self.writer, "INFO")
         sys.stderr = _OutputStream(self.stderr, self.writer, "ERROR")
-        self.writer.submit("INFO", "Motion Server process started")
+        self.writer.submit("INFO", "Motion Server session started")
         return self
 
     def __exit__(self, exc_type, exc, tb):
@@ -259,7 +263,7 @@ class FileLoggingSession:
                 self.writer.submit("ERROR", f"Motion Server process failed: {exc_type.__name__}: {exc}")
             sys.stdout.flush()
             sys.stderr.flush()
-            self.writer.submit("INFO", "Motion Server process stopped")
+            self.writer.submit("INFO", "Motion Server session stopped")
         finally:
             sys.stdout, sys.stderr = self.stdout, self.stderr
             self.root.removeHandler(self.handler)

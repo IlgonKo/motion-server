@@ -942,7 +942,10 @@ system/bus/reconnect
 ```
 
 Bus reconnect는 현재 runtime과 TCP client를 유지하며 transport/process image/parameter refresh를
-동기 수행한다. Server restart만 새 process와 Diagnostic 저장소를 만든다. Bus reconnect는 `initialization_error`,
+동기 수행한다. Server restart는 PID를 유지하며 설정을 다시 읽고 Diagnostic/runtime/listener를 새로 만든다.
+기존 TCP 연결과 제어권은 해제되며 자동 복원하지 않는다. Success는 요청 수락이며 재접속 후
+`system/server/status`로 초기화 결과를 확인한다. 저장 접수 건은 완료 후 정리하지만 자동 저장은 하지 않는다.
+프로그램 업데이트 적용에는 외부 프로세스 재시작이 필요하다. Bus reconnect는 `initialization_error`,
 `bus_disconnected`, `fault` 상태에서만 허용되고 `normal` 상태에서는 거부된다. 별도 recovery
 worker가 없으므로 reconnect가 완료될 때까지 status/stop을 포함한 다른 API 요청 처리는
 일시 정지하지만 기존 TCP socket과 command authority는 유지된다. Parameter refresh는 PRE-OP에서

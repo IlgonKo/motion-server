@@ -162,7 +162,7 @@
           "$ref": "https://motion-server.local/schema/system.json#/$defs/system_server_restart_response"
         }
       },
-      "description": "Request for system/server/restart. API success acknowledges handler execution, not physical motion completion."
+      "description": "Request same-process full server reinitialization. Success acknowledges acceptance, not completion. TCP connections and authority are released; configuration is reloaded while PID is retained. Reconnect and query system/server/status. Updating program code requires an external process restart."
     },
     "feedback": {
       "type": "object",

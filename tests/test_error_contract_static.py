@@ -17,6 +17,8 @@ SOURCE_ROOTS = (
 # changes do not invalidate the contract. Adding a new entry requires selecting
 # one of the documented boundary/translation/best-effort purposes.
 APPROVED_BROAD_CATCHES = {
+    # TD-042: complete cleanup of all owned resources, then fail the session.
+    "motion_server/server.py::close_server_session",
     # RF-011: best-effort worker diagnostic sink cannot interrupt server logging.
     "motion_server/file_logging.py::_notice",
     # RF-017: release writer/connection resources on construction or submission failure.

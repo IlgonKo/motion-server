@@ -211,7 +211,7 @@ class FileLoggingTests(unittest.TestCase):
             for message in ("startup line", "traceback detail", "api warning", "runtime info"):
                 self.assertEqual(text.count(message), 1)
             self.assertIn("WARNING api warning", text)
-            self.assertIn("process stopped", text)
+            self.assertIn("session stopped", text)
             self.assertIn("startup line", console.getvalue())
 
     def test_configuration_failure_is_also_logged(self):
@@ -228,22 +228,26 @@ class FileLoggingTests(unittest.TestCase):
             self.assertEqual(app.run(runner), "degraded")
             self.assertIn("configuration failure detail", (root / "degraded.log").read_text(encoding="utf-8"))
 
-    def test_restart_releases_log_lock_before_new_process(self):
+    def test_restart_releases_log_lock_before_new_session(self):
         from motion_server.server import ServerRestartRequested
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "restart.log"
-            app = MotionServerApplication(None, file_logging=FileLogConfig(True, path))
-            notices = []
-            def restart():
-                writer = AsyncFileLog(FileLogConfig(True, path), notify=notices.append)
-                writer.submit("INFO", "replacement")
-                writer.close()
+            root = Path(directory)
+            (root / ".env").write_text(
+                "MOTION_SERVER_BUS=invalid_device\n"
+                "MOTION_SERVER_LOG_FILE_ENABLED=1\nMOTION_SERVER_LOG_FILE_PATH=restart.log\n")
+            app = MotionServerApplication.from_source(ConfigurationSource(root), environ={})
+            calls = []
             def runner(**kwargs):
-                raise ServerRestartRequested
-            with patch("motion_server.server.restart_current_process", side_effect=restart):
-                app.run(runner)
-            self.assertEqual(notices, [])
-            self.assertIn("replacement", path.read_text(encoding="utf-8"))
+                calls.append(kwargs["diagnostic_manager"])
+                if len(calls) == 1:
+                    raise ServerRestartRequested
+                print("replacement session")
+                return 0
+            self.assertEqual(app.run(runner), 0)
+            self.assertIsNot(calls[0], calls[1])
+            text = (root / "restart.log").read_text(encoding="utf-8")
+            self.assertIn("replacement session", text)
+            self.assertEqual(text.count("session stopped"), 2)
 
 
 if __name__ == "__main__":

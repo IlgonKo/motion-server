@@ -105,7 +105,7 @@ class ServerRuntimeState(Enum):
 ### 확정: Recovery 실행과 완료 경계
 
 - Bus reconnect와 Axis restart는 모든 recovery 단계가 완료된 뒤 Success/Fail을 반환하는 동기
-  명령으로 구현한다. Server restart만 응답 후 process를 재시작한다.
+  명령으로 구현한다. Server restart는 TD-042에 따라 요청 수락 후 같은 PID에서 서버 전체를 재초기화하고 TCP 연결과 제어권을 해제한다.
 - 별도 recovery worker는 만들지 않는다. recovery handler가 실행되는 동안 같은 server loop의
   다른 API 요청 및 Heartbeat 처리는 일시 정지할 수 있다. client 연결과 authority 보존은
   보장하지 않는다. 연결 종료 시 기존 안전 처리와 authority 회수를 적용하며, 재연결 후

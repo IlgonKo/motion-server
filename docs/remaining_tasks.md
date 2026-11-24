@@ -886,7 +886,8 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-042 Server Restart의 동일 프로세스 내 전체 재초기화
 
-- 상태: `open`
+- 상태: `complete`
+- 완료: 2026-11-24 단위/Mock 628개, TCP 2개, 실제 LocalSystem 서비스 16개 검사 통과.
 - 우선순위: 높음
 - 관련 작업: RF-011
 - 요약: system/server/restart를 새 프로세스 실행 대신 PID를 유지하는 서버 전체 재초기화로 변경한다.

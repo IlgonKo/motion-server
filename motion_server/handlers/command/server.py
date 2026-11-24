@@ -45,4 +45,4 @@ def fault_reset_bus(message, runtime, state, client):
 
 def request_server_restart(message, runtime, state, client):
     state["server_restart_requested"] = True
-    return {"message": "Motion Server restart accepted. Process will restart."}
+    return {"message": "Motion Server restart accepted. Server will reinitialize in the same process."}

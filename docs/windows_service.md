@@ -38,10 +38,10 @@ powershell -ExecutionPolicy Bypass -File .\register_service.ps1
 LocalSystem이 패키지를 읽고 로그·가상장치 저장 경로에 쓸 수 있어야 한다.
 실제 EtherCAT 사용 시 Npcap 설치와 해당 인터페이스 접근도 필요하다.
 
-**현재 제한:** TD-042 구현 전에는 서비스 모드에서 `system/server/restart`를 사용하지 않는다.
-현재 API는 새 서버를 만들고 기존 프로세스를 종료하므로 Windows 서비스 상태와 실제 서버가
-분리될 수 있다. 지금 재시작이 필요하면 Windows 서비스 화면에서 수행한다.
-TD-042에서 같은 프로세스 내 재초기화로 변경할 예정이며, 아직 구현된 기능이 아니다.
+`system/server/restart`는 같은 PID에서 서버 전체를 재초기화한다. Windows 서비스는 실행 중
+상태를 유지하며 기존 TCP 연결과 제어권은 해제된다. Success는 요청 수락이며 재접속 후
+`system/server/status`로 완료 여부를 확인한다. 설정 파일은 다시 읽지만 프로그램 코드는
+다시 로드하지 않는다. 실행 파일 업데이트 적용은 Windows 서비스 화면에서 중지·시작한다.
 
 ## 파일 로그
 

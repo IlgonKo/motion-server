@@ -1,9 +1,6 @@
 import json
-import os
 import select
 import socket
-import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 
@@ -88,6 +85,10 @@ from ethercat.pysoem_master import PySOEMMaster
 
 
 class ServerRestartRequested(Exception):
+    pass
+
+
+class ServerCleanupError(RuntimeError):
     pass
 
 
@@ -328,8 +329,6 @@ def run_server_loop(
 
         action = requested_server_action(state)
         if action is not None:
-            for client in clients:
-                close_client(client, runtime, state)
             return action
 
         last_status_log_time = log_status_if_due(
@@ -400,9 +399,10 @@ def run_degraded_server_loop(
     state,
     server_config=None,
     ethercat_config=None,
+    clients=None,
 ):
     server.setblocking(False)
-    clients = []
+    clients = [] if clients is None else clients
     next_client_id = 1
     print(
         "Motion Server degraded server loop is active.",
@@ -481,8 +481,6 @@ def run_degraded_server_loop(
 
         action = requested_server_action(state)
         if action is not None:
-            for client in clients:
-                close_client(client, None, state)
             return action
 
 
@@ -500,14 +498,6 @@ def list_adapters():
         print(f"name={adapter.name}")
         print(f"desc={adapter.desc}")
         print()
-
-
-def restart_current_process():
-    arguments = [sys.executable, *sys.argv]
-    if os.name == "nt":
-        subprocess.Popen(arguments, close_fds=True)
-        raise SystemExit(0)
-    os.execv(sys.executable, arguments)
 
 
 def initialize_runtime_session(
@@ -574,8 +564,10 @@ def fail_runtime_initialization(session, runtime, stage, exception):
     session.mark_failed(failure)
     detect_initialization_fault(session, at=failure.occurred_at)
     if runtime is not None:
-        close_initialization_resource(runtime)
-        close_initialization_resource(getattr(runtime, "parameter_store", None))
+        errors = [close_initialization_resource(resource) for resource in
+                  (runtime, getattr(runtime, "parameter_store", None))]
+        if any(error is not None for error in errors):
+            raise ServerCleanupError("Failed to release initialization resources")
         if session.runtime is runtime:
             session.detach_runtime()
     log_initialization_failure(failure, exception)
@@ -684,18 +676,19 @@ def run_main_once(
 ):
     if not isinstance(session, ServerSession):
         raise TypeError("run_main_once requires ServerSession")
+    clients = []
+    state = {}
     axis_count_value = sum(device.role.value == "axis" for device in devices)
-    runtime, startup_sdo = initialize_runtime_session(
-        session,
-        server_mode=server_config.mode.value,
-        ethercat_config=ethercat_config,
-        motion_config=motion_config,
-        logging_config=logging_config,
-        devices=devices,
-        virtual_parameter_store=virtual_parameter_store,
-    )
-
     try:
+        runtime, startup_sdo = initialize_runtime_session(
+            session,
+            server_mode=server_config.mode.value,
+            ethercat_config=ethercat_config,
+            motion_config=motion_config,
+            logging_config=logging_config,
+            devices=devices,
+            virtual_parameter_store=virtual_parameter_store,
+        )
         if runtime is None:
             state = initial_degraded_state(
                 session,
@@ -818,7 +811,7 @@ def run_main_once(
             )
             action = (
                 run_server_loop(
-                    server, runtime, state, server_config, ethercat_config
+                    server, runtime, state, server_config, ethercat_config, clients=clients
                 )
                 if runtime is not None
                 else run_degraded_server_loop(
@@ -826,25 +819,53 @@ def run_main_once(
                     state,
                     server_config,
                     ethercat_config,
+                    clients=clients,
                 )
             )
             raise_server_action(action)
     finally:
+        close_server_session(session, clients, state)
+
+
+def close_server_session(session, clients, state):
+    errors = []
+    runtime = session.runtime
+    try:
+        for client in clients:
+            try:
+                close_client(client, runtime, state)
+            except Exception as exc:
+                errors.append(exc)
+            finally:
+                try:
+                    client["conn"].close()
+                except OSError as exc:
+                    errors.append(exc)
+        clients.clear()
+    finally:
         owned_runtime = session.detach_runtime()
         if owned_runtime is not None:
-            close_initialization_resource(owned_runtime)
-            close_initialization_resource(getattr(owned_runtime, "parameter_store", None))
+            for resource in (owned_runtime, getattr(owned_runtime, "parameter_store", None)):
+                error = close_initialization_resource(resource)
+                if error is not None:
+                    errors.append(error)
+    if errors:
+        raise ServerCleanupError(str(errors[0])) from errors[0]
 
 
 def run_configuration_degraded_once(session, bootstrap_config):
     state = initial_degraded_state(session)
-    with open_listener(MOTION_SERVER_BIND_HOST, bootstrap_config.port) as server:
-        print(
-            f"Motion Server listening on {MOTION_SERVER_BIND_HOST}:"
-            f"{bootstrap_config.port} in configuration-error state",
-            flush=True,
-        )
-        raise_server_action(run_degraded_server_loop(server, state))
+    clients = []
+    try:
+        with open_listener(MOTION_SERVER_BIND_HOST, bootstrap_config.port) as server:
+            print(
+                f"Motion Server listening on {MOTION_SERVER_BIND_HOST}:"
+                f"{bootstrap_config.port} in configuration-error state",
+                flush=True,
+            )
+            raise_server_action(run_degraded_server_loop(server, state, clients=clients))
+    finally:
+        close_server_session(session, clients, state)
 
 
 def raise_server_action(action):

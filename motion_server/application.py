@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import os
 
 from configuration import (
     ConfigurationSource,
@@ -25,7 +26,7 @@ from motion_server.app.listener import ListenerStartupException, log_listener_st
 
 
 class MotionServerApplication:
-    """Composition root for one immutable Motion Server configuration."""
+    """Owns successive immutable sessions within one server process."""
 
     def __init__(
         self,
@@ -35,7 +36,9 @@ class MotionServerApplication:
         initialization_exception=None,
         list_adapters=False,
         file_logging=FileLogConfig(),
+        reload_inputs=None,
     ):
+        self._reload_inputs = reload_inputs
         self._file_logging = file_logging
         self._bootstrap_config = bootstrap_config
         self._config = config
@@ -66,6 +69,8 @@ class MotionServerApplication:
         if not isinstance(source, ConfigurationSource):
             raise TypeError("source must be a ConfigurationSource")
         argv = list(argv or ())
+        environ = dict(os.environ if environ is None else environ)
+        reload_inputs = (source, tuple(argv), environ)
         if argv:
             cli_overrides, list_adapters = parse_cli_overrides(argv)
         else:
@@ -109,6 +114,7 @@ class MotionServerApplication:
                 initialization_exception=exc,
                 list_adapters=list_adapters,
                 file_logging=file_logging,
+                reload_inputs=reload_inputs,
             )
         return cls(
             bootstrap_config,
@@ -116,23 +122,41 @@ class MotionServerApplication:
             initialization_status=InitializationStatus.ready(),
             list_adapters=list_adapters,
             file_logging=file_logging,
+            reload_inputs=reload_inputs,
         )
 
     def run(self, runner=None):
-        from motion_server.server import ServerRestartRequested, restart_current_process
-        with FileLoggingSession(self._file_logging):
-            try:
-                return self._run(runner)
-            except ListenerStartupException as exception:
-                log_listener_startup_failure(exception)
-                return 1
-            except KeyboardInterrupt:
-                # Runtime finally blocks have already performed device cleanup.
-                return 0
-            except ServerRestartRequested:
-                pass
-        # Release the file lock and drain before the replacement process starts.
-        restart_current_process()
+        from motion_server.server import ServerRestartRequested, ServerCleanupError
+        current = self
+        try:
+            while True:
+                with FileLoggingSession(current._file_logging) as logging_session:
+                    try:
+                        return current._run(runner)
+                    except ListenerStartupException as exception:
+                        log_listener_startup_failure(exception)
+                        return 1
+                    except ServerCleanupError as exception:
+                        print(f"Motion Server cleanup failed; exiting: {exception}", flush=True)
+                        return 1
+                    except ServerRestartRequested:
+                        print("Motion Server restart accepted; reinitializing in the same process.", flush=True)
+                # Never overlap an old file writer/lock with a new session.
+                if logging_session.writer is not None and not logging_session.writer.stopped:
+                    print("Motion Server restart aborted: file log worker has not stopped.", flush=True)
+                    return 1
+                if current._reload_inputs is None:
+                    print("Motion Server restart aborted: configuration source is unavailable.", flush=True)
+                    return 1
+                source, argv, environ = current._reload_inputs
+                try:
+                    current = type(self).from_source(source, argv=argv, environ=environ)
+                except (OSError, ValueError) as exception:
+                    print(f"Motion Server configuration reload failed; exiting: {exception}", flush=True)
+                    return 1
+        except KeyboardInterrupt:
+            # Includes session cleanup and configuration reload between iterations.
+            return 0
 
     def _run(self, runner=None):
         if self._config is None:
@@ -170,11 +194,7 @@ class MotionServerApplication:
             )
 
         # Runtime recovery lifecycle belongs to this composition root.
-        from motion_server.server import (
-            ServerRestartRequested,
-            run_main_once,
-            list_adapters,
-        )
+        from motion_server.server import run_main_once, list_adapters
 
         if self._list_adapters:
             list_adapters()
@@ -184,8 +204,4 @@ class MotionServerApplication:
             InitializationStatus.ready(),
             diagnostic_manager=DiagnosticManager(),
         )
-        try:
-            return run_main_once(session, **dependencies)
-        except ServerRestartRequested:
-            print("Motion Server restart requested; restarting process.", flush=True)
-            raise
+        return run_main_once(session, **dependencies)

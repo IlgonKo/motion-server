@@ -151,6 +151,7 @@ or stops the service automatically. Existing service customizations are reset.
 Manage the installed service through Windows Services.
 
 See `Manual/windows_service.md` in the package or [the service guide](../docs/windows_service.md).
-The current `system/server/restart` process replacement is not yet integrated with
-service management; TD-042 tracks same-process reinitialization. Until that work is
-verified, restart a service deployment through Windows Services.
+`system/server/restart` reinitializes the server within the same process/PID and
+keeps the Windows service running. Connections and authority are released; success
+acknowledges acceptance, so reconnect and query status. Restart the actual Windows
+service to apply executable/code updates.

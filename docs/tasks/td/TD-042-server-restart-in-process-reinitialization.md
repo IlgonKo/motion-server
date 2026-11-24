@@ -1,7 +1,7 @@
 # TD-042 Server Restart의 동일 프로세스 내 전체 재초기화
 
 - 등록일: 2026-11-24
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 높음
 - 관련 작업: RF-011, TD-018, TD-035, RF-017
 
@@ -40,7 +40,6 @@ RF-011의 서비스 설치·운영 검증과 분리하며, 서비스 환경의 R
 - 코드·실행 파일 업데이트 적용 또는 모듈 hot reload.
 - Windows 전용 서버 진입점, WinSW 전용 API 또는 Manager/PID 인계 기능.
 - 연결/제어권 자동 복원, 모션 자동 재실행, 영구 저장소 Factory Reset.
-- 이번 등록 작업에서의 TD-042 코드 구현.
 
 ## 완료 조건
 
@@ -54,4 +53,25 @@ RF-011의 서비스 설치·운영 검증과 분리하며, 서비스 환경의 R
 
 ## 현재 상태
 
-등록만 완료했다. 구현과 서비스 환경 Restart 시험은 아직 수행하지 않았다.
+2026-11-24 구현, 단위/Mock 및 실제 Windows 서비스 Restart 검증 완료.
+
+## 구현 전 확정 — 2026-11-24
+
+- 메인/장치 설정을 모두 재로드하며 Port·Backend·Bus·로그 변경을 반영한다. 최초 CLI 인수와 프로세스 환경변수 입력 및 우선순위를 유지한다.
+- API Success는 재초기화 요청 수락이다. 완료 응답/API는 추가하지 않고 새 연결의 system/server/status로 확인한다.
+- 재초기화 실패는 기존 degraded/listener 실패 계약을 따른다. 이전 설정으로 자동 복귀하지 않는다. bootstrap 자체가 유효하지 않아 listener를 정할 수 없으면 오류 기록 후 종료한다.
+- 접수된 영구 저장은 완료 후 정리한다. Restart가 자동 저장을 수행하지 않으며 미저장 값은 기존 RF-017 계약을 따른다.
+- 정리가 실패하면 새 runtime을 겹쳐 실행하지 않는다. 외부 Stop/종료는 Restart보다 우선한다.
+- 구현 순서: 공통 재초기화 경로 → 반복·실패·자원 정리 검증 → Windows 서비스 PID 유지 검증.
+
+## 구현 및 검증 결과 — 2026-11-24
+
+- Application이 최초 ConfigurationSource·CLI·환경변수 입력을 보관하고 세션 종료 후 새 설정으로 같은 프로세스에서 재초기화한다. Popen/exec 기반 Restart는 제거했다.
+- 정상/degraded/Bus 단절 경로의 TCP client와 runtime 정리를 최종 소유 세션에 연결했다. 정리 실패 또는 종료되지 않은 로그 worker가 있으면 새 세션을 시작하지 않는다.
+- 접수된 비동기 저장 완료·저장소 잠금 해제 후 재생성하고 로그는 process가 아닌 session 시작/종료로 표시한다.
+- 회귀: 단위/Mock 628개 통과. Restart TCP 통합 1개와 기존 영구 저장 TCP 1개 통과. Node-RED 시험은 제외했다.
+- TCP 시험: 반복 Restart, 저장 중 Restart/복원, 제어권 초기화, 설정/Bus 실패의 degraded 및 복구, listener 충돌 시 종료 코드 1, PID와 worker/잠금 정리를 검증했다.
+- 새 Windows 패키지 빌드 및 최초 manifest 검사 3,846개 파일/오류 0개.
+- 실제 LocalSystem 서비스 16개 검사 통과: 연속 Restart 5회, 매회 제어권 해제, 설정 오류와 복구, Port 변경, Restart 직후 Stop. wrapper PID 21216 / 서버 PID 33032 유지. 종료 후 서버 PID 잔존 0개.
+- 외부 Stop 시 재실행하지 않으며 시험 종료 후 서비스는 새 시험 패키지의 Automatic/Stopped 상태다. 재부팅 및 실장비 이동은 수행하지 않았다.
+- 근거: [TD-042 검증 기록](../../validation/2026-11-24-td042-restart.md).
