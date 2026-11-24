@@ -1,15 +1,30 @@
 # Test Procedure
 
 이 문서는 Motion Server 프로젝트에서 수정, 리팩토링, 기능 추가 후 배포 전에 수행할
-테스트 항목과 절차 초안이다.
+자동 회귀 및 별도 실장치 인수 절차다.
 
 목표는 변경 영향 범위를 빠뜨리지 않고 확인하는 것이다. 모든 항목을 매번 같은 강도로
 수행할 필요는 없지만, Windows package 또는 Linux Docker 배포 전에는 해당 환경의
 절차를 반드시 완료한다.
 
+## 재현 가능한 회귀 실행
+
+설치: `python -m pip install -r requirements.txt`. Linux의 GUI 시험에는 Tk와 Xvfb가 필요하다.
+
+```text
+python -B -m scripts.check_api_docs
+python -B -m scripts.run_tests --profile unit --report reports/unit.json
+python -B -m scripts.run_tests --profile integration --report reports/integration.json
+```
+
+Linux headless에서는 test 명령 앞에 `xvfb-run -a`를 붙인다. CI는 Windows/Linux와 Python
+3.12/3.14에서 실행하도록 구성했다. Node-RED 시험은 명시적 재승인 전까지 제외한다.
+Unit과 TCP integration은 각각 별도 process로 실행하여 GUI/module 상태를 격리할 수 있다.
+실장치 profile과 배포 인수 기준은 [배포 검증](deployment_validation.md)을 따른다.
+
 ## RF-015 IO-Link 입력 디코딩 회귀
 
-- 자동 검증: `python -m unittest tests.test_io_link_decoding` 및 전체 unittest를 실행한다.
+- 자동 검증: `python -m unittest tests.test_io_link_decoding` 및 아래 profile별 회귀 검증을 실행한다.
   기본 타입, flat Record/DatatypeRef, metadata scale, 독립 raw fixture, qualifier 및 무효 입력,
   포트 격리, mock/실장치용 codec parity와 4-port payload/처리 비용을 확인한다.
 - mock으로 시험할 때 RF-014 input_write에는 module 전체 raw를 넣는다. Variant 32는
@@ -86,7 +101,7 @@ Motion Server 자체 Trajectory API는 RF-009에서 별도로 관리한다.
 
    ```powershell
    cd C:\Users\Festo\Documents\motion-server
-   python motion_server/server.py
+   python -B -m motion_server --backend mock
    ```
 
    기대 결과:

@@ -24,3 +24,21 @@
 ## 완료 증거
 
 완료 시 artifact manifest, 환경별 checklist와 clean-system 시험 결과를 기록한다.
+
+## 2026-11-24 진행 결과
+
+- 상태: `in_progress`.
+- 운영 배포 폴더를 덮어쓰지 않고 별도 경로에 Windows EXE 4종을 빌드했다.
+  `SkipLocalEnv`/`SkipNpcapDownload`를 사용했으므로 사용자 설정과 Npcap installer는 제외했다.
+- 최신 Markdown 매뉴얼/API 문서, 설정 예제, ESI/IODD, 외부 IODD 폴더,
+  Python AI Reference 및 Node-RED reference/flow 파일을 포함한다.
+- `scripts.validate_package`가 필수 artifact와 SHA256 manifest를 기록한다.
+  Node-RED는 파일 포함만 검사하며 실행하지 않는다.
+- 패키지 EXE를 별도 임시 설정·포트로 실행해 실제 TCP mock 이동 시퀀스 1개 통과.
+- `docs/deployment_validation.md`에 환경별 인수 조건, hardware status profile,
+  version/log/설정 차이 및 upgrade 확인 절차를 작성했다.
+- 미완료: 새 Windows PC의 Python 미설치 실행·Npcap·NIC/실장비, 새 Linux Docker/실제 NIC,
+  catalog 선택과 upgrade/rollback 인수. 현재 Docker client는 있으나 daemon 연결이 실패한다.
+  운영 서버 재시작, 실제 축 이동 및 OS/service 설치 변경은 하지 않았다.
+
+- 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)

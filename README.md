@@ -188,10 +188,11 @@ Repeating module areas such as `0x9000...0x9FFF`, `0xA000...0xA4F0`,
 `0xF030...0xF03F`, and `0xF050...0xF05F` are resolved by the CPX object lookup
 helper instead of being expanded into thousands of static entries.
 
-Motion Server does not remap PDOs at runtime. CMMT profiles validate the drive's
-configured PDO mapping before `config_map()`, then use that process-image layout
-for encode/decode. If the drive mapping does not match the expected CMMT layout,
-startup stops with a mapping mismatch message.
+During startup/reconnect in PRE-OP, CMMT profiles write the selected PDO mapping and
+assignment, then read back and validate it before process-image mapping. CPX uses its
+device process image and validates it against the configured modules and index stride.
+Mappings are not changed during ordinary cyclic motion. A mismatch leaves the server
+in initialization-error state with its TCP service available.
 
 Linux local Motion Server control and visualization:
 
@@ -384,3 +385,17 @@ device/cmmt/         Festo CMMT profile, vendor OD extensions, PDO codec, and se
 device/cpx_ap_i_ec/  Festo CPX-AP-I-EC I/O profile, PDO codec, and settings
 device/virtual_servo_drive/ Virtual servo-drive model, OD model, and OD/PDO bridge
 ```
+
+## Regression and release checks
+
+```bash
+python -m pip install -r requirements.txt
+python -B -m scripts.check_api_docs
+python -B -m scripts.run_tests --profile unit --report reports/unit.json
+python -B -m scripts.run_tests --profile integration --report reports/integration.json
+```
+
+Linux headless GUI checks require Tk and `xvfb-run -a`. Hardware checks are explicit and separate;
+Node-RED tests are excluded until requested. See [deployment validation](docs/deployment_validation.md),
+[installation manual](docs/Motion_Server_Installation_Manual_Basic_Mode.md), and
+[user manual](docs/Motion_Server_User_Manual_KR.md). Old Rev. 1.0 Word manuals are historical, not current instructions.

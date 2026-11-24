@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from ethercat.distributed_clock import _DcTimeUnwrapper, DcCycleScheduler, DcPhaseLock
 from motion_server.failure import CommunicationException
-from test_pdo_transport_parity import connected_pysoem
+from tests.test_pdo_transport_parity import connected_pysoem
 
 
 class DcRolloverTest(unittest.TestCase):

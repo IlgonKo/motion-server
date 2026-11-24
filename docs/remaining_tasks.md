@@ -99,7 +99,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-006 배포 구성 최종 검증
 
-- 상태: `planned`
+- 상태: `in_progress`
 - 우선순위: 보통
 - 요약: Windows package와 Linux Docker 배포 구성을 clean system에서 최종 검증한다.
 - 완료 조건:
@@ -145,7 +145,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-010 사용자 문서 최신화
 
-- 상태: `planned`
+- 상태: `in_progress`
 - 우선순위: 보통
 - 요약: 사용자 및 설치 매뉴얼을 최신 Motion Server 기능과 배포 구성에 맞춘다.
 - 완료 조건:
@@ -445,7 +445,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### TD-009 API 문서와 구현 불일치
 
-- 상태: `open`
+- 상태: `complete`
 - 우선순위: 높음
 - 요약: 공개 API와 동작 설명이 구현에서 자동 검증되도록 한다.
 - 완료 조건:
@@ -455,11 +455,11 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - CI가 API specification/handler/documentation 불일치를 실패로 검출한다.
 - 상세: [TD-009 기술 명세](tasks/td/TD-009-api-documentation.md)
 
-### TD-010 자동 테스트 부재
+### TD-010 회귀 검증 실행 및 보고 체계
 
-- 상태: `open`
+- 상태: `in_progress`
 - 우선순위: 높음
-- 요약: mock 회귀 테스트와 별도의 실장치 smoke-test 체계를 구축한다.
+- 요약: 기존 회귀를 profile·CI·JSON 보고로 통합하고 실장치 인수 절차를 분리한다.
 - 완료 조건:
   - 설정, ESI/IODD, PDO codec, API와 virtual servo 핵심 경로의 자동 테스트가 제공된다.
   - mock 회귀 테스트가 clean environment의 CI에서 통과한다.

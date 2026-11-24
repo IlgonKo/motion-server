@@ -78,3 +78,12 @@ interface, protocol 또는 capability를 다루는 TD에는 다음 표를 사용
 | 명세 항목 | 구현 위치 | 검증 테스트 | 범위 확대 여부 |
 | --- | --- | --- | --- |
 | 계약 항목 | 파일 또는 객체 | 테스트 이름 | 없음 또는 별도 결정 식별자 |
+
+## 현행 사용자 배포 문서
+
+- [사용자 매뉴얼 2.0](Motion_Server_User_Manual_KR.md)
+- [설치 매뉴얼 2.0](Motion_Server_Installation_Manual_Basic_Mode.md)
+- [배포 검증 및 인수 체크리스트](deployment_validation.md)
+
+기존 동명 DOCX는 Rev. 1.0 이력으로 보존한다. 폐기된 API가 포함되어 있어 최신 문서로
+배포하지 않는다. 대체 DOCX/PDF 생성·렌더 검증은 RF-010의 미완료 항목이다.

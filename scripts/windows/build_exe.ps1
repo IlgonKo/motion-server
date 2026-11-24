@@ -84,6 +84,13 @@ function Remove-DirectoryIfExists {
     )
 
     if (Test-Path $Path) {
+        $resolved = [System.IO.Path]::GetFullPath($Path)
+        $projectPrefix = [System.IO.Path]::GetFullPath($ProjectRoot).TrimEnd('\') + '\'
+        $tempPrefix = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\') + '\motion-server-pyinstaller-'
+        if (-not ($resolved.StartsWith($projectPrefix, [System.StringComparison]::OrdinalIgnoreCase) -or
+                  $resolved.StartsWith($tempPrefix, [System.StringComparison]::OrdinalIgnoreCase))) {
+            throw "Refusing cleanup outside build workspace: $resolved"
+        }
         Remove-Item -LiteralPath $Path -Recurse -Force
     }
 }
@@ -91,7 +98,7 @@ function Remove-DirectoryIfExists {
 Push-Location $ProjectRoot
 try {
     if (-not $SkipInstall) {
-        & $Python -B -m pip install -r (Join-Path $ProjectRoot "requirements.txt")
+        & $Python -B -m pip install pysoem -r (Join-Path $ProjectRoot "requirements.txt")
         if ($LASTEXITCODE -ne 0) {
             throw "Motion Server dependency installation failed"
         }
@@ -104,11 +111,18 @@ try {
         }
     }
 
+    & $Python -B -c "import pysoem" *> $null
+    if ($LASTEXITCODE -ne 0) {
+        throw "PySOEM must be installed in the build Python before packaging real-device support."
+    }
+
     if (Test-Path $PackageRoot) {
         Remove-Item -Recurse -Force $PackageRoot
     }
-    Remove-DirectoryIfExists $LegacyPyInstallerDistRoot
-    Remove-DirectoryIfExists $LegacyPyInstallerWorkRoot
+    if (-not $PackageDirectory) {
+        Remove-DirectoryIfExists $LegacyPyInstallerDistRoot
+        Remove-DirectoryIfExists $LegacyPyInstallerWorkRoot
+    }
 
     if (Test-Path $MotionServerIconPng) {
         $needsIconBuild = -not (Test-Path $MotionServerIconIco)
@@ -181,9 +195,14 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "AI reference bundle failed"
     }
-    $manualFiles = Get-ChildItem -Path "docs" -File -Filter "Motion_Server_*_Manual*"
+    # Rev. 1 Word manuals contain retired APIs; ship reviewed Markdown until
+    # replacement DOCX/PDF rendering has been verified.
+    $manualFiles = Get-ChildItem -Path "docs" -File -Filter "Motion_Server_*_Manual*.md"
     foreach ($manualFile in $manualFiles) {
         Copy-Item -Force $manualFile.FullName (Join-Path $ManualRoot $manualFile.Name)
+    }
+    foreach ($name in @("motion_server_api_basic.md", "deployment_validation.md")) {
+        Copy-Item -LiteralPath (Join-Path "docs" $name) -Destination (Join-Path $ManualRoot $name)
     }
     Copy-Item -Force "packaging\WINDOWS_EXE.md" (Join-Path $PackageRoot "WINDOWS_EXE.md")
     Copy-Item -Force "scripts\windows\list_ethercat_nics.ps1" (Join-Path $ToolsRoot "list_ethercat_nics.ps1")

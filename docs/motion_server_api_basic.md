@@ -56,13 +56,20 @@ system/io/*          I/O 장치 명령
 `MOTION_SERVER_HEARTBEAT_PERIOD`, `MOTION_SERVER_HEARTBEAT_TIMEOUT`으로 설정하며 timeout은 주기보다
 커야 한다.
 
-```python
-import json
-import socket
+공식 Python reference client를 설치하거나 import 경로에 추가한 뒤 사용한다.
+단순 recv 한 번으로 요청 응답을 판정하지 않는다.
 
-sock = socket.create_connection(("127.0.0.1", 15000))
-sock.sendall((json.dumps({"cmd": "system/axes/status"}) + "\n").encode("utf-8"))
-print(sock.recv(8192).decode("utf-8"))
+```python
+from motion_server_reference_client import MotionServerClient
+
+client = MotionServerClient("127.0.0.1", 15000)
+client.start()
+try:
+    if not client.wait_connected(5):
+        raise ConnectionError("Motion Server connection timed out")
+    print(client.request({"cmd": "system/axes/status"}))
+finally:
+    client.stop()
 ```
 
 서버는 연결된 client마다 주기적으로 `system/feedback`을 송신한다. 클라이언트는 요청 응답과 주기 feedback이 같은 TCP stream에 섞여 들어온다는 점을 고려해야 한다.
@@ -121,13 +128,14 @@ system/authority/release
 ```json
 {
   "type": "system/authority/request",
-  "ok": true,
-  "granted": true,
-  "owner": 2,
-  "owned_by_this_client": true,
-  "available": false,
-  "reason": null,
-  "message": "Command authority granted."
+  "result": "success",
+  "data": {
+    "granted": true,
+    "owner": 2,
+    "owned_by_this_client": true,
+    "available": false,
+    "message": "Command authority granted."
+  }
 }
 ```
 
@@ -186,18 +194,97 @@ available             owner가 없는 free 상태인지 여부
 ```json
 {
   "type": "system/axes/status",
-  "drive_initialized": true,
-  "target_positions": [0.0],
-  "actual_positions": [0.0],
-  "actual_velocities": [0.0],
-  "statuswords": [33831],
-  "motion_modes": ["pp"],
-  "motion_limits": [100.0, -100.0, 1000.0, 1000.0],
-  "profile_settings": [100.0, 1000.0, 1000.0, 0.0],
-  "software_position_limits": [-1000.0, 1000.0],
-  "axis_metadata": [],
-  "diagnostics": [],
-  "command_authority": {}
+  "result": "success",
+  "data": {
+    "target_positions": [
+      0.0
+    ],
+    "actual_positions": [
+      0.0
+    ],
+    "actual_velocities": [
+      0.0
+    ],
+    "command_positions": [
+      0.0
+    ],
+    "command_velocities": [
+      0.0
+    ],
+    "statuswords": [
+      64
+    ],
+    "motion_limits": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "profile_settings": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "software_position_limits": [
+      0.0,
+      0.0
+    ],
+    "axis_metadata": [
+      {}
+    ],
+    "user_position_units": [
+      null
+    ],
+    "converting_unit_exponents": [
+      null
+    ],
+    "motion_mode": "pp",
+    "motion_modes": [
+      "pp"
+    ],
+    "server_mode": "basic",
+    "position_counts_per_unit": 1.0,
+    "axis_position_counts_per_unit": [
+      1.0
+    ],
+    "capabilities": {
+      "position_loop_gain": true,
+      "profile_settings": true,
+      "motion_limits": true,
+      "software_position_limits": true,
+      "csp_trajectory_feedback": false,
+      "trajectory_commands": false
+    },
+    "trajectory": {
+      "active": false,
+      "state": "idle",
+      "axes": [],
+      "segment": 0,
+      "time_from_start": 0.0,
+      "points": [],
+      "start_time": null,
+      "message": ""
+    },
+    "homing": {
+      "active": false,
+      "state": "idle",
+      "axes": [],
+      "start_time": null,
+      "message": "",
+      "per_axis": []
+    },
+    "device_diagnostics": [],
+    "diagnostic_status": {
+      "level": "normal",
+      "statuses": []
+    },
+    "command_authority": {
+      "owner": null,
+      "owned_by_this_client": false,
+      "available": true
+    }
+  }
 }
 ```
 
@@ -232,25 +319,84 @@ RxPDO `profile_velocity` command value 갱신을 함께 수행하며, status의 
 ```json
 {
   "type": "system/axis/status",
-  "axis": 0,
-  "target_position": 0.0,
-  "actual_position": 0.0,
-  "actual_velocity": 0.0,
-  "statusword": 33831,
-  "mode_display": 1,
-  "motion_mode": "pp",
-  "motion_limits": [100.0, -100.0, 1000.0, 1000.0],
-  "profile_settings": [100.0, 1000.0, 1000.0, 0.0],
-  "software_position_limits": [-1000.0, 1000.0],
-  "axis_metadata": {},
-  "diagnostics": {},
-  "command_authority": {}
+  "result": "success",
+  "data": {
+    "axis": 0,
+    "target_position": 0.0,
+    "actual_position": 0.0,
+    "actual_velocity": 0.0,
+    "command_position": 0.0,
+    "command_velocity": 0.0,
+    "statusword": 64,
+    "mode_display": 8,
+    "motion_mode": "pp",
+    "server_mode": "basic",
+    "position_counts_per_unit": 1.0,
+    "axis_position_counts_per_unit": 1.0,
+    "motion_limits": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "profile_settings": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "software_position_limits": [
+      0.0,
+      0.0
+    ],
+    "axis_metadata": {},
+    "user_position_unit": null,
+    "converting_unit_exponents": null,
+    "trajectory": {
+      "active": false,
+      "state": "idle",
+      "axes": [],
+      "segment": 0,
+      "time_from_start": 0.0,
+      "points": [],
+      "start_time": null,
+      "message": "",
+      "axis": 0
+    },
+    "homing": {
+      "active": false,
+      "state": "idle",
+      "axes": [],
+      "start_time": null,
+      "message": "",
+      "per_axis": {},
+      "axis": 0
+    },
+    "device_diagnostics": {},
+    "diagnostic_status": {
+      "level": "normal",
+      "statuses": []
+    },
+    "capabilities": {
+      "position_loop_gain": true,
+      "profile_settings": true,
+      "motion_limits": true,
+      "software_position_limits": true,
+      "csp_trajectory_feedback": false,
+      "trajectory_commands": false
+    },
+    "command_authority": {
+      "owner": null,
+      "owned_by_this_client": false,
+      "available": true
+    }
+  }
 }
 ```
 
 ### system/server/status
 
-Motion Server 프로세스 상태 요약을 요청한다. 응답에는 server mode, 초기화 상태, axis count, cycle time 등이 포함된다.
+Motion Server 프로세스 상태 요약을 요청한다. 응답에는 server mode, 초기화 상태, runtime state, cycle time과 Diagnostic 상태가 포함된다. 축 수는 system/bus/status 또는 축 feedback 배열에서 확인한다.
 
 ```json
 {"cmd": "system/server/status"}
@@ -289,6 +435,7 @@ system/axis/manualCW
 system/axis/param_read
 system/axis/param_write
 system/axis/param_save
+system/axis/param_catalog
 ```
 
 Examples:
@@ -650,8 +797,14 @@ I/O SDO parameter access는 `axis`가 아니라 `io` selector를 사용한다.
   "index": 32768,
   "subindex": 1,
   "data_type": "uint16",
-  "value": "1"
+  "value": 1
 }
+```
+
+축 OD catalog는 `system/axis/param_catalog`에 `axis`를 지정해 조회한다.
+
+```json
+{"cmd": "system/axis/param_catalog", "axis": 0}
 ```
 
 ### CPX-AP Module Parameters
@@ -692,7 +845,7 @@ Motion Server는 이 번호를 장치의 `0x27F0:02 Module` 필드에 맞게
   "parameter_id": 1,
   "instance": 0,
   "data_type": "uint8",
-  "value": "1"
+  "value": 1
 }
 ```
 
@@ -701,18 +854,21 @@ Motion Server는 이 번호를 장치의 `0x27F0:02 Module` 필드에 맞게
 ```json
 {
   "type": "system/io/ap/param_read",
-  "ok": true,
-  "io": "io0",
-  "object_index": "0x27F0",
-  "module": 1,
-  "parameter_id": 1,
-  "parameter_id_hex": "0x00000001",
-  "instance": 0,
-  "data_type": "uint8",
-  "status": 0,
-  "length": 1,
-  "data": "01",
-  "value": 1,
+  "result": "success",
+  "data": {
+    "io": "io0",
+    "object_index": "0x27F0",
+    "module": 1,
+    "parameter_id": 1,
+    "parameter_id_hex": "0x00000001",
+    "instance": 0,
+    "data_type": "uint8",
+    "status": 0,
+    "length": 1,
+    "data": "01",
+    "value": 1,
+    "ap_access_module": 2
+  }
 }
 ```
 
@@ -753,20 +909,22 @@ IOL module이 slot 1이면 `object_index`는 `0x2011`이다.
 ```json
 {
   "type": "system/io/iol/param_read",
-  "ok": true,
-  "io": "io0",
-  "object_index": "0x2011",
-  "module": 1,
-  "port": 1,
-  "index": 81,
-  "index_hex": "0x0051",
-  "subindex": 0,
-  "subindex_hex": "0x00",
-  "data_type": "uint8",
-  "status": 0,
-  "length": 1,
-  "data": "01",
-  "value": 1
+  "result": "success",
+  "data": {
+    "io": "io0",
+    "object_index": "0x2011",
+    "module": 1,
+    "port": 1,
+    "index": 81,
+    "index_hex": "0x0051",
+    "subindex": 0,
+    "subindex_hex": "0x00",
+    "data_type": "uint8",
+    "status": 0,
+    "length": 1,
+    "data": "01",
+    "value": 1
+  }
 }
 ```
 
@@ -796,14 +954,12 @@ worker가 없으므로 reconnect가 완료될 때까지 status/stop을 포함한
 
 ```json
 {
-  "type": "command_rejected",
-  "ok": false,
-  "reason": "authority_required",
-  "command": "system/axis/move_abs",
-  "owner": null,
-  "available": true,
-  "owned_by_this_client": false,
-  "message": "Command authority is required."
+  "type": "system/axis/move_abs",
+  "result": "fail",
+  "failure": {
+    "code": "AUTHORITY_REQUIRED",
+    "message": "Command authority is required."
+  }
 }
 ```
 
@@ -846,3 +1002,14 @@ authority_busy       다른 client가 authority를 갖고 있음
 {"cmd": "system/axis/move_abs", "axis": 0, "position": 50.0}
 {"cmd": "system/authority/release"}
 ```
+
+## 상태 및 AP catalog 명령
+
+```text
+system/server/status
+system/bus/status
+system/io/ap/param_catalog
+```
+
+`system/io/ap/param_catalog`는 선택한 station의 AP 모듈 catalog 조회이며, EtherCAT 전체
+catalog인 `system/io/ethercat/param_catalog`와 구분한다. 요청 필드는 Schema를 따른다.

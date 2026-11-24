@@ -168,7 +168,7 @@ class ListenerStartupTest(unittest.TestCase):
         runtime_module = SimpleNamespace(prepare_runtime=lambda: Path.cwd())
         for packaged in (False, True):
             with self.subTest(packaged=packaged), \
-                 patch.object(MotionServerApplication, "from_source") as build, \
+                 patch("motion_server.application.MotionServerApplication.from_source") as build, \
                  patch.dict(sys.modules, {"windows_runtime": runtime_module}):
                 build.return_value.run.return_value = 1
                 with self.assertRaises(SystemExit) as caught:

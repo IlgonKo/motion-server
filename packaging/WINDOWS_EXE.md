@@ -32,8 +32,8 @@ dist\Motion Server
   device\cmmt\config.example.txt
   device\cpx_ap_i_ec\config.example.txt
   device\io_link\iodd\
-  Manual\Motion_Server_Installation_Manual_*.*
-  Manual\Motion_Server_User_Manual_*.*
+  Manual\Motion_Server_Installation_Manual_Basic_Mode.md
+  Manual\Motion_Server_User_Manual_KR.md
   Reference\cmmt_error_catalog.json
   Reference Clients\node_red\node-red-contrib-motion-server\package.json
   Reference Clients\node_red\node-red-contrib-motion-server\examples\flows\*.json
@@ -126,3 +126,12 @@ The Motion Server public API uses:
 
 PV mode is allowed only when the CMMT user position unit `0x216E:01` is in the
 rotary unit family: rad, degree, or revolution.
+
+## Release validation
+
+Use `-SkipLocalEnv -PackageDirectory <new-directory>` to build without replacing an existing deployment.
+Use `python -B -m scripts.validate_package <new-directory>` to write an artifact manifest.
+The reviewed manuals are Markdown revision 2.0; obsolete Word revision 1.0 files are not copied.
+`Manual/motion_server_api_basic.md` and `Manual/deployment_validation.md` are included.
+`-SkipNpcapDownload` explicitly omits the Npcap installer and does not prove hardware readiness.
+A local build is not a clean Windows/Linux acceptance test.

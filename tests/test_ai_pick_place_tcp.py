@@ -128,7 +128,16 @@ MotionServerApplication.from_source(ConfigurationSource(project_root=Path(sys.ar
         self.log.close()
         if hasattr(self, "_outcome") and self._outcome and not self._outcome.success:
             print(log[-6000:])
-        self.directory.cleanup()
+        # Windows can briefly retain the redirected log handle after the child
+        # exits (including the venv launcher). Do not hide persistent failures.
+        for attempt in range(20):
+            try:
+                self.directory.cleanup()
+                break
+            except PermissionError as error:
+                if getattr(error, "winerror", None) != 32 or attempt == 19:
+                    raise
+                time.sleep(0.05)
 
     def tearDown(self):
         self.cleanup()

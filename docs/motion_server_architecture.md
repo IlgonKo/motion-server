@@ -111,7 +111,7 @@ PySOEMMaster
   -> device profile PDO codec
 ```
 
-Motion Server는 PDO remap을 런타임에 수행하지 않는다. 사용할 PDO mapping은 장치 설정 단계에서 사전에 준비되어 있어야 한다. 서버는 설정된 PDO를 읽고 쓰며, 필요한 필드가 없으면 해당 기능을 거부한다.
+CMMT는 startup/reconnect의 PRE-OP 단계에서 선택한 PDO configuration의 mapping/assignment를 기록하고 readback 검증한다. CPX는 구성 module과 index stride에 따른 실제 process image를 검증한다. 정상 cyclic 운전 중 mapping을 변경하지 않으며, 필요한 필드가 없으면 해당 기능을 거부한다.
 
 ### mock backend
 

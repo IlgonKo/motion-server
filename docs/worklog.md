@@ -6,6 +6,23 @@
 
 ## 2026-11-24
 
+### TD-009 RF-010 문서 정합성 및 TD-010 RF-006 검증 체계 정리
+
+- 공개 API 57개와 JSON 예제 59개를 Schema/registry 기반으로 검증하도록 만들었다.
+  legacy response·숫자 문자열·axis status·AP module 번호·PDO 정책과 실행 안내를 수정했다.
+- 사용자/설치 매뉴얼 Markdown 2.0을 작성하고 오래된 Word 1.0의 배포를 중단했다.
+  최신 Markdown/API/인수 안내를 package Manual에 포함한다. 원본 DOCX는 이력으로 보존한다.
+- unit/integration profile, 개별 실패·시간 JSON 보고서와 Windows/Linux CI matrix를 추가했다.
+  test import/reload 간섭 및 Windows 일시 log handle 잠금의 정리 문제를 수정했다.
+- 실제 장치 status만 조회하는 명시적 hardware profile을 분리했다. 이번에는 실행하지 않았다.
+- 신규 venv 및 로컬 .env 없는 소스 복사본에서 최종 598개 테스트 통과(55.42초).
+- 별도 검증 경로에 Windows EXE 4종 빌드, 3828개 artifact manifest 및 패키지 mock TCP 이동 시험 통과.
+  Npcap installer와 로컬 운영 설정은 제외했다. build의 PySOEM 누락 방지도 추가했다.
+- TD-009 complete. TD-010은 원격 CI 실행, RF-010은 DOCX/PDF 렌더와 신규 설치,
+  RF-006은 새 Windows/Linux PC 및 실장비 인수가 남아 in_progress로 기록했다.
+- Node-RED 실행 시험·실장비 제어·운영 서버 재시작·커밋/푸쉬는 하지 않았다.
+- 상세: [배포 준비 검증 결과](validation/2026-11-24-release-readiness.md).
+
 ### TD-041 재평가: 초기 연결 화면의 제어권·Bus Reconnect만 유지
 
 - 사용자 요청에 따라 이전 Bus Fault Reset 관련 변경과 초기 화면의 추가 Reset/Restart 버튼을 원복했다.

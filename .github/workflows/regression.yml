@@ -1,0 +1,33 @@
+name: Motion Server regression
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  regression:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.12', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements.txt
+      - name: Linux display for Tk tests
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb xauth python3-tk
+      - run: python -B -m scripts.check_api_docs
+      - name: Windows regression
+        if: runner.os == 'Windows'
+        run: python -B -m scripts.run_tests --profile all --report reports/regression.json
+      - name: Linux regression
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -B -m scripts.run_tests --profile all --report reports/regression.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-${{ matrix.os }}-${{ matrix.python }}
+          path: reports/

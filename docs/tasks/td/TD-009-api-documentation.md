@@ -1,30 +1,26 @@
-# TD-009 API 문서와 구현 불일치
+# TD-009 API 문서와 구현 정합성
 
-## 배경 및 현재 구조
+- 상태: `complete`
+- 검증일: 2026-11-24
 
-- 일부 server reset/restart, bus reconnect와 IO-Link ISDU API의 문서상 지원 여부가 route와 다르다.
-- README의 PDO remap 정책 설명이 현재 구현과 다르다.
-- manual CSP count scale 설명 등 현재 구현과 맞지 않는 내용이 남아 있다.
+## 확정 범위
 
-## 관련 위치
+JSON Schema를 API 계약 원본으로 유지하고 specification·handler registry·공개 문서 목록을 비교한다.
+서버 동작을 확장하거나 legacy 입력을 허용하지 않는다. 문서 검증은 네트워크 명령을 전송하지 않는다.
 
-- `docs/motion_server_api_basic.md`
-- `README.md`
-- `docs/motion_server_architecture.md`
-- `motion_server/api/specification.py`
-- handler registry
+## 구현 및 결과
 
-## 목표 구조 및 구현 범위
+- `scripts/check_api_docs.py`가 57개 공개 command의 Schema/registry/문서 집합을 비교한다.
+- JSON 예제 59개를 parse하고 request와 response를 실제 Schema로 검사한다.
+- 오래된 ok/command_rejected 응답, 숫자 문자열 입력, axis status 및 AP response를 현행 형식으로 수정했다.
+- Axis parameter catalog 누락, server status의 축 수 설명, authority/Heartbeat client 예제를 수정했다.
+- README/architecture의 CMMT PRE-OP PDO mapping 기록과 CPX mapping 검증 정책을 실제 구현에 맞췄다.
+- 문서 명령 삭제/미지원 명령 삽입과 숫자 문자열 예제 주입 시 실패하는 음성 테스트를 추가했다.
+- CI workflow에서 동일 검사를 실행한다. 로컬 검사 및 테스트는 통과했으며 원격 CI 실행 증거는 TD-010에서 추적한다.
 
-- API specification과 handler registry를 authoritative source로 검증한다.
-- 공개 command 목록 또는 검증 가능한 documentation metadata를 specification과 연결한다.
-- 사용 예제와 정책 설명을 현재 구현에 맞춘다.
+## 남은 범위와 연결
 
-## 검증 계획
+사용자 매뉴얼 갱신은 RF-010, 새 OS 배포 인수는 RF-006에서 관리한다.
+Node-RED 테스트와 실장비 조작은 수행하지 않았다.
 
-- specification, registry와 문서 command 목록의 차이를 CI에서 검사한다.
-- 문서의 JSON 예제를 parse하고 가능한 예제는 mock smoke test로 실행한다.
-
-## 완료 증거
-
-완료 시 동기화 방식, 수정 문서 목록과 자동 검사 결과를 기록한다.
+- 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)
