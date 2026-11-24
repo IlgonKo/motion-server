@@ -1,5 +1,6 @@
 """Offline unit/mock regression profiles with machine-readable failure evidence."""
 import argparse
+import gc
 import json
 from pathlib import Path
 import platform
@@ -13,12 +14,16 @@ INTEGRATION = {'test_ai_pick_place_tcp', 'test_ai_pick_place_extended'}
 
 class ReportResult(unittest.TextTestResult):
     def startTest(self, test):
+        # The preceding test may have released its final references only after
+        # stopTest. Collect Tk cycles here, before starting new client workers.
+        gc.collect()
         self.started = time.monotonic()
         super().startTest(test)
 
     def stopTest(self, test):
         self.durations.append({'test': test.id(), 'seconds': time.monotonic()-self.started})
         super().stopTest(test)
+        gc.collect()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,7 +46,18 @@ def main():
             modules.append('tests.'+path.stem)
     suite = unittest.defaultTestLoader.loadTestsFromNames(modules)
     started = time.monotonic()
-    result = unittest.TextTestRunner(verbosity=2, resultclass=ReportResult).run(suite)
+    # Tk Variables can survive root.destroy() through callback/reference cycles.
+    # Automatic GC in a later TCP worker must not finalize these Tcl objects:
+    # Tcl is owned by the main thread. Keep collection at test boundaries on
+    # this thread; do not change server/client timing or suppress test failures.
+    automatic_gc = gc.isenabled()
+    gc.disable()
+    try:
+        result = unittest.TextTestRunner(verbosity=2, resultclass=ReportResult).run(suite)
+    finally:
+        gc.collect()
+        if automatic_gc:
+            gc.enable()
     report = {'profile': args.profile, 'python': sys.version, 'platform': platform.platform(),
               'seconds': time.monotonic()-started, 'modules': modules, 'excluded': excluded,
               'tests_run': result.testsRun, 'success': result.wasSuccessful(),
