@@ -32,9 +32,9 @@ python -B -m scripts.validate_package '<새 검증 폴더>'
 manifest는 source commit, 미커밋 변경 여부, 경로·크기·SHA256과 누락 항목을 기록한다.
 Node-RED package/flow는 존재 여부만 확인하며 실행 시험하지 않는다.
 
-최신 매뉴얼은 Markdown 2.0이며 `Manual`에 API 문서와 함께 포함한다.
-기존 Word 1.0 문서는 폐기된 API가 있어 배포에서 제외한다. DOCX/PDF 후속 생성 및 렌더 검증 전에는
-이를 최신 매뉴얼로 배포하지 않는다.
+최신 매뉴얼은 Markdown/DOCX/PDF Rev. 2.0이며 `Manual`에 API 문서와 함께 포함한다.
+사용자/설치 매뉴얼 각 3페이지의 DOCX→PDF 렌더 검증을 완료했다.
+이 검증은 신규 PC 설치 및 실제 장비 인수를 대체하지 않는다.
 
 ## 새 환경 인수 체크리스트
 

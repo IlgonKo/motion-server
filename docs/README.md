@@ -85,5 +85,9 @@ interface, protocol 또는 capability를 다루는 TD에는 다음 표를 사용
 - [설치 매뉴얼 2.0](Motion_Server_Installation_Manual_Basic_Mode.md)
 - [배포 검증 및 인수 체크리스트](deployment_validation.md)
 
-기존 동명 DOCX는 Rev. 1.0 이력으로 보존한다. 폐기된 API가 포함되어 있어 최신 문서로
-배포하지 않는다. 대체 DOCX/PDF 생성·렌더 검증은 RF-010의 미완료 항목이다.
+같은 이름의 DOCX/PDF도 Rev. 2.0으로 제공한다. Markdown을 편집 원본으로 사용하며
+`scripts/build_manuals.py`로 DOCX를 재생성한다. DOCX 변경 후 PDF 변환과 전체 페이지 렌더 검증이 필요하다.
+기존 Word Rev. 1.0은 Git 이력에서 확인한다. 신규 환경의 문서 기반 설치 인수는 아직 미완료다.
+
+- 사용자 매뉴얼: [DOCX](Motion_Server_User_Manual_KR.docx) · [PDF](Motion_Server_User_Manual_KR.pdf)
+- 설치 매뉴얼: [DOCX](Motion_Server_Installation_Manual_Basic_Mode.docx) · [PDF](Motion_Server_Installation_Manual_Basic_Mode.pdf)

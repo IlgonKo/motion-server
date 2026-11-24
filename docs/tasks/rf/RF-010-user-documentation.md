@@ -30,10 +30,12 @@
 - 상태: `in_progress`.
 - 사용자/설치 매뉴얼 Markdown Rev. 2.0을 작성했다. 현행 API, authority, feedback,
   parameter storage, Diagnostic/recovery, Windows/Linux 설정과 ESI/IODD 경계를 반영했다.
-- 기존 Word Rev. 1.0에는 폐기된 API가 광범위하게 남아 있어 이력으로 보존하고 패키지 복사에서 제외했다.
-  최신 Markdown 매뉴얼과 API/배포 검증 문서를 package Manual에 포함한다.
+- 기존 Word Rev. 1.0은 최신 Markdown 기반 DOCX Rev. 2.0으로 교체했다. 이전 판은 Git 이력에 남는다.
+  Markdown/DOCX/PDF와 API/배포 검증 문서를 package Manual에 포함하도록 변경했다.
 - API 예제/명령 자동 검사는 TD-009로 연결했다. 개발 PC의 패키지 mock smoke는 통과했다.
-- 미완료: 최신 DOCX/PDF 생성·렌더 확인(현재 Word/LibreOffice 없음), 새 Windows/Linux 환경에서
-  문서만으로 설치하는 인수 검증. 기존 DOCX를 최신판으로 표시하지 않는다.
+- DOCX/PDF 제작·렌더 확인 완료: 사용자/설치 매뉴얼 각 3페이지, 총 6페이지를 이미지로 검토했다.
+  한글 글꼴, 코드 예시, 페이지 번호와 페이지 경계를 확인하고 제목 스타일 및 코드 설명 분리를 수정했다.
+  Markdown→DOCX 내용 일치 검사 및 PDF 추출 내용 대조를 수행했다.
+- 미완료: 새 Windows/Linux 환경에서 문서만으로 설치하는 인수 검증. 상태는 `in_progress`를 유지한다.
 
 - 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)

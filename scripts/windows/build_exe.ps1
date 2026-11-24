@@ -195,9 +195,9 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "AI reference bundle failed"
     }
-    # Rev. 1 Word manuals contain retired APIs; ship reviewed Markdown until
-    # replacement DOCX/PDF rendering has been verified.
-    $manualFiles = Get-ChildItem -Path "docs" -File -Filter "Motion_Server_*_Manual*.md"
+    # Reviewed Rev. 2.0 manuals: editable source, Word and rendered PDF.
+    $manualFiles = Get-ChildItem -Path "docs" -File -Filter "Motion_Server_*_Manual*" |
+        Where-Object { $_.Extension -in ".md", ".docx", ".pdf" }
     foreach ($manualFile in $manualFiles) {
         Copy-Item -Force $manualFile.FullName (Join-Path $ManualRoot $manualFile.Name)
     }

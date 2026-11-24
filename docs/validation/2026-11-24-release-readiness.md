@@ -64,8 +64,8 @@ Ubuntu 3.14는 GUI Jog 조건 대기 timeout과 연결 해제 시험의 worker �
 ## 남은 인수
 
 - TD-010: 아래 최종 원격 재검증으로 완료했다.
-- RF-010: 새 DOCX/PDF 제작·렌더 검증 및 문서 기반 신규 환경 설치. 현재는 Markdown 2.0이며
-  Word 1.0은 obsolete 이력으로 보존하고 배포에서 제외했다. 현 PC에 Word/LibreOffice가 없다.
+- RF-010: 문서 기반 신규 환경 설치 인수. DOCX/PDF Rev. 2.0 제작과 각 3페이지 렌더 검증은
+  후속 작업에서 완료했다. Word Rev. 1.0은 Git 이력으로 남기고 최신 DOCX로 교체했다.
 - RF-006: 새 Windows/Linux PC, Npcap/NIC 및 실장비, catalog 선택, upgrade/rollback 인수.
   현 PC의 Docker daemon 연결이 실패하여 Linux container 실행은 검증하지 않았다.
 
@@ -103,3 +103,16 @@ TD-009와 TD-010은 complete, RF-010과 RF-006은 in_progress로 유지한다. �
 DEC-057에 따라 Windows에서는 CSP를 포함한 동기 제어를 공식 지원하지 않으며 주기 성능을
 검증하지 않는다. 2ms는 시험 fixture의 설정값으로, Windows의 실시간 성능 보증이 아니다.
 Node-RED 시험, 실장비 제어 및 운영 서버 재시작은 하지 않았다.
+
+## DOCX/PDF 렌더 검증 — 2026-11-24
+
+- 사용자/설치 매뉴얼 Rev. 2.0: 각각 3페이지, 총 6페이지 전체 육안 확인 완료.
+- `scripts/build_manuals.py`로 Markdown에서 DOCX 생성, LibreOffice를 이용해 PDF 및 페이지 이미지 렌더.
+  변환기는 작업 전용 폴더에서 사용했으며 시스템 설치를 변경하지 않았다.
+- 한글 글꼴, 제목, 코드 예시, 페이지 분할을 확인하고 레이아웃 수정 후 최종본을 재검사했다.
+- Markdown/DOCX/PDF의 공백을 제외한 본문 텍스트 일치 확인. PDF에 모든 사용 글꼴 포함 확인.
+- 최신 DOCX/PDF를 `docs`에 저장하고 Windows 패키지 문서 복사 및 검사 규칙을 갱신했다.
+- 기존 시험 패키지의 Manual만 갱신한 구성 검사: 3,832개 파일, 오류 0개.
+  EXE를 다시 빌드하거나 새 환경에서 설치한 결과는 아니다.
+- API 문서 검사: 공개 명령 57개, JSON 예제 59개, 오류 0개.
+- 새 Windows/Linux 환경에서 매뉴얼을 따라 설치하는 인수는 별도로 남아 있다.

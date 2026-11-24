@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+from zipfile import BadZipFile, ZipFile
+from xml.etree import ElementTree
 
 
 def inspect(root):
@@ -29,8 +31,26 @@ def inspect(root):
                      '_internal/device/io_link/iodd'):
         if not list((root/relative).rglob('*.xml')):
             errors.append(f'No XML catalog: {relative}')
-    if list((root/'Manual').glob('*.docx')):
-        errors.append('Unreviewed legacy DOCX manual included')
+    for stem in ('Motion_Server_User_Manual_KR', 'Motion_Server_Installation_Manual_Basic_Mode'):
+        word = root/'Manual'/f'{stem}.docx'
+        pdf = root/'Manual'/f'{stem}.pdf'
+        if not word.exists():
+            errors.append(f'Missing: Manual/{word.name}')
+        else:
+            try:
+                with ZipFile(word) as archive:
+                    core = ElementTree.fromstring(archive.read('docProps/core.xml'))
+                version = core.find('{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}version')
+                if version is None or version.text != '2.0':
+                    errors.append(f'Unreviewed manual revision: {word.name}')
+            except (OSError, ValueError, KeyError, BadZipFile, ElementTree.ParseError):
+                errors.append(f'Invalid DOCX: {word.name}')
+        if not pdf.exists():
+            errors.append(f'Missing: Manual/{pdf.name}')
+        else:
+            with pdf.open('rb') as stream:
+                if stream.read(5) != b'%PDF-':
+                    errors.append(f'Invalid PDF: {pdf.name}')
     if list(root.rglob('.env')):
         errors.append('Source .env included in Windows package')
     if not list((root/'_internal/pysoem').glob('*.pyd')):

@@ -148,6 +148,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 - 상태: `in_progress`
 - 우선순위: 보통
 - 요약: 사용자 및 설치 매뉴얼을 최신 Motion Server 기능과 배포 구성에 맞춘다.
+- 진행: Rev. 2.0 DOCX/PDF 제작 및 총 6페이지 렌더 검증 완료. 신규 환경 설치 인수는 미완료.
 - 완료 조건:
   - User Manual이 최신 API, authority, feedback, parameter access와 Basic mode를 설명한다.
   - Installation Manual이 Windows/Linux 설치, 설정과 ESI/IODD 규칙을 설명한다.
