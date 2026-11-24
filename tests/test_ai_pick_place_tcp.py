@@ -45,14 +45,6 @@ PYSOEM_CYCLE_TIME=0.008
         env = {k: v for k, v in os.environ.items() if not k.startswith(
             ("MOTION_SERVER_", "PYSOEM_", "MOCK_", "AXIS_"))}
         env["PYTHONPATH"] = "" if package else str(ROOT)
-        timing_probe = '''import time
-samples = []
-for _ in range(10):
-    started = time.perf_counter()
-    time.sleep(0.008)
-    samples.append(round((time.perf_counter() - started) * 1000, 2))
-print("Test launcher sleep(8ms) samples:", samples, flush=True)
-'''
         code = ("from pathlib import Path; from configuration import ConfigurationSource; "
                 "from motion_server.application import MotionServerApplication; "
                 "import sys; MotionServerApplication.from_source("
@@ -75,7 +67,6 @@ RuntimeDiagnosticMonitor.update = update
 MotionServerApplication.from_source(ConfigurationSource(project_root=Path(sys.argv[1])), argv=[]).run()
 '''
         self.log = (self.folder / "server.log").open("w+", encoding="utf-8")
-        code = timing_probe + code
         command = [str(self.folder / "motion_server.exe")] if package else [sys.executable, "-u", "-c", code, str(self.folder)]
         self.process = subprocess.Popen(command,
             cwd=self.folder, env=env, stdout=self.log, stderr=subprocess.STDOUT)
