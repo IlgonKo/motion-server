@@ -1,11 +1,32 @@
 # RF-018 Gamepad Manual Multi-Axis Velocity Control
 
 - 등록일: 2026-09-04
-- 상태: `in_progress`
-- 우선순위: 보통
+- 상태: `out_of_scope` (향후 개발은 DT Demo 상위 애플리케이션/프로젝트에서 진행)
+- 범위 변경일: 2026-11-24
+- 우선순위: Motion Server 내 해당 없음
 - 선행 작업: TD-034, TD-036, TD-037, TD-038
 - 구현 위치: `control_panel/gamepad_control_panel`
 - Windows 실행: `scripts/windows/gamepad.ps1`
+
+## 현재 책임 경계 — 2026-11-24 확정
+
+- DualSense/Gamepad를 Motion Server에 직접 연결하는 방향의 개발은 더 이상 진행하지 않는다.
+- 입력 장치는 향후 DT Demo 상위 애플리케이션에 연결한다. 상위 애플리케이션이 입력을 해석하고 Motion Server의 기존 API 형식에 맞는 명령을 전송한다.
+- Motion Server는 기존 API의 명령 처리·권한·상태·제한 검증을 담당하며 Gamepad 전용 책임을 추가하지 않는다.
+- Gamepad 입력·매핑·운전 UI 및 관련 검증은 DT Demo 애플리케이션/프로젝트에서 추후 다룬다.
+- 기존 `control_panel/gamepad_control_panel` 코드, 설정, 테스트, 실행/패키징 경로와 문서는 현재 저장소에 그대로 유지한다. 이번 결정으로 삭제·이동·비활성화하지 않는다.
+- 이 상태는 기능 구현 완료나 코드 이관 완료를 뜻하지 않는다. Motion Server의 미완료 작업 대상에서 제외하고 후속 개발 책임만 변경한다.
+
+```text
+DualSense / Gamepad
+→ DT Demo 상위 애플리케이션 (입력 해석·명령 구성)
+→ 기존 Motion Server API
+→ Motion / I/O 제어
+```
+
+아래 배경·설계·완료 조건·구현 현황은 기존 구현의 참고 이력으로 보존한다.
+현재 Motion Server에서 추가 구현하거나 인수 시험을 진행해야 하는 요구사항으로 사용하지 않는다.
+향후 DT Demo에서 재사용할 범위와 상세 동작은 해당 프로젝트에서 확정한다.
 
 ## 배경
 

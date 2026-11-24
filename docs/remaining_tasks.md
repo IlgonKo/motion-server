@@ -272,42 +272,13 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-018 Gamepad Manual Multi-Axis Velocity Control
 
-- 상태: `in_progress`
-- 우선순위: 보통
-- 요약: DualSense Gamepad Control Panel로 3축 + rotation 수동 제어를 제공한다.
-- 선행 작업: `TD-034`, `TD-036`, `TD-037`, `TD-038`
-- 완료 조건:
-  - Motion Server core에는 gamepad/HID dependency를 추가하지 않고 `control_panel/gamepad_control_panel`에 구현된다.
-  - Windows 입력은 `pygame-ce / pygame.joystick` adapter를 사용하고 name/GUID별 mapping profile과 SDL
-    runtime을 배포 artifact에 포함한다.
-  - Multi-axis mode는 기존 `system/axes/move_vel` API를 사용하여 X/Y/Z/Rotation role을 동시에 속도 지령한다.
-  - Single-axis mode는 선택 축 하나를 Left Stick Y 반대 방향의 `jog_start`/`jog_stop`으로 제어하고
-    D-pad left/right로 선택 축을 변경한다.
-  - `actions.homing`으로 설정한 button은 Single-axis Armed·stick 중립·모든 Axis Standstill에서만
-    선택 축 Homing을 시작하고 완료까지 Jog를 억제한다. 기본값은 Cross이며 Multi-axis mode에서는
-    Homing 입력을 거부한다.
-  - `actions`로 설정한 mode 전환과 axis 선택은 Disarmed, stick 중립과 모든 Axis Standstill에서만
-    허용하며 Single-axis mode에서는 Left Stick Y와 선택 Axis만 사용한다.
-  - Multi-axis mode에서 Left Stick X/Y는 X/Y, Right Stick Y/X는 Z/Rotation velocity로 매핑된다.
-  - 모든 Axis Standstill과 stick 중립에서 설정 가능한 Enable trigger의 상승 edge로 mapped axes를 enable하고,
-    Operation Enabled 확인 후에만 Armed로 진입한다. DualSense 기본 매핑은 L2 axis 4이다.
-  - stick 중립에서는 mapped axes를 Stop하고 Enabled/Armed 상태를 유지한다.
-  - Enable trigger release에서는 Stop/Standstill 대기 없이 mapped axes를 즉시 Disable하여 Quick Stop으로
-    전환하고 Disarmed 상태로 전환한다.
-  - server와 client 사이의 단절은 TD-037의 모든 TCP client 공통 왕복 Heartbeat로 감지한다.
-  - Heartbeat timeout에서는 client가 즉시 Disarmed로 전환하고 Disable을 시도하며, server는 owner
-    연결이면 모든 Axis motion target 제거, Disable/Quick Stop, authority 회수와 연결 종료를 수행한다.
-  - 명시적인 authority release에서는 모든 Axis를 Stop하고 Enabled 상태를 유지하며, Feedback에서 모든
-    Axis Standstill을 확인한 뒤 authority를 해제한다.
-  - DualSense와 gamepad client 사이의 단절 및 input-loop timeout은 1차 범위에 포함하지 않는다.
-  - `server.axes`의 axis role-to-index와 루트 `axes`의 role-to-logical-stick, deadzone, update period와
-    speed scale은 client 설정으로 관리되며 axis별 max velocity는 server `motion_limits`를 사용한다.
-  - scaled deadzone, role별 invert, 최신 command coalescing, strict axis/limit/device 검증과 Windows 상태
-    GUI를 제공한다.
-  - command reject, authority/Enabled 상실, Axis Fault와 runtime/bus 이상에서 즉시 Disarmed 및 안전
-    Disable을 수행한다.
-  - command authority, runtime state, fault state, motion limit와 software limit는 기존 Motion Server API 계약을 따른다.
-  - absolute/relative move, sequence, parameter write, safety bypass와 신규 Motion Server gamepad API는 포함하지 않는다.
+- 상태: `out_of_scope`
+- 범위 변경일: 2026-11-24
+- 우선순위: Motion Server 내 해당 없음
+- 요약: Gamepad는 DT Demo 상위 애플리케이션에 연결하고, 상위 애플리케이션이 기존 Motion Server API 형식으로 명령을 전송한다.
+- 후속 담당: DT Demo 애플리케이션/프로젝트. 관련 설계·구현·검증은 추후 해당 프로젝트에서 진행한다.
+- 보존 정책: 기존 코드·설정·테스트·패키징·문서는 현재 저장소에 유지한다. 삭제·이동·비활성화하지 않는다.
+- 상태 의미: 구현 완료가 아닌 향후 개발 범위 변경. 기존 설계와 미결 사항은 상세 문서에 참고 이력으로 보존한다.
 - 상세: [RF-018 기능 명세](../control_panel/gamepad_control_panel/doc/RF-018-gamepad-manual-velocity-control.md)
 
 ### RF-019 AI 기반 Motion/I/O 시퀀스 생성 플랫폼
@@ -359,27 +330,13 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-020 DualSense Haptic and Lightbar Feedback
 
-- 상태: `in_progress`
-- 우선순위: 보통
-- 선행 작업: `RF-018`
-- 요약: 설정된 Axis가 실제로 Moving인 동안 DualSense에 약한 일반 rumble과 Festo Blue(`#0091DC`)
-  라이트바를 출력하고, 향후 알람 발생 시 설정된 시간 동안 더 강한 rumble로 덮어쓰는 Gamepad 출력
-  기능을 제공한다.
-- 완료 조건:
-  - 이동 진동은 Stick command가 아니라 Motion Server Feedback의 활성 Axis Moving/Standstill을 따른다.
-  - 이동 라이트바는 Festo CI 기준 RGB `0 / 145 / 220` 색조로 연속 점등하며 밝기는 별도로 조절한다.
-  - 연결, 제어권, Armed, Moving, Homing, Warning과 Fault/Alarm 상태별 색상·점멸 패턴을
-    정의하고 높은 우선순위 상태가 해제되면 최신 상태 표시로 복귀한다.
-  - 점멸은 output adapter의 timer로 구현하며 고정 점등 상태에서 동일 LED 명령을 반복하지 않는다.
-  - 약진동, 알람 강진동, Off의 우선순위와 복귀 동작이 명확하다.
-  - 진동·라이트바 미지원 또는 출력 실패가 Motion 명령과 안전 동작에 영향을 주지 않는다.
-  - Gamepad 분리와 앱 종료에서 진동 중지와 이동 라이트바 해제를 best effort로 수행한다.
-  - Motion Server에 Gamepad/Haptic/Lightbar 전용 API를 추가하지 않는다.
-  - USB/Bluetooth DualSense에서 일반 rumble과 라이트바 지원 여부 및 필요한 SDL 설정을 실장비로 검증한다.
-- 구현 전 미결 사항: 알람 local event 계약과 중복/우선순위 정책, Windows 연결별 출력 지원 검증
-- 진행 상황: Machine State 판정, 상태별 RGB/점멸, Moving 약진동, Axis Fault 강진동, GUI 출력 상태와
-  SDL DualSense 확장 출력 설정을 구현했다. 현재 연결 장치에서 LED/rumble 지원을 확인했으며 외부
-  Warning/Alarm event 연동과 연결 방식별 검증은 남아 있다.
+- 상태: `out_of_scope`
+- 범위 변경일: 2026-11-24
+- 우선순위: Motion Server 내 해당 없음
+- 요약: DualSense 진동·라이트바 및 외부 알람 연동은 DT Demo 상위 애플리케이션의 책임으로 둔다.
+- 후속 담당: DT Demo 애플리케이션/프로젝트. 관련 설계·구현·검증은 추후 해당 프로젝트에서 진행한다.
+- 보존 정책: 기존 코드·설정·테스트·패키징·문서는 현재 저장소에 유지한다. 삭제·이동·비활성화하지 않는다.
+- 상태 의미: 구현 완료가 아닌 향후 개발 범위 변경. 기존 설계와 미결 사항은 상세 문서에 참고 이력으로 보존한다.
 - 상세: [RF-020 기능 명세](../control_panel/gamepad_control_panel/doc/RF-020-dualsense-haptic-feedback.md)
 
 ## Tech Debt

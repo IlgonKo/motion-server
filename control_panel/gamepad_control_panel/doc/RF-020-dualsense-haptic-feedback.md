@@ -1,10 +1,23 @@
 # RF-020 DualSense Haptic and Lightbar Feedback
 
 - 등록일: 2026-11-05
-- 상태: `in_progress`
-- 우선순위: 보통
+- 상태: `out_of_scope` (향후 개발은 DT Demo 상위 애플리케이션/프로젝트에서 진행)
+- 범위 변경일: 2026-11-24
+- 우선순위: Motion Server 내 해당 없음
 - 선행 작업: RF-018
 - 구현 위치: `control_panel/gamepad_control_panel`
+
+## 현재 책임 경계 — 2026-11-24 확정
+
+- RF-018의 방향 변경에 따라 DualSense/Gamepad는 DT Demo 상위 애플리케이션에 연결한다.
+- 진동·라이트바·입력 장치 상태 표시와 외부 Warning/Alarm 연동 정책은 상위 애플리케이션의 책임이다.
+- 상위 애플리케이션이 Motion Server의 기존 API로 명령을 보내고 응답/Feedback을 활용한다. Motion Server에 DualSense 출력 전용 API나 장치 제어 책임을 추가하지 않는다.
+- 미결 정책과 USB/Bluetooth 인수 시험 등 후속 작업은 DT Demo 애플리케이션/프로젝트에서 추후 다룬다.
+- 기존 구현 코드·설정·테스트·패키징과 관련 문서는 Motion Server 저장소에 그대로 유지한다. 이번에는 삭제·이동·기능 변경을 하지 않는다.
+- 이 상태는 구현 완료나 코드 이관 완료가 아닌 향후 개발 범위의 변경이다.
+
+아래 설계·미결 사항·완료 조건·구현 현황은 기존 구현의 참고 이력이다.
+Motion Server에서 계속 진행할 작업으로 해석하지 않으며 DT Demo의 상세 범위는 해당 프로젝트에서 확정한다.
 
 ## 배경
 
