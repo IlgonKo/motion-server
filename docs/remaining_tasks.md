@@ -897,3 +897,14 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 관련 PDO/backend/초기화/복구 회귀가 통과한다.
 - 후속 확인: 구현 및 자동 검증 완료. 실장비 2 ms CSP 재캡처와 축 소음 해소 여부는 미확인이다.
 - 상세: [TD-040 기술 명세](tasks/td/TD-040-dc-clock-rollover-continuity.md)
+
+### TD-041 Axis Control Panel 초기 연결 화면의 Bus Reconnect
+
+- 상태: `complete`
+- 우선순위: 보통
+- 요약: 축 정보가 없는 초기 연결 화면에서 제어권 요청/해제와 Bus Reconnect를 제공한다.
+- 완료 조건:
+  - 축 수 0에서도 제어권과 reconnect 버튼을 사용할 수 있으며 요청이 중복 전송되지 않는다.
+  - 응답/실패/연결 단절을 표시하고 자동 authority 획득이나 재전송을 하지 않는다.
+  - 축 feedback 수신 후 본 화면 전환 및 관련 회귀 검증이 통과한다.
+- 상세: [TD-041 기술 명세](tasks/td/TD-041-axis-panel-bootstrap-recovery.md)

@@ -900,12 +900,14 @@ class AxisPanelBootstrap:
         self.result = None
         self.root = tk.Tk()
         self.root.title("Axis Control Panel")
-        self.root.geometry("760x240")
+        self.root.geometry("760x340")
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.host_var = tk.StringVar(value=client.host)
         self.port_var = tk.StringVar(value=str(client.port))
         self.connection_var = tk.StringVar(value="Connecting...")
         self.health_var = tk.StringVar(value="Server: waiting for feedback")
+        self.authority_button_var = tk.StringVar(value="Request Authority")
+        self.result_var = tk.StringVar(value="Waiting for axis feedback.")
         self._build_ui()
         self.root.after(GUI_PERIOD_MS, self.update)
 
@@ -931,6 +933,13 @@ class AxisPanelBootstrap:
             side="left", padx=8
         )
         ttk.Label(endpoint, textvariable=self.connection_var).pack(side="right")
+        recovery = ttk.Frame(outer)
+        recovery.pack(fill="x", pady=(0, 10))
+        ttk.Button(recovery, textvariable=self.authority_button_var,
+                   command=self.toggle_authority).pack(side="left", padx=4)
+        ttk.Button(recovery, text="Bus Reconnect",
+                   command=lambda: self.send_recovery(self.client.send_bus_reconnect)).pack(side="left", padx=4)
+        ttk.Label(outer, textvariable=self.result_var, wraplength=700).pack(fill="x", pady=(0, 8))
         health = ttk.LabelFrame(outer, text="Motion Server Status")
         health.pack(fill="both", expand=True)
         ttk.Label(
@@ -953,8 +962,21 @@ class AxisPanelBootstrap:
             return
         self.client.set_endpoint(host, port)
 
+    def send_recovery(self, operation):
+        try:
+            operation()
+        except (ConnectionError, OSError) as exc:
+            self.result_var.set(f"Send failed: {exc}")
+        else:
+            self.result_var.set("Request sent; waiting for response. Recovery may disconnect TCP.")
+
+    def toggle_authority(self):
+        operation = (self.client.release_command_authority if self.client.owns_command_authority()
+                     else self.client.request_command_authority)
+        self.send_recovery(operation)
+
     def update(self):
-        connected, error, feedback, _notice, _result = self.client.get_snapshot()
+        connected, error, feedback, notice, result = self.client.get_snapshot()
         axis_count, topology_error = self.client.get_topology_snapshot()
         self.connection_var.set(
             f"Connected {self.client.host}:{self.client.port}"
@@ -962,6 +984,14 @@ class AxisPanelBootstrap:
             else f"Disconnected {error}"
         )
         self.health_var.set(format_server_health(feedback))
+        self.authority_button_var.set(
+            "Release Authority" if connected and self.client.owns_command_authority()
+            else "Request Authority"
+        )
+        if result or notice:
+            self.result_var.set(result or notice)
+        elif not connected:
+            self.result_var.set("Disconnected; recovery result is unconfirmed. Check status after reconnection.")
         if topology_error:
             self.health_var.set(topology_error)
         if axis_count > 0:

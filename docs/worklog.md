@@ -6,6 +6,17 @@
 
 ## 2026-11-24
 
+### TD-041 재평가: 초기 연결 화면의 제어권·Bus Reconnect만 유지
+
+- 사용자 요청에 따라 이전 Bus Fault Reset 관련 변경과 초기 화면의 추가 Reset/Restart 버튼을 원복했다.
+  client.py, diagnosis.py, ui_builders/panel_layout.py는 기존 커밋 상태로 복원했다.
+- 최종 제품 변경은 control_panel.py의 초기 연결 화면에 명시적 제어권 요청/해제와
+  Bus Reconnect 및 결과 표시를 제공하는 부분으로 한정했다. 축 UI 생성 경계는 유지한다.
+- 기존 Bus Fault Reset 전용 신규 테스트를 삭제하고 초기 화면 테스트를 최종 범위로 축소했다.
+  실제 숨김 Tk 버튼 및 기존 Panel/응답/Fault Reset 회귀 테스트 41개 통과.
+- TD-041 제목·범위·완료 조건을 정정하고 상세 문서를 TD-041-axis-panel-bootstrap-recovery.md로 변경했다.
+- 실장비 명령, 커밋/푸쉬는 수행하지 않았다.
+
 ### TD-035 Windows 포트 독점 수정 및 실제 재시험 완료
 
 - `motion_server/app/listener.py`에 Windows SO_EXCLUSIVEADDRUSE를 적용했다.
