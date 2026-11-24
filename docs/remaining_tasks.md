@@ -162,12 +162,14 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 ### RF-011 Windows Service 실행 및 파일 로그 옵션
 
 - 상태: `planned`
+- 진행: 2026-11-24 Manager 범위·설정·실행/재시작 및 비동기 파일 로그 정책 확정. 정상 종료 전달·프로세스 추적·서비스 계정/권한 등 구현 방법 검토 후 구현한다.
 - 우선순위: 보통
 - 요약: Windows에서 Motion Server를 선택적으로 service로 자동 실행하고 운영 로그를 파일로 보존한다.
 - 완료 조건:
   - Windows Service 설치, 제거, 시작, 중지, 재시작과 상태 확인 절차가 제공된다.
   - 기존 foreground/console 실행과 service 실행이 동일한 Motion Server 설정을 사용한다.
-  - service 로그의 저장 경로, level, rotation, retention과 오류 시 fallback 정책이 설정 가능하다.
+  - 콘솔/서비스 공통 파일 로그의 활성화·경로·크기·보존 개수를 설정할 수 있다. 별도 전역 level 설정 없이 기존 기능별 로그 설정을 따른다.
+  - 초기 파일 열기/운전 중 쓰기 실패에도 서버 실행을 유지하고 확정한 비동기 재시도·대기열·유실 집계 정책을 적용한다.
   - clean Windows PC에서 부팅 자동 시작, 정상 종료, 장애 후 재시작과 로그 보존 검증이 통과한다.
 - 상세: [RF-011 기능 명세](tasks/rf/RF-011-windows-service-logging.md)
 
