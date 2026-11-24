@@ -27,7 +27,8 @@
 
 ## 2026-11-24 진행 결과
 
-- 상태: `in_progress`.
+- 상태: `pending`.
+- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다. 완료된 검증 결과는 유지한다.
 - 사용자/설치 매뉴얼 Markdown Rev. 2.0을 작성했다. 현행 API, authority, feedback,
   parameter storage, Diagnostic/recovery, Windows/Linux 설정과 ESI/IODD 경계를 반영했다.
 - 기존 Word Rev. 1.0은 최신 Markdown 기반 DOCX Rev. 2.0으로 교체했다. 이전 판은 Git 이력에 남는다.
@@ -36,6 +37,6 @@
 - DOCX/PDF 제작·렌더 확인 완료: 사용자/설치 매뉴얼 각 3페이지, 총 6페이지를 이미지로 검토했다.
   한글 글꼴, 코드 예시, 페이지 번호와 페이지 경계를 확인하고 제목 스타일 및 코드 설명 분리를 수정했다.
   Markdown→DOCX 내용 일치 검사 및 PDF 추출 내용 대조를 수행했다.
-- 미완료: 새 Windows/Linux 환경에서 문서만으로 설치하는 인수 검증. 상태는 `in_progress`를 유지한다.
+- 미완료: 새 Windows/Linux 환경에서 문서만으로 설치하는 인수 검증. DT Demo 제작 시 검증할 때까지 `pending`으로 둔다.
 
 - 상세 검증 기록: [2026-11-24 배포 준비 검증](../../validation/2026-11-24-release-readiness.md)

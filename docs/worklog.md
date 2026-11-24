@@ -6,6 +6,68 @@
 
 ## 2026-11-24
 
+### RF-017 1차 범위 및 CMMT 저장 목록 확정
+
+- 공통 저장소·CLI 및 가상 CMMT 20개 Non-PDO 설정 OD를 1차 범위로 확정했다.
+- Profile velocity 0x6081은 저장/복원에서 제외한다. CPX는 후속, AP/IOL은 RF-013 재개 시 연결한다.
+- Factory Reset 후 현재 선택된 non_pdo_configuration preset을 사용하고 자동 snapshot을 생성하지 않는다.
+- 상세 OD 표와 완료 조건, 결정 기록 및 작업 목록을 정합화했다. 구현은 아직 시작하지 않았다.
+
+### RF-017 storage_id 설정 문법 확정
+
+- 메인 설정 MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS에 BUS slave index와 storage_id 매핑을 지정한다.
+- ID 문자 규칙과 중복/존재하지 않는 slave 검증을 확정하고 BUS 문법은 유지한다.
+- 코드 구현 없이 관련 문서에 반영했다.
+
+### RF-017 실행 중 이력 조회 허용
+
+- list/history/show를 서버 실행 중 읽기 전용으로 허용하고 commit 완료된 데이터만 조회하도록 확정했다.
+- Factory Reset의 서버 종료 조건은 유지한다. storage_id 설정 문법은 다음 논의 대상이다.
+
+### RF-017 가상장치 저장 설정 및 CLI 범위 확정
+
+- 설정명을 MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_ENABLED/PATH로 확정했다. 기본 비활성화이며 실장비에는 적용하지 않는다.
+- Factory Reset은 서버 종료 후 CLI로 수행하고 다음 기동에 기본값을 적용한다.
+- CLI list/history/show/factory-reset과 --json, 이력 자동 삭제 없음으로 확정했다. export/import·diff·과거 revision 복원은 1차 제외다.
+- 문서만 수정했으며 코드·설정 파일은 아직 변경하지 않았다.
+
+### RF-017 저장·복원·초기화 정책 확정
+
+- storage_id 명시, 인스턴스별 SQLite 파일 경로 지정, 동일 값 재저장 시 revision 미생성을 반영했다.
+- 전체 검증 후 복원, 동기 저장 우선 및 주기 영향 검토, 저장 실패 시 이전 저장본/현재값 유지 정책을 기록했다.
+- 초기화는 별도 관리 도구의 Factory Reset 하나로 통일하고 과거 이력은 유지한다.
+- 관리 도구 실행 조건, export/import·조회 범위 등 미결정 사항을 분리했다. 코드 구현은 하지 않았다.
+
+### RF-017 저장 책임 경계 확정 및 구조 초안
+
+- profile은 저장 대상, 가상장치 모델은 저장 시점, Persistent Store는 저장·이력·조회, 초기화는 복원을 담당한다.
+- 모든 장치에 Save-only 규칙을 강제하던 계약을 대체했다. CPX 세부 동작은 장치 구현 단계에서 다룬다.
+- 장치 식별·snapshot·parameter value와 SQLite transaction 구조는 미확정 초안으로 RF-017에 기록했다.
+- 코드 변경과 실장비 조작은 수행하지 않았다.
+
+### RF-017 실장비 snapshot 제외
+
+- 실장비 snapshot 저장·백업·변경 이력 관리를 외부 애플리케이션 범위로 확정했다.
+- RF-017의 영구 저장·이력·복원 대상을 가상장치로 한정하고 상세 명세, 작업 목록, 결정 기록을 갱신했다.
+- 기존 실장비 파라미터 접근·runtime cache·장치 내부 저장 기능은 변경하지 않았다.
+
+### RF-017 파라미터 이전 책임 경계 확정
+
+- 가상장치는 실장치와 같은 OD 구조를 기반으로 파라미터를 관리한다.
+- 가상/실장비 간 파라미터 이전은 외부 애플리케이션 구현 범위로 확정하고 RF-017에서 제외했다.
+- RF-017은 영구 저장·변경 이력·가상장치 복원을 유지한다. 작업 목록, 결정 기록 및 TD-025 참조를 정합화했다.
+
+### RF-013 대기 전환
+
+- 사용자 결정에 따라 RF-013을 `pending`으로 변경했다. 재개 시점은 미정이다.
+- 기존 구현 범위와 완료 조건은 유지하며 사용자 요청 시 재개한다.
+
+### 새 Windows/Linux 환경 인수 대기
+
+- 사용자 결정으로 RF-006/RF-010을 `pending`으로 변경했다.
+- 새 Windows/Linux 환경 인수는 DT Demo 제작 시 함께 검증한다.
+- 완료된 자동 검증·매뉴얼 렌더 결과와 남은 인수 조건은 유지했다.
+
 ### RF-010 DOCX/PDF 제작 및 렌더 검증
 
 - 최신 Markdown을 바탕으로 사용자/설치 매뉴얼 DOCX·PDF Rev. 2.0을 제작했다.

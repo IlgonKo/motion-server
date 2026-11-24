@@ -28,7 +28,8 @@
 
 ## 2026-11-24 진행 결과
 
-- 상태: `in_progress`.
+- 상태: `pending`.
+- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다. 완료된 검증 결과는 유지한다.
 - 운영 배포 폴더를 덮어쓰지 않고 별도 경로에 Windows EXE 4종을 빌드했다.
   `SkipLocalEnv`/`SkipNpcapDownload`를 사용했으므로 사용자 설정과 Npcap installer는 제외했다.
 - 최신 Markdown 매뉴얼/API 문서, 설정 예제, ESI/IODD, 외부 IODD 폴더,

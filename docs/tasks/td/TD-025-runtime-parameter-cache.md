@@ -11,7 +11,7 @@ CPX-AP-I-EC의 EtherCAT station parameter, AP module parameter와 IO-Link ISDU �
 다만 모든 OD/parameter를 cache하지 않고, 서버 제어/status/API 응답 또는 recovery 이후
 정합성에 필요한 항목만 cache 대상으로 둔다.
 
-서버 재시작 후 virtual device parameter를 복원하거나 변경 이력을 관리하고 실장비로 이전하는
+서버 재시작 후 virtual device parameter를 복원하거나 변경 이력을 관리하는
 영구 저장 기능은 [RF-017](../rf/RF-017-persistent-parameter-store.md)로 분리한다.
 
 ## 현재 구현 상태
@@ -204,7 +204,7 @@ definition의 access는 기본 `rw`로 등록한다. 실제 접근 가능 여부
 - 주기 제어 중 SDO polling
 - parameter write 시 자동 영구 저장
 - 서버 재시작 후 virtual parameter restore
-- Persistent Store, 변경 이력, export/import와 실장비 commissioning transfer
+- Persistent Store, 변경 이력, 저장 profile export/import
 
 ## RF-005와의 경계
 
@@ -277,5 +277,5 @@ definition의 access는 기본 `rw`로 등록한다. 실제 접근 가능 여부
 - 서버 제어와 status/API에 필요한 parameter만 cache 대상으로 선정된다.
 - startup, parameter write, Bus reconnect, Axis restart 후 cache refresh/invalidation 경계가 구현된다.
 - readback 실패는 조용한 fallback이 아니라 validity와 Diagnostic으로 표현된다.
-- Persistent Store 및 commissioning transfer는 RF-017 범위로 명확히 제외된다.
+- Persistent Store는 RF-017 범위로 분리한다. 가상/실장비 간 파라미터 이전은 Motion Server를 이용하는 애플리케이션 범위다.
 - CMMT/CPX provider 단위 테스트와 recovery 연동 회귀 테스트가 통과한다.

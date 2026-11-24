@@ -69,7 +69,7 @@ Ubuntu 3.14는 GUI Jog 조건 대기 timeout과 연결 해제 시험의 worker �
 - RF-006: 새 Windows/Linux PC, Npcap/NIC 및 실장비, catalog 선택, upgrade/rollback 인수.
   현 PC의 Docker daemon 연결이 실패하여 Linux container 실행은 검증하지 않았다.
 
-TD-009와 TD-010은 complete, RF-010과 RF-006은 in_progress로 유지한다. 신규 환경 인수 항목을
+TD-009와 TD-010은 complete, RF-010과 RF-006은 pending으로 두고 DT Demo 제작 시 인수를 재개한다. 신규 환경 인수 항목을
 로컬 자동 시험 결과만으로 완료 처리하지 않는다.
 
 ## 원격 CI 실패 수정 및 최종 재검증
@@ -116,3 +116,8 @@ Node-RED 시험, 실장비 제어 및 운영 서버 재시작은 하지 않았�
   EXE를 다시 빌드하거나 새 환경에서 설치한 결과는 아니다.
 - API 문서 검사: 공개 명령 57개, JSON 예제 59개, 오류 0개.
 - 새 Windows/Linux 환경에서 매뉴얼을 따라 설치하는 인수는 별도로 남아 있다.
+
+## 새 환경 인수 일정 변경 — 2026-11-24
+
+사용자 결정에 따라 RF-006/RF-010의 새 Windows/Linux 환경 인수는 `pending`으로 변경한다.
+DT Demo 제작 시 함께 검증하고 환경별 증거를 기록한다. 기존 검증 완료 범위와 남은 인수 조건은 유지한다.

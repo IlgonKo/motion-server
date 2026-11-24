@@ -38,6 +38,9 @@ Node-RED package/flow는 존재 여부만 확인하며 실행 시험하지 않�
 
 ## 새 환경 인수 체크리스트
 
+상태: `pending`. 사용자 결정에 따라 DT Demo 제작 시 Windows/Linux 환경 인수를 함께 수행한다.
+기존 자동 검증 및 DOCX/PDF 렌더 검증 결과는 유지하며, 아래 인수 항목은 아직 완료되지 않았다.
+
 | 환경 | 확인 | 완료 증거 |
 | --- | --- | --- |
 | Windows | Python 미설치 환경에서 서버/Panel 기동 | OS, artifact hash, 콘솔 및 화면 기록 |

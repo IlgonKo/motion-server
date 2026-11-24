@@ -19,7 +19,8 @@
 - 단순한 예외 처리나 방어 코드에는 표식을 붙이지 않는다. 교체 또는 제거 계획이 있는
   임시 호환 로직에만 사용한다.
 
-기능 상태 값은 `planned`, `reserved`, `blocked`, `in_progress`, `complete`, `out_of_scope`를 사용한다.
+기능 상태 값은 `planned`, `reserved`, `pending`, `blocked`, `in_progress`, `complete`, `out_of_scope`를 사용한다.
+`pending`은 사용자 결정에 따른 대기 상태이며 완료를 의미하지 않는다. 재개 시점은 항목별로 기록한다.
 2026-11-24 DEC-053에 따라 ROS/ROS2 및 MoveIt 개발·이관·배포·검증은 범위에서 제외한다.
 과거 완료 기록의 ROS 언급은 이력이며 후속 작업 요구가 아니다.
 Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
@@ -99,7 +100,8 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-006 배포 구성 최종 검증
 
-- 상태: `in_progress`
+- 상태: `pending`
+- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다.
 - 우선순위: 보통
 - 요약: Windows package와 Linux Docker 배포 구성을 clean system에서 최종 검증한다.
 - 완료 조건:
@@ -145,7 +147,8 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-010 사용자 문서 최신화
 
-- 상태: `in_progress`
+- 상태: `pending`
+- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다.
 - 우선순위: 보통
 - 요약: 사용자 및 설치 매뉴얼을 최신 Motion Server 기능과 배포 구성에 맞춘다.
 - 진행: Rev. 2.0 DOCX/PDF 제작 및 총 6페이지 렌더 검증 완료. 신규 환경 설치 인수는 미완료.
@@ -182,7 +185,8 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-013 Virtual AP Module 및 IO-Link Parameter Device
 
-- 상태: `planned`
+- 상태: `pending`
+- 재개 시점: 미정. 사용자 요청 시 재개한다.
 - 우선순위: 보통
 - 요약: Virtual CPX gateway 뒤에 AP module parameter와 IO-Link ISDU runtime 공간을 가진 가상 장치를 제공한다.
 - 완료 조건:
@@ -232,27 +236,34 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - TD-032 같은 실장치 IO-Link ISDU 조사 절차에서 임시 probe script 없이 필요한 raw SDO 접근을 수행할 수 있다.
 - 상세: [RF-016 기능 명세](tasks/rf/RF-016-hidden-expert-mode.md)
 
-### RF-017 Persistent Device Parameter Store and Commissioning Transfer
+### RF-017 Persistent Device Parameter Store
 
 - 상태: `planned`
 - 우선순위: 보통
-- 요약: 가상장치와 실장치의 parameter snapshot을 영구 저장하고 변경 이력을 관리하여,
-  가상장치에서 조정한 commissioning parameter를 명시적으로 실장비로 이전할 수 있게 한다.
+- 요약: 가상장치의 parameter snapshot을 영구 저장하고 변경 이력을 관리하여,
+  서버 재시작 후 가상장치 파라미터를 복원한다. 장비 간 이전은 외부 애플리케이션 범위다.
+- 확정 범위: 1차는 공통 저장소·CLI와 가상 CMMT 20개 Non-PDO 설정 OD. Profile velocity 0x6081 제외.
+  CPX 연결은 후속 단계, AP/IOL 연결은 RF-013 재개 시 진행한다.
 - 완료 조건:
   - CMMT Axis, CPX station/module parameter와 IO-Link ISDU parameter를 공통 address model로
     식별하는 persistent parameter record가 정의된다.
-  - `parameter_save` 명령 시 현재 runtime/cache 또는 device readback snapshot을 Persistent Store에
+  - 가상장치의 명시적 save 시 parameter snapshot을 Persistent Store에
     저장하고 변경 이력을 남긴다.
   - 서버 재시작 시 Virtual Device는 기본 OD 초기화 후 Persistent Store 값을 읽어 OD에 적용하고,
     Runtime Cache는 적용된 OD readback으로 다시 구성된다.
-  - Virtual Device runtime reset, store reset과 factory restore는 공개 TCP API가 아니라 별도
-    maintenance/commissioning tool로 제공된다.
-  - 단순 parameter write는 영구 저장을 수행하지 않고, save 명령만 저장 commit 의미를 가진다.
+  - Factory Reset은 서버 종료 상태에서 CLI로 실행하고 다음 기동에 현재 선택한 non_pdo_configuration 기본값을 적용한다. 과거 이력은 유지한다.
+  - CLI는 list/history/show/factory-reset 및 --json을 제공한다. 이력 자동 삭제와 export/import 등은 1차에서 제외한다.
+  - MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_ENABLED(기본 0)로 활성화를 별도 제어한다.
+  - 메인 설정 MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS의 slave_index:storage_id 목록으로 가상장치와 저장 ID를 연결한다.
+  - storage_id와 MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_PATH를 명시하고 동일 값 재저장 시 새 revision을 만들지 않는다.
+  - 저장 실패 시 이전 저장본/현재값을 유지하고 복원 데이터 오류는 초기화 실패로 처리한다.
+  - 저장 대상은 장치 profile이 정의하고 저장 시점은 가상장치 모델이 결정한다.
+  - 공통 Persistent Store는 전달된 데이터의 저장·이력·조회를 담당하며 가상장치 초기화가 복원한다.
   - 실장비 내부 non-volatile parameter save와 서버 Persistent Store 저장 결과 및 실패가 분리되어
     보고된다.
-  - 저장된 virtual commissioning profile을 실장비에 적용하는 export/apply/verify 경계가 명시적
-    사용자 명령으로 제공되며 자동 적용은 하지 않는다.
-  - 변경 이력, source, revision, timestamp와 실패/부분 적용 결과가 자동 테스트와 수동 검증으로 확인된다.
+  - 가상장치는 실장치와 같은 OD 구조로 파라미터를 관리한다.
+  - 실장비 snapshot 저장과 가상/실장비 간 이전은 외부 애플리케이션 범위로 제외한다.
+  - 변경 이력, revision, timestamp와 저장/복원 실패 처리가 자동 테스트와 수동 검증으로 확인된다.
 - 상세: [RF-017 기능 명세](tasks/rf/RF-017-persistent-parameter-store.md)
 
 ### RF-018 Gamepad Manual Multi-Axis Velocity Control
@@ -641,7 +652,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - Axis/IO EtherCAT OD, CPX AP parameter, IO-Link ISDU read/write 성공 결과가 공통 cache에
     반영되도록 했다.
   - 공개 refresh API는 만들지 않고 startup/recovery/parameter access 내부 경계에서 cache를 갱신한다.
-  - RF-017 Persistent Store의 실제 저장 포맷, 변경 이력, restart restore와 실장비 이전은 RF-017로
+  - RF-017 Persistent Store의 실제 저장 포맷, 변경 이력, restart restore는 RF-017로
     분리했다.
 - 완료 조건:
   - CMMT Axis, CPX station/module parameter와 IO-Link ISDU parameter를 표현할 runtime cache
@@ -650,7 +661,7 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 축/장치/항목별 명시적 refresh와 일반 parameter write 후 cache 갱신 또는 invalidation이 구현된다.
   - RF-005의 PySOEM Axis restart 및 Bus reconnect 완료 후 해당 cache refresh와 invalid 처리가 수행된다.
   - readback 실패, 외부 commissioning 변경과 다중 항목 갱신 정책이 정의된다.
-  - Persistent Store, 변경 이력, 서버 재시작 후 virtual parameter restore와 실장비 이전은 RF-017로 분리된다.
+  - Persistent Store, 변경 이력, 서버 재시작 후 virtual parameter restore는 RF-017로 분리된다.
   - CMMT/CPX device provider 경계와 Diagnostic 연동 자동 테스트가 통과한다.
 - 상세: [TD-025 기술 명세](tasks/td/TD-025-runtime-parameter-cache.md)
 

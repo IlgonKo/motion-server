@@ -1,5 +1,11 @@
 # RF-013 Virtual AP Module 및 IO-Link Parameter Device
 
+## 상태
+
+- 상태: `pending`
+- 2026-11-24 사용자 결정으로 작업을 대기한다. 재개 시점은 미정이며 사용자 요청 시 재개한다.
+- 재개 시 기존 ISDU 접근 경로 관련 기록을 현재 구현 및 실장비 확인 결과와 대조한다.
+
 ## 사용자 가치
 
 실제 AP module과 IO-Link Device가 없어도 Motion Server의 AP parameter와 IO-Link ISDU parameter

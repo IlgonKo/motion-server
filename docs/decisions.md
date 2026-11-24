@@ -934,24 +934,41 @@ Device Profile + ESI
   - Runtime Parameter Cache는 실행 중 서버 제어, status/API projection과 recovery 후 정합성을 위한
     현재값/validity 모델로 둔다. CMMT Axis뿐 아니라 CPX station/module parameter와 IO-Link ISDU
     parameter까지 표현할 수 있는 device-wide 구조를 사용한다.
-  - Persistent Parameter Store는 별도 기능으로 분리한다. 사용자가 명시적으로 `parameter_save`를
-    수행했을 때만 현재 parameter snapshot과 변경 이력을 저장한다.
-  - parameter write는 Device OD/AP/ISDU 값과 Runtime Cache만 갱신 또는 invalid 처리하며 영구 저장을
-    수행하지 않는다.
+  - 2026-11-24 수정: 저장 대상은 장치 profile이 정의하고 저장 시점은 가상장치 모델이 장치별 동작에 따라 결정한다.
+    공통 Persistent Store는 모델이 전달한 파라미터 저장·변경 이력·조회를 담당하며 장치 명령을 해석하지 않는다.
+  - 가상장치 초기화가 저장값을 OD/AP/ISDU 공간에 복원한다. CPX 저장 동작은 장치 모델 구현에서 다룬다.
+    모든 장치를 parameter_save 명령에서만 저장하도록 제한하는 기존 규칙은 대체한다.
   - 서버 재시작 시 virtual device는 기본 OD를 먼저 초기화한 뒤 Persistent Store 값을 적용하고,
     Runtime Cache는 적용된 device state readback으로 다시 구성한다.
-  - Virtual Device runtime reset, store reset과 factory restore는 공개 Motion Server TCP API가
-    아니라 별도 maintenance/commissioning tool에서 제공한다.
-  - 저장된 virtual commissioning profile을 실장비에 적용하는 기능은 명시적 apply/verify 명령으로만
-    제공하며 자동 적용하지 않는다.
+  - 2026-11-24 확정: 초기화는 서버 종료 상태에서 CLI의 Factory Reset 하나로 제공한다. 다음 기동 시
+    기본값을 사용하고 Reset 이력과 과거 revision을 유지한다. 저장소가 서버에서 사용 중이면 거부한다. 공개 TCP API, 개별 Runtime/Store reset, purge는 제공하지 않는다.
+  - RF-017 1차는 공통 저장소·CLI와 가상 CMMT의 기존 Non-PDO 초기 설정 20개 OD로 한정한다.
+    Profile velocity 0x6081은 제외한다. CPX는 후속 단계, AP/IOL은 RF-013 재개 시 연결한다.
+  - Factory Reset 후 기본값은 현재 선택한 non_pdo_configuration preset이며 새 저장 요청 전 snapshot을 자동 생성하지 않는다.
+  - storage_id는 가상장치 설정의 고유 ID로 명시하고 통신 index와 분리한다. 변경 시 새 장치로 취급한다.
+    메인 설정 MOTION_SERVER_VIRTUAL_DEVICE_STORAGE_IDS에 slave_index:storage_id 목록으로 지정한다.
+    ID는 영문 소문자/숫자/_/-를 허용하며 중복 slave·중복 ID·존재하지 않는 slave는 오류다.
+    BUS 문법은 유지하며 AP/IOL 하위 장치 독립 ID는 RF-013 연계 시 결정한다.
+  - MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_PATH로 인스턴스별 SQLite 파일을 명시한다. 상대 경로는 메인 설정 파일 기준이다.
+  - MOTION_SERVER_VIRTUAL_DEVICE_PARAMETER_STORE_ENABLED 기본값 0으로 활성화를 별도 제어한다. 비활성화는 파일을 삭제하지 않는다.
+    활성화 시 경로/ID를 검증하며 비활성화 중 저장 명령은 성공으로 처리하지 않는다. 실장비 저장에는 영향을 주지 않는다.
+  - CLI 1차는 list/history/show/factory-reset, 기본 출력 및 --json이다. 이력 자동 삭제 없음.
+    list/history/show는 서버 실행 중에도 commit 완료된 revision만 읽기 전용으로 조회한다.
+    과거 revision 복원, diff, export/import, purge는 1차에서 제외한다.
+  - 동일 저장 대상·타입·값·정의 정보의 재저장은 revision 없이 성공한다. 변경 시 snapshot 전체를 transaction으로 저장한다.
+  - 동기 저장을 우선하되 구현 전에 주기 영향을 평가한다. 실패 시 이전 저장본/현재값 유지, 자동 재시도 없음.
+  - 새 가상장치 생성 때 최신 저장본을 전체 검증 후 복원한다. 저장본 없음은 기본값, 손상/불일치/읽기 실패는 초기화 실패다.
+  - 2026-11-24 수정: 가상장치는 실장치와 같은 OD 구조로 파라미터를 관리한다.
+    가상/실장비 간 이전은 외부 애플리케이션 책임이며 Motion Server에 apply/verify 기능을 추가하지 않는다.
+  - 2026-11-24 추가 결정: 실장비 snapshot 저장·백업·변경 이력도 외부 애플리케이션 책임이다.
+    RF-017의 영구 저장·이력·복원은 가상장치 파라미터에 한정하며 기존 실장비 접근/cache/save는 유지한다.
   - 실장비 내부 non-volatile save와 서버 Persistent Store 저장은 별도 동작과 별도 결과로 보고한다.
-- 이유: 실행 중 제어용 cache와 변경 이력/재시작 복원/실장비 이전용 저장소를 섞으면 주기 제어 경로가
+- 이유: 실행 중 제어용 cache와 변경 이력/재시작 복원용 저장소를 섞으면 주기 제어 경로가
   영구 저장 정책에 의존하고, 단순 parameter write가 의도치 않은 commissioning commit이 될 수 있다.
   반대로 둘을 분리하면 cache는 빠른 현재값 projection에 집중하고, 저장소는 사용자가 명시적으로
   확정한 commissioning snapshot만 관리할 수 있다.
 - 검토한 대안:
-  - parameter write마다 자동 저장하는 방식은 시험 중 임시 변경까지 영구 이력에 commit하므로 채택하지
-    않는다.
+  - 공통 저장소가 장치 정책과 무관하게 모든 parameter write를 자동 저장하는 방식은 채택하지 않는다.
   - Persistent Store 값을 주기 제어에 직접 사용하는 방식은 실제 장치 readback과 cache validity 경계를
     흐리므로 채택하지 않는다.
   - 서버 시작 시 실장비에 저장값을 자동 적용하는 방식은 장치 commissioning 변경 위험이 크므로
@@ -959,7 +976,7 @@ Device Profile + ESI
   - Virtual Device 초기화를 공개 runtime API로 제공하는 방식은 운전 중 reset/restart/fault_reset과
     의미가 섞이고 store 삭제 같은 파괴적 작업이 일반 client에 노출되므로 채택하지 않는다.
 - 영향: TD-025는 device-wide Runtime Parameter Cache와 refresh/validity/Diagnostic을 구현한다.
-  Persistent Store, 변경 이력, virtual restart restore와 실장비 commissioning transfer는
+  Persistent Store, 변경 이력, virtual restart restore는
   [RF-017](tasks/rf/RF-017-persistent-parameter-store.md)에서 구현한다.
 
 ## DEC-040 Gamepad는 독립 Control Panel로 구현
@@ -1060,8 +1077,8 @@ Device Profile + ESI
   - CPX-AP-I-EC 실장치에서는 storage mode 변경 직후 곧바로 다른 mode를 쓰면
     SDO abort `0x08000000` (`General error`)로 reject될 수 있다. 이는 object/index 오류가 아니라
     장치 내부 storage mode 반영 중의 일시적 거부로 취급하며, 운용 시 mode 변경 간격을 둔다.
-  - RF-017은 Motion Server 측 Persistent Parameter Store, 변경 이력, virtual device 재시작 복원과
-    실장비 이전 기능으로 한정한다.
+  - RF-017은 Motion Server 측 Persistent Parameter Store, 변경 이력과 virtual device 재시작 복원으로
+    한정한다. 2026-11-24 수정: 가상/실장비 간 이전은 외부 애플리케이션 범위다.
 - 이유: reset/restart/save를 하나의 추상 명령으로 강제하면 CPX처럼 장치별 지원 여부가 다른 경우
   의미가 흐려진다. 반대로 API name은 유지하되 device capability에 따라 명확히 success 또는
   unsupported로 응답하면 client 계약과 실장치 차이를 모두 보존할 수 있다.
