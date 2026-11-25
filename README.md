@@ -1,20 +1,62 @@
 # Motion Server
 
-This project has two execution paths.
+**Build motion and I/O applications through a common API, using a PC as the EtherCAT host.**
 
-ROS/ROS2 and MoveIt are outside the project scope as of 2026-11-24 (DEC-053).
-ROS/MoveIt source, launch scripts and Docker definitions have been removed.
-Motion Server's own Trajectory Controller remains in scope.
+Motion Server connects your application to servo drives and I/O devices through a
+TCP JSON API. Combine motion commands, digital and analog I/O, and device parameter
+access to create your own sequences with Python, Node-RED, or another TCP client.
+It provides a PC-based control interface without requiring a separate dedicated
+motion controller; compatible EtherCAT devices and network hardware are still required.
 
-Motion Server documentation:
+## What you can do
 
-- [Documentation guide](docs/README.md)
-- [Motion Server software architecture](docs/motion_server_architecture.md)
-- [Motion Server Basic mode API manual](docs/motion_server_api_basic.md)
-- [Design decisions](docs/decisions.md)
-- [Test procedure](docs/test_procedure.md)
-- [Remaining tasks](docs/remaining_tasks.md)
-- [Work log](docs/worklog.md)
+- **Control motion:** enable axes, move to positions, command velocity, jog, home, and stop.
+- **Work with I/O:** read and write digital/analog signals and access CPX AP and IO-Link parameters.
+- **Develop with virtual devices:** use the same API with virtual CMMT axes and CPX I/O,
+  then connect your application to supported physical devices.
+- **Inspect and configure:** use the Axis and I/O Control Panels for operation,
+  device parameters, server status, and diagnostics.
+- **Build application sequences:** use the Python reference client and Node-RED nodes,
+  sample flows, and Dashboards as starting points.
+
+```text
+Your application / Python / Node-RED / Control Panels
+                         |
+                    TCP JSON API
+                         |
+                    Motion Server
+                         |
+          +--------------+--------------+
+          |                             |
+   Physical EtherCAT devices      Virtual devices
+   CMMT-AS/ST + CPX-AP-I-EC       CMMT axes + CPX I/O
+```
+
+## Platforms and release status
+
+- **Windows:** executable package or source execution, with optional Windows service registration.
+- **Linux:** Docker deployment on the EtherCAT host PC.
+- **Version 1.0:** internal and DT Demo development baseline. Final package validation
+  and clean Windows/Linux environment acceptance remain pending.
+- Windows CSP and synchronous control are not officially supported. Virtual-device
+  testing does not establish physical-device timing or performance.
+
+See the [1.0 release scope and remaining validation](docs/release_1.0.md).
+
+## Getting started
+
+1. Follow the [installation guide](docs/Motion_Server_Installation_Manual_Basic_Mode.md)
+   to prepare the host and configure the device layout.
+2. Use the [user guide](docs/Motion_Server_User_Manual_KR.md) and Control Panels
+   to check the server and devices.
+3. Build your application with the [API manual](docs/motion_server_api_basic.md)
+   and the reference clients below. Your application owns sequence execution and
+   determines when to advance to the next step using responses and feedback.
+
+For further reading, see the [documentation guide](docs/README.md),
+[software architecture](docs/motion_server_architecture.md),
+[test procedure](docs/test_procedure.md), [design decisions](docs/decisions.md),
+[remaining tasks](docs/remaining_tasks.md), and [work log](docs/worklog.md).
 
 ## Reference Clients
 
