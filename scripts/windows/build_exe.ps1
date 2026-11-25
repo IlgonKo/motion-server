@@ -13,9 +13,9 @@ $ProjectRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
 $PackageRoot = Join-Path $ProjectRoot "dist\Motion Server"
 if ($PackageDirectory) {
     $PackageRoot = [System.IO.Path]::GetFullPath($PackageDirectory)
-    if (Test-Path -LiteralPath $PackageRoot) {
-        throw "Validation package destination must not already exist: $PackageRoot"
-    }
+}
+if (Test-Path -LiteralPath $PackageRoot) {
+    throw "Package destination already exists; choose a new -PackageDirectory to preserve configurations and data: $PackageRoot"
 }
 $ToolsRoot = Join-Path $PackageRoot "Tools"
 $PanelToolRoot = Join-Path $ToolsRoot "axis_control_panel"
@@ -98,16 +98,9 @@ function Remove-DirectoryIfExists {
 Push-Location $ProjectRoot
 try {
     if (-not $SkipInstall) {
-        & $Python -B -m pip install pysoem -r (Join-Path $ProjectRoot "requirements.txt")
+        & $Python -B -m pip install -r (Join-Path $ProjectRoot "requirements-build.txt")
         if ($LASTEXITCODE -ne 0) {
             throw "Motion Server dependency installation failed"
-        }
-        & $Python -B -m pip show pyinstaller *> $null
-        if ($LASTEXITCODE -ne 0) {
-            & $Python -B -m pip install pyinstaller
-            if ($LASTEXITCODE -ne 0) {
-                throw "PyInstaller installation failed"
-            }
         }
     }
 
@@ -116,8 +109,8 @@ try {
         throw "PySOEM must be installed in the build Python before packaging real-device support."
     }
 
-    if (Test-Path $PackageRoot) {
-        Remove-Item -Recurse -Force $PackageRoot
+    if (Test-Path -LiteralPath $PackageRoot) {
+        throw "Package destination was created during preparation: $PackageRoot"
     }
     if (-not $PackageDirectory) {
         Remove-DirectoryIfExists $LegacyPyInstallerDistRoot
@@ -143,6 +136,9 @@ try {
     }
 
     $PyInstallerTempRoot = New-PyInstallerTempRoot
+    $BuildInfoPath = Join-Path $PyInstallerTempRoot "build-info.json"
+    & $Python -B -m scripts.build_metadata $BuildInfoPath
+    if ($LASTEXITCODE -ne 0) { throw "Build provenance capture failed" }
     $PyInstallerDistRoot = Join-Path $PyInstallerTempRoot "dist"
     $PyInstallerWorkRoot = Join-Path $PyInstallerTempRoot "build"
 
@@ -166,7 +162,8 @@ try {
         throw "gamepad PyInstaller build failed"
     }
 
-    New-Item -ItemType Directory -Force $PackageRoot | Out-Null
+    New-Item -ItemType Directory $PackageRoot -ErrorAction Stop | Out-Null
+    Copy-Item -LiteralPath $BuildInfoPath -Destination (Join-Path $PackageRoot "build-info.json")
     Copy-Item -Recurse -Force (Join-Path $PyInstallerDistRoot "motion_server\*") $PackageRoot
 
     New-Item -ItemType Directory -Force (Join-Path $PackageRoot "device\cmmt") | Out-Null
@@ -201,7 +198,7 @@ try {
     foreach ($manualFile in $manualFiles) {
         Copy-Item -Force $manualFile.FullName (Join-Path $ManualRoot $manualFile.Name)
     }
-    foreach ($name in @("motion_server_api_basic.md", "deployment_validation.md", "windows_service.md")) {
+    foreach ($name in @("motion_server_api_basic.md", "deployment_validation.md", "windows_service.md", "release_1.0.md")) {
         Copy-Item -LiteralPath (Join-Path "docs" $name) -Destination (Join-Path $ManualRoot $name)
     }
     Copy-Item -Force "packaging\WINDOWS_EXE.md" (Join-Path $PackageRoot "WINDOWS_EXE.md")
@@ -239,6 +236,8 @@ try {
         }
     }
 
+    & $Python -B -m scripts.build_metadata $BuildInfoPath --verify
+    if ($LASTEXITCODE -ne 0) { throw "Source changed during build; package must not be released" }
     Write-Host "Built Windows package: $PackageRoot"
     if ($SkipLocalEnv) {
         Write-Host "Create config.txt files from config.example.txt before running."

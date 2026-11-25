@@ -1,0 +1,6 @@
+# Direct dependencies used by the verified Windows build environment.
+# build-info.json records the full installed dependency set for each artifact.
+jsonschema==4.26.0
+pygame-ce==2.5.8
+pysoem==1.1.13
+pyinstaller==6.21.0

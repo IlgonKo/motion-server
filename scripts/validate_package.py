@@ -3,14 +3,13 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-import subprocess
 from zipfile import BadZipFile, ZipFile
 from xml.etree import ElementTree
 
 
 def inspect(root):
     required = [
-        'motion_server.exe', 'config.example.txt',
+        'motion_server.exe', 'config.example.txt', 'build-info.json',
         'register_service.ps1', 'Tools/service/MotionServerService.exe',
         'Tools/service/MotionServerService.default.xml',
         'Tools/service/dependency.json', 'Tools/service/WinSW-LICENSE.txt',
@@ -22,7 +21,7 @@ def inspect(root):
         'Manual/Motion_Server_User_Manual_KR.md',
         'Manual/Motion_Server_Installation_Manual_Basic_Mode.md',
         'Manual/motion_server_api_basic.md', 'Manual/deployment_validation.md',
-        'Manual/windows_service.md',
+        'Manual/windows_service.md', 'Manual/release_1.0.md',
         '_internal/motion_server/api/schema/axis.json',
         '_internal/device/cmmt/esi', '_internal/device/cpx_ap_i_ec/esi',
         '_internal/device/io_link/iodd', 'Reference/cmmt_error_catalog.json',
@@ -75,6 +74,15 @@ def inspect(root):
     return errors, files
 
 
+def load_build_info(root):
+    """Read immutable build provenance, independent of the validator's checkout."""
+    data = json.loads((root/'build-info.json').read_text(encoding='utf-8'))
+    for key in ('version', 'source_commit', 'source_dirty', 'dependencies', 'built_at_utc'):
+        if key not in data:
+            raise ValueError(f'Missing build provenance field: {key}')
+    return data
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('package', type=Path)
@@ -83,9 +91,12 @@ def main():
     if not root.is_dir():
         parser.error('Package directory does not exist')
     errors, files = inspect(root)
-    commit = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
-    dirty = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True).stdout
-    report = {'source_commit': commit, 'source_dirty': bool(dirty), 'errors': errors,
+    try:
+        build_info = load_build_info(root)
+    except (OSError, ValueError) as exc:
+        build_info = {}
+        errors.append(f'Invalid build provenance: {exc}')
+    report = {'build_info': build_info, 'errors': errors,
               'npcap_installer_included': bool(list((root/'Tools').glob('npcap-*.exe'))),
               'files': files}
     (root/'artifact-manifest.json').write_text(json.dumps(report, indent=2), encoding='utf-8')

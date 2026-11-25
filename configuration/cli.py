@@ -10,10 +10,12 @@ from configuration.models import (
 
 
 def parse_cli_overrides(argv=None):
+    from motion_server.version import VERSION
     parser = argparse.ArgumentParser(
         description="TCP JSON-lines Motion Server for CiA402 axes."
     )
     parser.add_argument("interface", nargs="?", default=None)
+    parser.add_argument("--version", action="version", version=f"Motion Server {VERSION}")
     parser.add_argument("--list-adapters", action="store_true")
     parser.add_argument("--backend", choices=[item.value for item in BackendType])
     parser.add_argument("--bus")
