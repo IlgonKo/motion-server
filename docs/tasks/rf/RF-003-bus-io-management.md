@@ -1,5 +1,13 @@
 # RF-003 I/O Reset, Restart 및 Parameter Storage API
 
+## 후속 정정 사항 — 2026-11-26
+
+아래 volatile/non_volatile 설명은 현재 구현 및 당시 합의의 기록이며 제조사 의미와 차이가 있다.
+제조사 매뉴얼(2025-05d, 22페이지 표 19)은 `0x27F1:01`의 0을 저장 데이터 삭제(현재값 유지),
+1을 저장/갱신, 2를 삭제 및 기본값 복원으로 설명한다. 지속적인 자동 저장 모드로 단정하지 않는다.
+[TD-044](../td/TD-044-cpx-parameter-storage-semantics.md)에 차이·수정 방향·미결정 사항을 등록했다.
+Soft ESC 마무리 후 계약을 재확정하며 현재 코드와 API는 아직 변경하지 않았다.
+
 ## 배경
 
 다음 I/O 관리 API name은 예약되어 있으나 장치별 의미와 lifecycle 계약이 확정되지 않았다.

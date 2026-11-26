@@ -17,6 +17,10 @@ AP module input process image만 사용하는 구성에서는 해당 진단 정�
 
 ## 구현 범위
 
+일반 DI/AI의 모듈 단위 유효성 전달은 [TD-043](../td/TD-043-cpx-module-input-validity.md)에서
+관리한다. 본 RF는 진단 수집·해석과 station Diagnostic을 담당하며, 최신 진단 하나만으로
+모든 모듈 입력의 유효성을 확정하지 않는다. Soft ESC 마무리 후 연계 계약을 논의한다.
+
 - 설정에서 선택형 Diagnosis TxPDO 사용 여부를 명시한다.
 - `0x1AF1` TxPDO assignment와 실제 mapping readback을 검증한다.
 - 추가되는 12-byte diagnosis 영역과 AP module input 영역의 offset 계약을 확정한다.

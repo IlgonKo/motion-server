@@ -897,3 +897,56 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
   - 기존 초기화 실패 정책과 외부 종료 우선 동작을 유지한다.
   - 서비스 실행 상태를 유지하는 API Restart 통합 검증 및 의미 변경 문서화가 완료된다.
 - 상세: [TD-042 기술 명세](tasks/td/TD-042-server-restart-in-process-reinitialization.md)
+
+### TD-043 일반 DI/AI 입력 유효성 전달 및 CPX 진단 연계
+
+- 상태: `open`
+- 우선순위: 높음
+- 재개: Soft ESC 마무리 후 추가 논의·계약 확정. 현재 구현 보류.
+- 관련 작업: DEC-020, RF-012
+- 요약: 일반 DI/AI의 마지막 수신값과 모듈 단위 유효성을 분리하여 API와 화면에 전달한다.
+- 완료 조건:
+  - RF-012 진단 수집에 연계한 모듈별 valid/invalid/unknown 판정 근거와 한계가 확정된다.
+  - 미지원·미수집·복수 장애에서 근거 없는 정상 판정을 하지 않는다.
+  - API Schema·조회/feedback·화면에서 값과 유효성이 구분된다.
+  - 정상/장애/복구, 진단 활성/비활성, Bus 단절/reconnect 및 매핑 회귀가 검증된다.
+- 상세: [TD-043 기술 명세](tasks/td/TD-043-cpx-module-input-validity.md)
+
+### TD-044 CPX 0x27F1 파라미터 저장 API 의미 정합성
+
+- 상태: `open`
+- 우선순위: 높음
+- 재개: Soft ESC 마무리 후 추가 논의·계약 확정. 현재 구현 보류.
+- 관련 작업: RF-003
+- 요약: 제조사의 저장/갱신·저장 데이터 삭제 동작과 다른 volatile/non_volatile API 해석을 정리한다.
+- 완료 조건:
+  - 제조사 동작과 공개 API 계약의 대응이 확정된다.
+  - 코드·Schema·화면·문서에서 저장 대상 선택으로 오해하는 표현이 정리된다.
+  - 저장/삭제의 현재값·재기동 영향과 권한·실패 처리를 검증한다.
+  - 기본값 복원의 지원/제외 범위 및 실장치/Soft ESC 검증 결과를 기록한다.
+- 상세: [TD-044 기술 명세](tasks/td/TD-044-cpx-parameter-storage-semantics.md)
+
+### TD-045 IO Control Panel 아날로그 출력 UI 누락
+
+- 상태: `open`
+- 우선순위: 보통
+- 요약: 기존 analog output_write API를 IO Control Panel에서 조작할 수 있도록 AO UI를 추가한다.
+- 완료 조건:
+  - IO·Module·Channel·raw 정수 출력값·Apply로 기존 API를 호출한다.
+  - AO 미구성·입력 오류·제어권 없음·요청 실패를 표시한다.
+  - Mock AO 값 반영과 타 채널 보존, 명시적 Apply 이외 자동 출력 없음을 검증한다.
+  - DO 및 Virtual Input Simulation 회귀와 사용 문서 갱신이 완료된다.
+- 상세: [TD-045 기술 명세](tasks/td/TD-045-io-panel-analog-output.md)
+
+### TD-046 PP/PV·Homing·모드 변경의 정지 상태 접수 제한
+
+- 상태: `open`
+- 우선순위: 높음
+- 요약: 신규 PP/PV·Homing·모드 변경은 정지 시에만 접수하고 운전 중 요청은 변경 없이 거부한다.
+- 완료 조건:
+  - 운전 중 제한 대상 요청과 move_vel(0)을 Fail로 반환하며 기존 출력·설정값을 보존한다.
+  - 다축 대상 전체를 사전 검사하고 feedback 지연 구간의 연속 명령을 검증한다.
+  - Jog 모드 전환은 정지 시에만 허용하고 이미 Jog 모드에서의 동작 갱신은 허용한다.
+  - Stop·Disable·Jog 정지 요청을 유지하며 CSP 변경은 제외한다.
+  - API 문서와 정지/운전/복구 경계 회귀 검증이 완료된다.
+- 상세: [TD-046 기술 명세](tasks/td/TD-046-motion-command-standstill-admission.md)
