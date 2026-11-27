@@ -1,5 +1,20 @@
 # RF-006 배포 구성 최종 검증
 
+## 현재 상태 — 2026-11-27
+
+- 상태: `complete`.
+- 사용자 보고: “새로운 환경에서 설정 검증이 되었음.” 완료 처리 요청에 따라 내부용 1.0/DT Demo 범위에서 종료한다.
+- 증거: 기존 패키지/문서 검증 기록과 [DT Demo Linux 신규 환경 기록](../../validation/2026-11-27-dt-demo-linux-setup.md).
+- 직접 확인: 새 Ubuntu 환경의 Git/설정 구성, Docker 이미지 빌드·컨테이너 기동, 실제 NIC 사용,
+  Windows에서 원격 TCP 상태 조회. 이후 설정 검증 완료는 사용자 확인으로 기록한다.
+- 이전 identity mismatch는 Soft ESC 설정 전 관찰이며 Motion Server 배포 설정 결함으로 확정하지 않는다.
+- 이번 완료는 새 Windows PC, 실제 Festo 장비 운전, 모든 ESI/IODD 선택 조합,
+  upgrade/rollback 및 모든 저장소 CLI 시나리오의 신규 검증 완료를 뜻하지 않는다.
+  해당 확대 인수는 필요 시 후속 배포 검증으로 수행한다.
+- 후속 Markdown 변경의 DOCX/PDF 재생성과 최종 배포 패키지 검증은 release_1.0의 잔여 작업으로 유지한다.
+- 아래 2026-11-24 pending/미완료 내용은 당시 이력이며 현재 상태와 구분한다.
+
+
 ## 목표
 
 새로운 Windows와 Linux system에서 배포 artifact와 설치 문서만으로 Basic mode를 재현한다.

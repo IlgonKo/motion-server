@@ -38,8 +38,10 @@ Node-RED package/flow는 존재 여부만 확인하며 실행 시험하지 않�
 
 ## 새 환경 인수 체크리스트
 
-상태: `pending`. 사용자 결정에 따라 DT Demo 제작 시 Windows/Linux 환경 인수를 함께 수행한다.
-기존 자동 검증 및 DOCX/PDF 렌더 검증 결과는 유지하며, 아래 인수 항목은 아직 완료되지 않았다.
+상태: 2026-11-27 사용자 확인으로 RF-006/RF-010을 내부용 1.0/DT Demo 범위에서 완료 처리했다.
+[DT Demo Linux 기록](validation/2026-11-27-dt-demo-linux-setup.md)을 참고한다.
+아래 표는 확대 배포 인수 기준이며 전체 행의 시험 완료를 의미하지 않는다. 새 Windows 환경과
+실제 Festo 장비 및 upgrade/rollback 등 직접 검증되지 않은 항목은 후속 인수 대상으로 구분한다.
 
 | 환경 | 확인 | 완료 증거 |
 | --- | --- | --- |
@@ -51,7 +53,7 @@ Node-RED package/flow는 존재 여부만 확인하며 실행 시험하지 않�
 | 양쪽 | 잘못된 설정·누락 catalog·port 점유 | stage/cause/detail 및 종료 결과 |
 | 양쪽 | 설정 보존 upgrade와 rollback | 이전/새 version, 실제 설정 비교 |
 
-모든 행의 증거가 있어야 RF-006의 clean-system 인수를 완료한다. 운영 하드웨어의 이동 시험은
+전체 clean-system 인수 완료를 주장하려면 위 모든 행의 증거가 필요하다. 이번 내부용 종료와 구분한다. 운영 하드웨어의 이동 시험은
 사용자와 축·경로·속도를 확정한 별도 절차로 수행하며 자동 CI에서 실행하지 않는다.
 
 ## 명시적 hardware 조회 profile

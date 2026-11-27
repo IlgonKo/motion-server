@@ -100,11 +100,12 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-006 배포 구성 최종 검증
 
-- 상태: `pending`
-- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다.
+- 상태: `complete`
+- 완료: 2026-11-27 사용자 신규 환경 설정 검증 확인으로 내부용 1.0/DT Demo 범위에서 종료.
+- 검증 한계: 이번 신규 환경은 Linux/Soft ESC 대상이다. 새 Windows PC·실제 Festo 장비 인수 완료를 의미하지 않는다.
 - 우선순위: 보통
 - 요약: Windows package와 Linux Docker 배포 구성을 clean system에서 최종 검증한다.
-- 완료 조건:
+- 기존 검증 기준 (아래 모든 항목을 신규 실증한 것은 아니며, 내부용 종료 범위는 상세 문서 참조):
   - Windows package의 server, panel, tools, manual과 catalog 구성이 정의대로 포함된다.
   - 사용자 IODD 저장 및 검색 폴더 `device/io_link/iodd`와 Node-RED reference client/sample flow가
     Windows package에 포함된다.
@@ -147,12 +148,14 @@ Tech Debt 상태 값은 `open`, `in_progress`, `complete`를 사용한다.
 
 ### RF-010 사용자 문서 최신화
 
-- 상태: `pending`
-- 재개 시점: DT Demo 제작 시 새 Windows/Linux 환경 인수를 함께 검증한다.
+- 상태: `complete`
+- 완료: 2026-11-27 사용자 신규 환경 설정 검증 확인으로 내부용 1.0/DT Demo 범위에서 종료.
+- 검증 한계: 이번 신규 환경은 Linux/Soft ESC 대상이다. 새 Windows PC·실제 Festo 장비 인수 완료를 의미하지 않는다.
 - 우선순위: 보통
 - 요약: 사용자 및 설치 매뉴얼을 최신 Motion Server 기능과 배포 구성에 맞춘다.
-- 진행: Rev. 2.0 DOCX/PDF 제작 및 총 6페이지 렌더 검증 완료. 신규 환경 설치 인수는 미완료.
-- 완료 조건:
+- 증거: 기존 Rev. 2.0 DOCX/PDF 렌더 검증과 DT Demo Linux 설정·기동 및 사용자 확인.
+- 후속: 이후 Markdown 변경의 DOCX/PDF 재생성은 최종 패키지 준비에서 관리한다.
+- 기존 검증 기준 (아래 모든 항목을 신규 실증한 것은 아니며, 내부용 종료 범위는 상세 문서 참조):
   - User Manual이 최신 API, authority, feedback, parameter access와 Basic mode를 설명한다.
   - Installation Manual이 Windows/Linux 설치, 설정과 ESI/IODD 규칙을 설명한다.
   - 문서 파일명, 내부 링크와 packaging 포함 검사가 통과한다.
