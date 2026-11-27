@@ -877,6 +877,8 @@ class AxisServerControlPanel(
 def main():
     host, port, configured_axis_names, auto_sdo_reads = read_runtime_config()
     client = AxisServerClient(host, port)
+    # Select the intended server before its first feedback fixes the UI topology.
+    client.disconnect()
     client.start()
     bootstrap = AxisPanelBootstrap(client)
     axis_count = bootstrap.run()
@@ -904,10 +906,10 @@ class AxisPanelBootstrap:
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.host_var = tk.StringVar(value=client.host)
         self.port_var = tk.StringVar(value=str(client.port))
-        self.connection_var = tk.StringVar(value="Connecting...")
+        self.connection_var = tk.StringVar(value="Not connected")
         self.health_var = tk.StringVar(value="Server: waiting for feedback")
         self.authority_button_var = tk.StringVar(value="Request Authority")
-        self.result_var = tk.StringVar(value="Waiting for axis feedback.")
+        self.result_var = tk.StringVar(value="Select Host and Port, then press Connect.")
         self._build_ui()
         self.root.after(GUI_PERIOD_MS, self.update)
 
@@ -991,7 +993,10 @@ class AxisPanelBootstrap:
         if result or notice:
             self.result_var.set(result or notice)
         elif not connected:
-            self.result_var.set("Disconnected; recovery result is unconfirmed. Check status after reconnection.")
+            if not self.client.enabled:
+                self.result_var.set("Select Host and Port, then press Connect.")
+            else:
+                self.result_var.set("Disconnected; recovery result is unconfirmed. Check status after reconnection.")
         if topology_error:
             self.health_var.set(topology_error)
         if axis_count > 0:

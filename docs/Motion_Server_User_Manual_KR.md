@@ -22,6 +22,10 @@ Windows에서는 CSP를 포함한 동기 제어 기능을 공식 지원하지 �
 
 ## Axis Control Panel
 
+시작 화면에서 Host와 Port를 확인한 뒤 `Connect`를 누른다. 시작 시 기본 주소로 자동 연결하지 않는다.
+선택한 서버의 첫 feedback으로 축 화면을 한 번 구성한다. 다른 축 구성의 서버로 바꿀 때는 Panel을
+다시 실행하고 시작 화면에서 해당 서버 주소를 선택한다.
+
 첫 feedback의 축 배열로 축 수를 확정해 화면을 구성한다. 설정의 물리 slave 순서와 API의 axis index는
 다르다. 예를 들어 slave 0이 축, slave 1이 IO, slave 2가 축이면 축 index는 0과 1이다.
 

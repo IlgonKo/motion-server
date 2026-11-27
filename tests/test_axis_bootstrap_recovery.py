@@ -1,6 +1,6 @@
 import tkinter as tk
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from control_panel.axis_control_panel.control_panel import AxisPanelBootstrap
 
 class AxisBootstrapRecoveryTest(unittest.TestCase):
@@ -50,6 +50,17 @@ class AxisBootstrapRecoveryTest(unittest.TestCase):
         self.assertCountEqual(button_labels(self.panel.root),
                               ['Connect', 'Request Authority', 'Bus Reconnect'])
 
+    def test_connect_uses_selected_remote_endpoint(self):
+        self.client.enabled = False
+        self.client.get_snapshot.return_value = (False, '', {}, '', '')
+        self.panel.update()
+        self.assertIn('press Connect', self.panel.result_var.get())
+        self.client.set_endpoint.assert_not_called()
+        self.panel.host_var.set('192.168.0.128')
+        self.panel.port_var.set('15000')
+        self.button('Connect').invoke()
+        self.client.set_endpoint.assert_called_once_with('192.168.0.128', 15000)
+
     def test_authority_is_explicit_and_fail_is_displayed(self):
         self.panel.root.update_idletasks()
         self.button('Request Authority').invoke()
@@ -76,6 +87,18 @@ class AxisBootstrapRecoveryTest(unittest.TestCase):
         self.client.get_topology_snapshot.return_value = (5, '')
         self.panel.update()
         self.assertEqual(self.panel.result, 5)
+
+class AxisPanelStartupTest(unittest.TestCase):
+    def test_startup_disables_connection_before_worker_starts(self):
+        from control_panel.axis_control_panel import control_panel as module
+        with patch.object(module, 'read_runtime_config', return_value=('127.0.0.1', 15000, [], False)), \
+             patch.object(module, 'AxisServerClient') as factory, \
+             patch.object(module, 'AxisPanelBootstrap') as bootstrap:
+            client = factory.return_value
+            bootstrap.return_value.run.return_value = None
+            module.main()
+            self.assertEqual([call[0] for call in client.method_calls],
+                             ['disconnect', 'start', 'stop'])
 
 if __name__ == '__main__':
     unittest.main()
